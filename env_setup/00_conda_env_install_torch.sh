@@ -15,5 +15,14 @@ pip install --index-url https://download.pytorch.org/whl/cu121 \
 # pull the v1.3-pinned packages (no CUDA build yet)
 pip install -r requirements/requirements-cu121.txt
 
-# compute PSNR/SSIM/LPIPS
-pip install scikit-image lpips
+# Install base requirements
+pip install -r requirements/requirements.txt
+
+# Install eval requirements (includes decord, lpips, scikit-image)
+pip install -r requirements/requirements-eval.txt
+
+# Install VAE requirements (includes opencv-python, pillow, einops)
+pip install -r requirements/requirements-vae.txt
+
+# Install huggingface-hub for checkpoint download script
+pip install huggingface-hub

@@ -88,7 +88,8 @@ PY
 echo "Built wheels are in $WHEEL_DIR"
 
 # ---- OTHER OPEN-SORA v1.3 REQUIREMENTS ----
-cd /scratch/wc3013/video_gen_exp/Open-Sora-1.3
+# NOTE: Update this path to your actual repo location
+cd /path/to/your/repo/Open-Sora-1.3
 pip install -v -e .
 # (optional) TensorNVMe for fast disk I/O; fall back if io_uring not available
 DISABLE_URING=1 pip install -v --no-build-isolation git+https://github.com/hpcaitech/TensorNVMe.git || true
