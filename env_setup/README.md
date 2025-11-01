@@ -7,7 +7,7 @@ This directory contains scripts to set up the environment for running the naive 
 Follow these scripts **in order** (each depends on the previous):
 
 ### 0. Setup Scratch Environment Variables (MUST RUN FIRST!)
-**File:** `05_setup_scratch_env.sh`
+**File:** `00_set_scratch_env.sh`
 - Redirects ALL installations, caches, and temp files to `/scratch/wc3013`
 - Prevents filling up `/home` directory
 - Sets up organized cache directory structure
@@ -15,13 +15,13 @@ Follow these scripts **in order** (each depends on the previous):
 **Run on:** Login node (before everything else)
 
 ```bash
-source env_setup/05_setup_scratch_env.sh
+source env_setup/00_set_scratch_env.sh
 ```
 
 **Important:** You must `source` (not `bash`) this script to export variables to your shell!
 
 ### 1. Create Conda Environment and Install PyTorch
-**File:** `00_conda_env_install_torch.sh`
+**File:** `01_conda_env_install_torch.sh`
 - Creates conda environment with Python 3.9
 - Installs PyTorch 2.2.2 + CUDA 12.1
 - Installs xformers
@@ -31,22 +31,22 @@ source env_setup/05_setup_scratch_env.sh
 **Run on:** Login node (no GPU needed)
 
 ```bash
-bash env_setup/00_conda_env_install_torch.sh
+bash env_setup/01_conda_env_install_torch.sh
 ```
 
 ### 2. Install FFmpeg
-**File:** `02_ffmpeg.sh`
+**File:** `03_ffmpeg.sh`
 - Installs FFmpeg for video processing
 - Required by PyAV for HMDB51 preprocessing and inference
 
 **Run on:** Login node (no GPU needed)
 
 ```bash
-bash env_setup/02_ffmpeg.sh
+bash env_setup/03_ffmpeg.sh
 ```
 
 ### 3. Build Flash Attention and Apex
-**File:** `01_flsh_attn_apex_build.sbatch`
+**File:** `02_flsh_attn_apex_build.sbatch`
 - Builds flash-attn 2.5.8 (must match GPU architecture)
 - Builds apex (for FusedLayerNorm, FusedAdam)
 - Installs Open-Sora in development mode
@@ -56,10 +56,10 @@ bash env_setup/02_ffmpeg.sh
 
 ```bash
 # Edit the sbatch file first!
-nano env_setup/01_flsh_attn_apex_build.sbatch
+nano env_setup/02_flsh_attn_apex_build.sbatch
 
 # Then submit
-sbatch env_setup/01_flsh_attn_apex_build.sbatch
+sbatch env_setup/02_flsh_attn_apex_build.sbatch
 ```
 
 **Key Configuration:**
@@ -121,17 +121,17 @@ bash env_setup/04_installation_check.sh
 
 ```bash
 # 0. Setup scratch environment (RUN THIS FIRST!)
-source env_setup/05_setup_scratch_env.sh
+source env_setup/00_set_scratch_env.sh
 
 # 1. Create environment
-bash env_setup/00_conda_env_install_torch.sh
+bash env_setup/01_conda_env_install_torch.sh
 
 # 2. Install FFmpeg
-bash env_setup/02_ffmpeg.sh
+bash env_setup/03_ffmpeg.sh
 
 # 3. Build compiled extensions (on GPU node)
-# Edit 01_flsh_attn_apex_build.sbatch first!
-sbatch env_setup/01_flsh_attn_apex_build.sbatch
+# Edit 02_flsh_attn_apex_build.sbatch first!
+sbatch env_setup/02_flsh_attn_apex_build.sbatch
 
 # 4. Verify
 bash env_setup/04_installation_check.sh
@@ -140,13 +140,13 @@ bash env_setup/04_installation_check.sh
 ## Cluster-Specific Notes
 
 ### GPU Architecture
-Adjust `TORCH_CUDA_ARCH_LIST` in `01_flsh_attn_apex_build.sbatch`:
+Adjust `TORCH_CUDA_ARCH_LIST` in `02_flsh_attn_apex_build.sbatch`:
 - H100/H200: `"90"`
 - A100: `"80"`
 - Both: `"80;90"`
 
 ### Path Customization
-In `01_flsh_attn_apex_build.sbatch`, update:
+In `02_flsh_attn_apex_build.sbatch`, update:
 - Line 99: Your repo path (critical!)
 - Wheels automatically built to scratch directory
 
@@ -162,11 +162,11 @@ If your cluster uses environment modules, you may need to load:
 - Check that TORCH_CUDA_ARCH_LIST matches your GPU
 
 ### "ffmpeg not found"
-- Run `bash env_setup/02_ffmpeg.sh`
+- Run `bash env_setup/03_ffmpeg.sh`
 
 ### "No module named 'opensora'"
 - Run the sbatch script (installs via `pip install -e .`)
-- Check that repo path on line 92 is correct
+- Check that repo path on line 99 is correct
 
 ### "decord" import errors
 - Decord is installed via requirements-eval.txt
@@ -178,27 +178,27 @@ To avoid filling up your `/home` directory, all installations and caches are red
 
 ### Directory Structure
 
-After running `05_setup_scratch_env.sh`, you'll have this organized structure:
+After running `00_set_scratch_env.sh`, you'll have this organized structure:
 
 ```
-/scratch/wc3013/opensora_env/
-├── conda_envs/          # Conda environments
-├── conda_pkgs/          # Conda package cache
-├── pip_cache/           # Pip package cache
-├── torch_cache/         # PyTorch model cache
-├── transformers_cache/  # Transformers cache
-├── hf_cache/            # HuggingFace caches
-│   ├── hf_home/
+/scratch/wc3013/
+├── conda-envs/          # Conda environments
+├── conda-pkgs/          # Conda package cache
+├── py-cache/            # Python/PyTorch caches
+│   ├── pip/             # Pip package cache
+│   ├── torch/           # PyTorch cache
+│   │   └── extensions/  # PyTorch extensions
+│   ├── models/          # PyTorch model cache
+│   ├── triton/          # Triton compiler cache
+│   ├── torch-inductor/  # TorchInductor cache
+│   ├── colossalaJit/    # ColossalAI JIT cache
+│   └── python/          # Python __pycache__
+├── hf-cache/            # HuggingFace caches
+│   ├── datasets/
 │   ├── hub/
-│   └── datasets/
-├── triton_cache/        # Triton compiler cache
-├── extensions_cache/    # Compiled extensions
-│   ├── torch_extensions/
-│   └── colossalai/
-├── inductor_cache/      # TorchInductor cache
+│   └── transformers/
 ├── tmp/                 # Temporary files
-├── xdg_cache/           # XDG system cache
-├── wandb_cache/         # Weights & Biases cache
+├── wandb/               # Weights & Biases cache
 ├── tensorboard/         # TensorBoard logs
 └── wheels/              # Compiled wheel files
 ```
@@ -207,14 +207,14 @@ After running `05_setup_scratch_env.sh`, you'll have this organized structure:
 
 1. **Source the script** to get env variables in your current shell:
    ```bash
-   source env_setup/05_setup_scratch_env.sh
+   source env_setup/00_set_scratch_env.sh
    ```
 
 2. **Re-source after logout**: If you SSH logout/login, you need to re-source the script
 
 3. **For SLURM jobs**: Add to your sbatch script:
    ```bash
-   source env_setup/05_setup_scratch_env.sh
+   source env_setup/00_set_scratch_env.sh
    ```
 
 4. **All caches go to scratch**: Torch, HuggingFace, pip, conda, everything!

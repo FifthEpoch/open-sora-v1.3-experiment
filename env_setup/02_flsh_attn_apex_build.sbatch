@@ -21,7 +21,7 @@ source ~/.bashrc
 # Setup scratch environment variables
 # NOTE: Ensure this path exists before running
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/05_setup_scratch_env.sh"
+source "${SCRIPT_DIR}/00_set_scratch_env.sh"
 
 conda activate opensora13
 
@@ -47,8 +47,8 @@ export TORCH_CUDA_ARCH_LIST="90"     # or "80;90" if you also use A100 nodes
 export MAX_JOBS="${SLURM_CPUS_PER_TASK:-8}"
 
 # Build wheels in scratch directory
-mkdir -p "${SCRATCH_DIR}/wheels/cu121_sm90"
-WHEEL_DIR="${SCRATCH_DIR}/wheels/cu121_sm90"
+WHEEL_DIR="${SCRATCH_BASE}/wheels/cu121_sm90"
+mkdir -p "${WHEEL_DIR}"
 
 # ---- FLASH-ATTN ----
 # Version family known to work with torch 2.2.x + cu12.x on Hopper.
