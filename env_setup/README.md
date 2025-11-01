@@ -6,27 +6,28 @@ This directory contains scripts to set up the environment for running the naive 
 
 Follow these scripts **in order** (each depends on the previous):
 
-### 0. Setup Scratch Environment Variables (MUST RUN FIRST!)
+### 0. Setup Scratch Environment Variables (AUTOMATIC!)
 **File:** `00_set_scratch_env.sh`
 - Redirects ALL installations, caches, and temp files to `/scratch/wc3013`
 - Prevents filling up `/home` directory
 - Sets up organized cache directory structure
+- **Note:** This is now automatically loaded by all scripts below!
 
-**Run on:** Login node (before everything else)
+**Run on:** (Not needed - auto-loaded by scripts)
 
+**Manual usage** (if needed):
 ```bash
 source env_setup/00_set_scratch_env.sh
 ```
 
-**Important:** You must `source` (not `bash`) this script to export variables to your shell!
-
 ### 1. Create Conda Environment and Install PyTorch
 **File:** `01_conda_env_install_torch.sh`
-- Creates conda environment with Python 3.9
+- **Auto-loads scratch environment** - no manual sourcing needed!
+- Creates conda environment with Python 3.9 **in `/scratch/wc3013/conda-envs/`**
 - Installs PyTorch 2.2.2 + CUDA 12.1
 - Installs xformers
 - Installs basic dependencies from requirements
-- **After Step 0**, conda env will be created in `/scratch`
+- Configures conda to use scratch directories permanently
 
 **Run on:** Login node (no GPU needed)
 
@@ -120,22 +121,21 @@ bash env_setup/04_installation_check.sh
 ## Quick Start
 
 ```bash
-# 0. Setup scratch environment (RUN THIS FIRST!)
-source env_setup/00_set_scratch_env.sh
-
-# 1. Create environment
+# 1. Create environment (auto-loads scratch env)
 bash env_setup/01_conda_env_install_torch.sh
 
-# 2. Install FFmpeg
+# 2. Install FFmpeg (auto-loads scratch env)
 bash env_setup/03_ffmpeg.sh
 
 # 3. Build compiled extensions (on GPU node)
 # Edit 02_flsh_attn_apex_build.sbatch first!
 sbatch env_setup/02_flsh_attn_apex_build.sbatch
 
-# 4. Verify
+# 4. Verify (auto-loads scratch env)
 bash env_setup/04_installation_check.sh
 ```
+
+**Note:** Steps 1, 2, and 4 automatically load the scratch environment configuration!
 
 ## Cluster-Specific Notes
 
@@ -205,17 +205,19 @@ After running `00_set_scratch_env.sh`, you'll have this organized structure:
 
 ### Important Notes
 
-1. **Source the script** to get env variables in your current shell:
+1. **Auto-loading**: All setup scripts (`01`, `03`, `04`) automatically source `00_set_scratch_env.sh` - no manual sourcing needed!
+
+2. **Manual sourcing**: If you need the env vars in your current shell for custom commands:
    ```bash
    source env_setup/00_set_scratch_env.sh
    ```
 
-2. **Re-source after logout**: If you SSH logout/login, you need to re-source the script
+3. **Re-source after logout**: If you SSH logout/login, you need to re-source if doing manual work
 
-3. **For SLURM jobs**: Add to your sbatch script:
+4. **For SLURM jobs**: Add to your sbatch script:
    ```bash
    source env_setup/00_set_scratch_env.sh
    ```
 
-4. **All caches go to scratch**: Torch, HuggingFace, pip, conda, everything!
+5. **All caches go to scratch**: Torch, HuggingFace, pip, conda, everything!
 
