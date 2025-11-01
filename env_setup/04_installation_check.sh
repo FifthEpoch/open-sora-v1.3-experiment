@@ -1,3 +1,7 @@
+#!/bin/bash
+# NOTE: This script should be run after sourcing 05_setup_scratch_env.sh
+# If you haven't sourced it, do this: source env_setup/05_setup_scratch_env.sh
+
 # On a login node
 conda activate opensora13
 python - <<'PY'

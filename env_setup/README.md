@@ -6,12 +6,27 @@ This directory contains scripts to set up the environment for running the naive 
 
 Follow these scripts **in order** (each depends on the previous):
 
+### 0. Setup Scratch Environment Variables (MUST RUN FIRST!)
+**File:** `05_setup_scratch_env.sh`
+- Redirects ALL installations, caches, and temp files to `/scratch/wc3013`
+- Prevents filling up `/home` directory
+- Sets up organized cache directory structure
+
+**Run on:** Login node (before everything else)
+
+```bash
+source env_setup/05_setup_scratch_env.sh
+```
+
+**Important:** You must `source` (not `bash`) this script to export variables to your shell!
+
 ### 1. Create Conda Environment and Install PyTorch
 **File:** `00_conda_env_install_torch.sh`
 - Creates conda environment with Python 3.9
 - Installs PyTorch 2.2.2 + CUDA 12.1
 - Installs xformers
 - Installs basic dependencies from requirements
+- **After Step 0**, conda env will be created in `/scratch`
 
 **Run on:** Login node (no GPU needed)
 
@@ -105,6 +120,9 @@ bash env_setup/04_installation_check.sh
 ## Quick Start
 
 ```bash
+# 0. Setup scratch environment (RUN THIS FIRST!)
+source env_setup/05_setup_scratch_env.sh
+
 # 1. Create environment
 bash env_setup/00_conda_env_install_torch.sh
 
@@ -153,4 +171,50 @@ If your cluster uses environment modules, you may need to load:
 ### "decord" import errors
 - Decord is installed via requirements-eval.txt
 - If issues persist, may need to build from source
+
+## Scratch Storage Setup
+
+To avoid filling up your `/home` directory, all installations and caches are redirected to `/scratch/wc3013`.
+
+### Directory Structure
+
+After running `05_setup_scratch_env.sh`, you'll have this organized structure:
+
+```
+/scratch/wc3013/opensora_env/
+├── conda_envs/          # Conda environments
+├── conda_pkgs/          # Conda package cache
+├── pip_cache/           # Pip package cache
+├── torch_cache/         # PyTorch model cache
+├── transformers_cache/  # Transformers cache
+├── hf_cache/            # HuggingFace caches
+│   ├── hf_home/
+│   ├── hub/
+│   └── datasets/
+├── triton_cache/        # Triton compiler cache
+├── extensions_cache/    # Compiled extensions
+│   ├── torch_extensions/
+│   └── colossalai/
+├── inductor_cache/      # TorchInductor cache
+├── tmp/                 # Temporary files
+├── xdg_cache/           # XDG system cache
+├── wandb_cache/         # Weights & Biases cache
+└── tensorboard/         # TensorBoard logs
+```
+
+### Important Notes
+
+1. **Source the script** to get env variables in your current shell:
+   ```bash
+   source env_setup/05_setup_scratch_env.sh
+   ```
+
+2. **Re-source after logout**: If you SSH logout/login, you need to re-source the script
+
+3. **For SLURM jobs**: Add to your sbatch script:
+   ```bash
+   source env_setup/05_setup_scratch_env.sh
+   ```
+
+4. **All caches go to scratch**: Torch, HuggingFace, pip, conda, everything!
 

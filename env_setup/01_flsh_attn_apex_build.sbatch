@@ -17,6 +17,12 @@ module purge
 # module load gcc/12
 
 source ~/.bashrc
+
+# Setup scratch environment variables
+# NOTE: Ensure this path exists before running
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/05_setup_scratch_env.sh"
+
 conda activate opensora13
 
 python -c "import torch;print('Torch:', torch.__version__,'CUDA:', torch.version.cuda)"
