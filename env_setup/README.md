@@ -50,7 +50,7 @@ bash env_setup/02_ffmpeg.sh
 - Builds flash-attn 2.5.8 (must match GPU architecture)
 - Builds apex (for FusedLayerNorm, FusedAdam)
 - Installs Open-Sora in development mode
-- **IMPORTANT:** Edit line 92 to point to your repo path
+- **IMPORTANT:** Edit line 99 to point to your repo path
 
 **Run on:** GPU node (submit via SLURM)
 
@@ -63,9 +63,9 @@ sbatch env_setup/01_flsh_attn_apex_build.sbatch
 ```
 
 **Key Configuration:**
-- Line 40: `TORCH_CUDA_ARCH_LIST="90"` for H100/H200
-- Line 92: Change to your repo path
-- Lines 43-44: Set wheel output directory
+- Line 46: `TORCH_CUDA_ARCH_LIST="90"` for H100/H200
+- Line 99: Change to your repo path
+- Wheels are built in scratch directory automatically
 
 ### 4. Verify Installation
 **File:** `04_installation_check.sh`
@@ -147,8 +147,8 @@ Adjust `TORCH_CUDA_ARCH_LIST` in `01_flsh_attn_apex_build.sbatch`:
 
 ### Path Customization
 In `01_flsh_attn_apex_build.sbatch`, update:
-- Line 43-44: Wheel output directory (default: `~/wheels/cu121_sm90`)
-- Line 92: Your repo path (critical!)
+- Line 99: Your repo path (critical!)
+- Wheels automatically built to scratch directory
 
 ### Module System
 If your cluster uses environment modules, you may need to load:
@@ -199,7 +199,8 @@ After running `05_setup_scratch_env.sh`, you'll have this organized structure:
 ├── tmp/                 # Temporary files
 ├── xdg_cache/           # XDG system cache
 ├── wandb_cache/         # Weights & Biases cache
-└── tensorboard/         # TensorBoard logs
+├── tensorboard/         # TensorBoard logs
+└── wheels/              # Compiled wheel files
 ```
 
 ### Important Notes

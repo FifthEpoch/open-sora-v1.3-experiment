@@ -46,8 +46,9 @@ export LD_LIBRARY_PATH="$CUDA_HOME/cuda_nvcc/lib64:${LD_LIBRARY_PATH:-}"
 export TORCH_CUDA_ARCH_LIST="90"     # or "80;90" if you also use A100 nodes
 export MAX_JOBS="${SLURM_CPUS_PER_TASK:-8}"
 
-mkdir -p ~/wheels/cu121_sm90
-WHEEL_DIR=~/wheels/cu121_sm90
+# Build wheels in scratch directory
+mkdir -p "${SCRATCH_DIR}/wheels/cu121_sm90"
+WHEEL_DIR="${SCRATCH_DIR}/wheels/cu121_sm90"
 
 # ---- FLASH-ATTN ----
 # Version family known to work with torch 2.2.x + cu12.x on Hopper.

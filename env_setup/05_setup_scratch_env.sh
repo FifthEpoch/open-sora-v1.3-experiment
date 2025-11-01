@@ -7,7 +7,7 @@
 export SCRATCH_DIR="/scratch/wc3013/opensora_env"
 
 # Create organized directory structure
-mkdir -p "${SCRATCH_DIR}"/{conda_envs,conda_pkgs,pip_cache,torch_cache,transformers_cache,hf_cache,triton_cache,extensions_cache,inductor_cache,tmp,xdg_cache,wandb_cache,tensorboard}
+mkdir -p "${SCRATCH_DIR}"/{conda_envs,conda_pkgs,pip_cache,torch_cache,transformers_cache,hf_cache,triton_cache,extensions_cache,inductor_cache,tmp,xdg_cache,wandb_cache,tensorboard,wheels}
 
 # ===========================================================================
 # PYTHON / CONDA / PIP CACHES
