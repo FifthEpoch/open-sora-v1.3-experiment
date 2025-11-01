@@ -1,13 +1,29 @@
 #!/bin/bash
 # Create conda environment and install PyTorch + dependencies
-# NOTE: This script should be run after sourcing 00_set_scratch_env.sh
-# If you haven't sourced it, do this: source env_setup/00_set_scratch_env.sh
+
+set -euo pipefail
+
+# Auto-load scratch environment variables
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "${SCRIPT_DIR}/00_set_scratch_env.sh" ]; then
+    echo "Loading scratch environment configuration..."
+    source "${SCRIPT_DIR}/00_set_scratch_env.sh"
+else
+    echo "Warning: ${SCRIPT_DIR}/00_set_scratch_env.sh not found!"
+    exit 1
+fi
 
 # login node (no GPU)
 module purge || true
 module load anaconda3/2024.02
-conda create -y -n opensora13 python=3.9
-conda activate opensora13
+
+# Configure conda to use scratch directories
+conda config --add envs_dirs "${SCRATCH_BASE}/conda-envs" 2>/dev/null || true
+conda config --add pkgs_dirs "${SCRATCH_BASE}/conda-pkgs" 2>/dev/null || true
+
+# Create environment in scratch location
+conda create -y -p "${SCRATCH_BASE}/conda-envs/opensora13" python=3.9
+conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
 
 python -m pip install -U pip setuptools wheel
 
