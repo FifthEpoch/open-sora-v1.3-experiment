@@ -1,10 +1,11 @@
 #!/bin/bash
-# Setup environment variables for /scratch storage
-# NOTE: This script should be run after sourcing 05_setup_scratch_env.sh
-# If you haven't sourced it, do this: source env_setup/05_setup_scratch_env.sh
+# Create conda environment and install PyTorch + dependencies
+# NOTE: This script should be run after sourcing 00_set_scratch_env.sh
+# If you haven't sourced it, do this: source env_setup/00_set_scratch_env.sh
 
 # login node (no GPU)
 module purge || true
+module load anaconda3/2024.02
 conda create -y -n opensora13 python=3.9
 conda activate opensora13
 
