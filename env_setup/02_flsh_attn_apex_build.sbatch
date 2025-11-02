@@ -66,13 +66,28 @@ elif [ -f "$(python -c 'import nvidia.cuda_nvcc as m; from pathlib import Path; 
     echo "Using nvcc from module dir: $CUDA_HOME/bin/nvcc"
 else
     echo "ERROR: Could not find nvcc binary!"
+    echo "Searching for nvcc recursively..."
     python - <<'PY'
 import nvidia.cuda_nvcc as m
 from pathlib import Path
 p = Path(m.__file__).resolve().parent
-print("Searching for nvcc...")
-for item in p.rglob("nvcc"):
-    print(f"Found: {item}")
+print(f"Searching from: {p}")
+print(f"Searching for nvcc in all subdirectories...")
+try:
+    for item in p.rglob("nvcc"):
+        if item.is_file():
+            print(f"Found nvcc: {item}")
+            print(f"  Parent dir: {item.parent}")
+            print(f"  Grandparent dir: {item.parent.parent}")
+    # If nothing found, list the directory structure
+    print("\nDirectory structure:")
+    for item in sorted(p.rglob("*")):
+        if item.is_dir():
+            print(f"  DIR:  {item}")
+        elif item.is_file():
+            print(f"  FILE: {item}")
+except Exception as e:
+    print(f"Error during search: {e}")
 PY
     exit 1
 fi
