@@ -40,8 +40,20 @@ p = Path(m.__file__).resolve().parent  # .../site-packages/nvidia/cuda_nvcc
 print(str(p.parent))                   # .../site-packages/nvidia
 PY
 )"
-export PATH="$CUDA_HOME/cuda_nvcc/bin:$PATH"
-export LD_LIBRARY_PATH="$CUDA_HOME/cuda_nvcc/lib64:${LD_LIBRARY_PATH:-}"
+echo "CUDA_HOME set to: $CUDA_HOME"
+
+# Fix: CUDA_HOME should point to nvidia/, then we append cuda_nvcc
+# But the python script already outputs the parent, so we need cuda_nvcc subdir
+export CUDA_HOME="$CUDA_HOME/cuda_nvcc"
+echo "CUDA_HOME corrected to: $CUDA_HOME"
+
+export PATH="$CUDA_HOME/bin:$PATH"
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
+
+# Verify nvcc is accessible
+echo "Checking nvcc installation:"
+ls -la "$CUDA_HOME/bin/nvcc" || echo "WARNING: nvcc not found at $CUDA_HOME/bin/nvcc"
+nvcc --version || echo "WARNING: nvcc not in PATH"
 
 # Hopper (H100/H200) arch; include others if you may run on A100 too:
 export TORCH_CUDA_ARCH_LIST="90"     # or "80;90" if you also use A100 nodes
