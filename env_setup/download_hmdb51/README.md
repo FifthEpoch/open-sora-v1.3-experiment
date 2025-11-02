@@ -4,30 +4,32 @@ The HMDB51 (Human Motion Database 51) is an action recognition dataset containin
 
 ## Dataset Information
 
-- **Source**: [Serre Lab, Brown University](https://serre-lab.clps.brown.edu/wp-content/uploads/2013/10/hmdb51_org.rar)
+- **Source**: [Serre Lab, Brown University](http://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/)
 - **Actions**: 51 different human action categories
 - **Format**: Video clips in AVI format
 - **Total size**: ~2GB compressed
+- **Note**: The official download URL may be broken. If automatic download fails, you may need to manually download from the official website or find an alternative source.
 
 ## Download Instructions
 
 1. **Install extraction tool** (if not already installed):
    
-   **On cluster (without sudo)**:
-   ```bash
-   # Install p7zip via conda (no sudo required)
-   conda install -c conda-forge p7zip
-   ```
+   **IMPORTANT**: HMDB51 is a `.rar` file, which requires `unrar` to extract. p7zip does NOT support RAR format.
    
-   On macOS:
+   **On macOS**:
    ```bash
    brew install unrar  # or: brew install unar
    ```
    
-   On Linux (with sudo):
+   **On Linux (with sudo)**:
    ```bash
-   sudo apt-get install unrar  # or: sudo apt-get install p7zip-full
+   sudo apt-get install unrar  # or: sudo apt-get install unrar-free
    ```
+   
+   **On cluster (without sudo)** - limited options:
+   - Ask your cluster admin to install `unrar`
+   - Or manually compile `unrar` from source and add to PATH
+   - Or download a pre-extracted version of HMDB51 from another source
 
 2. **Run the download script**:
    ```bash

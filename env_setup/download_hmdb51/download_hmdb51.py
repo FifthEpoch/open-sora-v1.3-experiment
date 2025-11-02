@@ -20,6 +20,18 @@ def download_file(url: str, dest_path: str) -> bool:
     try:
         urllib.request.urlretrieve(url, dest_path, reporthook=download_progress)
         print("\nDownload completed!")
+        
+        # Check file size - HMDB51 should be ~2GB, not 5KB!
+        file_size = os.path.getsize(dest_path)
+        if file_size < 1024 * 1024:  # Less than 1MB is suspicious
+            print(f"WARNING: Downloaded file is only {file_size} bytes. This is likely not a valid RAR file!")
+            print("The official download URL may be broken. Please manually download hmdb51_org.rar")
+            print("from an alternative source and place it in this directory.")
+            rar_file = Path(dest_path)
+            if rar_file.exists():
+                rar_file.unlink()  # Delete the fake file
+            return False
+        
         return True
     except Exception as e:
         print(f"\nError downloading file: {e}")
@@ -73,11 +85,15 @@ def extract_rar(rar_path: str, dest_dir: str) -> bool:
         except subprocess.CalledProcessError as e:
             print(f"Error extracting with 7z: {e}")
     
-    print("ERROR: No extraction tool found. Please install one of:")
-    print("  - p7zip via conda (cluster, no sudo): conda install -c conda-forge p7zip")
+    print("\nERROR: No extraction tool found that supports RAR files!")
+    print("\nNote: p7zip (7z) does NOT support RAR format. You need unrar.")
+    print("\nPlease install one of:")
     print("  - unrar: sudo apt-get install unrar (Linux) or brew install unrar (macOS)")
     print("  - unar: brew install unar (macOS)")
-    print("  - p7zip: sudo apt-get install p7zip-full (Linux) or brew install p7zip (macOS)")
+    print("\nOn clusters without sudo, you may need to:")
+    print("  1. Manually download and compile unrar")
+    print("  2. Or ask your cluster admin to install unrar")
+    print("  3. Or download a pre-extracted version of HMDB51")
     return False
 
 
@@ -134,21 +150,31 @@ def main():
     # Check if already downloaded
     if rar_file.exists():
         print(f"\nFound existing file: {rar_file}")
-        response = input("Re-download? (y/n): ").strip().lower()
-        if response == 'y':
+        file_size = os.path.getsize(rar_file)
+        if file_size < 1024 * 1024:  # Less than 1MB is suspicious
+            print(f"WARNING: File is only {file_size} bytes, likely corrupted!")
+            print("Deleting corrupted file...")
             rar_file.unlink()
         else:
-            print("Using existing file.")
+            response = input("Re-download? (y/n): ").strip().lower()
+            if response == 'y':
+                rar_file.unlink()
+            else:
+                print("Using existing file.")
     
     # Download if needed
     if not rar_file.exists():
         if not download_file(url, str(rar_file)):
-            print("Download failed!")
+            print("\nDownload failed! The official URL may be broken.")
+            print("\nPlease manually download hmdb51_org.rar (~2GB) from:")
+            print("  - The official HMDB51 website")
+            print("  - Or search for 'HMDB51 dataset download'")
+            print("\nThen place it in this directory and run the script again.")
             sys.exit(1)
     
     # Extract
     if not extract_rar(str(rar_file), str(script_dir)):
-        print("Extraction failed!")
+        print("\nExtraction failed!")
         sys.exit(1)
     
     # Generate captions
