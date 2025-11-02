@@ -80,14 +80,29 @@ cd "$SCRIPT_DIR"
 
 # ---- APEX ----
 # Build both C++ and CUDA extensions (fused layernorm, FusedAdam, etc.)
-pip wheel -v --no-build-isolation --no-deps -w "$WHEEL_DIR" \
+# NOTE: Apex build will likely fail due to CUDA 12.1/12.2 mismatch, but we build anyway
+# If it fails, we simply skip it and use enable_layernorm_kernel=False in configs
+# Force TMPDIR on scratch before building
+export TMPDIR=/scratch/wc3013/tmp
+export TMP=/scratch/wc3013/tmp
+export TEMP=/scratch/wc3013/tmp
+
+echo "Attempting to build apex (may fail due to CUDA version mismatch)..."
+pip wheel -v --no-cache-dir --no-build-isolation --no-deps -w "$WHEEL_DIR" \
   "git+https://github.com/NVIDIA/apex.git#egg=apex" \
   --config-settings="--build-option=--cpp_ext" \
-  --config-settings="--build-option=--cuda_ext"
+  --config-settings="--build-option=--cuda_ext" || echo "Apex build failed - this is OK, we'll use standard LayerNorm"
 
 # Install the wheels we just produced (optional here; you can install later in your run env)
 pip install "$WHEEL_DIR"/flash_attn-*.whl
-pip install "$WHEEL_DIR"/apex-*.whl
+
+# Install apex if it was built successfully
+if ls "$WHEEL_DIR"/apex-*.whl 1> /dev/null 2>&1; then
+    pip install "$WHEEL_DIR"/apex-*.whl
+    echo "Apex installed successfully"
+else
+    echo "WARNING: Apex not available. Use enable_layernorm_kernel=False in configs"
+fi
 
 # Smoke tests
 python - <<'PY'
