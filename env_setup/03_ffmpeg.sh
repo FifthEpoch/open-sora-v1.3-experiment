@@ -14,4 +14,4 @@ fi
 
 module purge || true
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
-conda install -y -c conda-forge ffmpeg>=6,<7
+conda install -y -c conda-forge "ffmpeg>=6,<7"
