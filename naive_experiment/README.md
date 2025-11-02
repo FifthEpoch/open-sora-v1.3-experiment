@@ -121,7 +121,10 @@ Following Open-Sora v1.3 VAE evaluation practices:
    python download_checkpoints.py --output-dir /path/to/checkpoints
    ```
 
-3. **Installed Open-Sora dependencies**
+3. **Installed Open-Sora dependencies**:
+   - Flash-attention and apex are **optional** for this experiment
+   - Configs set `enable_flash_attn=False` and `enable_layernorm_kernel=False`
+   - See `env_setup/README.md` for full environment setup
 
 ## Usage
 
