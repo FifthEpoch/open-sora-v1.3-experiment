@@ -10,6 +10,7 @@ import os
 import sys
 import urllib.request
 import subprocess
+import shutil
 from pathlib import Path
 
 
@@ -40,7 +41,8 @@ def extract_rar(rar_path: str, dest_dir: str) -> bool:
     print(f"\nExtracting {rar_path} to {dest_dir}...")
     
     # Try unrar first
-    if subprocess.run(['which', 'unrar'], capture_output=True).returncode == 0:
+    unrar_path = shutil.which('unrar')
+    if unrar_path is not None:
         cmd = ['unrar', 'x', rar_path, dest_dir]
         try:
             subprocess.run(cmd, check=True)
@@ -50,7 +52,8 @@ def extract_rar(rar_path: str, dest_dir: str) -> bool:
             print(f"Error extracting with unrar: {e}")
     
     # Try unar (macOS)
-    if subprocess.run(['which', 'unar'], capture_output=True).returncode == 0:
+    unar_path = shutil.which('unar')
+    if unar_path is not None:
         cmd = ['unar', '-o', dest_dir, rar_path]
         try:
             subprocess.run(cmd, check=True)
@@ -59,8 +62,9 @@ def extract_rar(rar_path: str, dest_dir: str) -> bool:
         except subprocess.CalledProcessError as e:
             print(f"Error extracting with unar: {e}")
     
-    # Try 7z
-    if subprocess.run(['which', '7z'], capture_output=True).returncode == 0:
+    # Try 7z (including conda-installed versions)
+    p7z_path = shutil.which('7z')
+    if p7z_path is not None:
         cmd = ['7z', 'x', rar_path, f'-o{dest_dir}']
         try:
             subprocess.run(cmd, check=True)

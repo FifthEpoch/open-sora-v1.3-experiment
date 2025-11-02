@@ -31,6 +31,9 @@ The HMDB51 (Human Motion Database 51) is an action recognition dataset containin
 
 2. **Run the download script**:
    ```bash
+   # IMPORTANT: Activate the opensora13 conda environment first!
+   conda activate /scratch/wc3013/conda-envs/opensora13
+   
    cd env_setup/download_hmdb51
    python download_hmdb51.py
    ```
@@ -77,13 +80,11 @@ After downloading the HMDB51 dataset, you need to preprocess the videos for Open
 
 ### Requirements
 
+All dependencies should already be installed in the opensora13 conda environment.
+
+Or install manually:
 ```bash
 pip install av opencv-python pillow torch torchvision numpy pandas tqdm
-```
-
-Or install from Open-Sora's requirements:
-```bash
-pip install -r ../requirements.txt
 ```
 
 ### Preprocessing Steps
@@ -91,6 +92,9 @@ pip install -r ../requirements.txt
 Run the preprocessing script:
 
 ```bash
+# IMPORTANT: Activate the opensora13 conda environment first!
+conda activate /scratch/wc3013/conda-envs/opensora13
+
 cd env_setup/download_hmdb51
 python preprocess_hmdb51.py
 ```
