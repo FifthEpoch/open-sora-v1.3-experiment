@@ -68,6 +68,13 @@ cd /scratch/wc3013/tmp
 rm -rf flash-attention
 git clone https://github.com/Dao-AILab/flash-attention.git
 cd flash-attention && git checkout v2.5.8
+
+# Force all temporary directories to be on scratch filesystem
+export TMPDIR=/scratch/wc3013/tmp
+export TMP=/scratch/wc3013/tmp
+export TEMP=/scratch/wc3013/tmp
+unset PIP_NO_CACHE_DIR  # Use PIP_CACHE_DIR instead which is on scratch
+
 pip wheel -v --no-build-isolation --no-deps -w "$WHEEL_DIR" .
 cd "$SCRIPT_DIR"
 

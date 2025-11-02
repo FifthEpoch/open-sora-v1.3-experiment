@@ -36,6 +36,8 @@ export TRANSFORMERS_CACHE="${SCRATCH_BASE}/hf-cache/transformers"
 
 # Pip cache
 export PIP_CACHE_DIR="${SCRATCH_BASE}/py-cache/pip"
+# Disable pip cache to avoid cross-device link errors
+export PIP_NO_CACHE_DIR=1
 
 # Temporary directory for compilations
 export TMPDIR="${SCRATCH_BASE}/tmp"
