@@ -33,7 +33,7 @@ model = dict(
 )
 vae = dict(
     type="OpenSoraVAE_V1_3",
-    from_pretrained="/home/guoxinying/open_source_video_ocean_V1/OpenSora-VAE-v1.3",
+    from_pretrained="hpcai-tech/OpenSora-VAE-v1.3",
     z_channels=16,
     micro_batch_size=1,
     micro_batch_size_2d=4,
@@ -46,7 +46,7 @@ vae = dict(
 )
 text_encoder = dict(
     type="t5",
-    from_pretrained="DeepFloyd/t5-v1_1-xxl",
+    from_pretrained="google/t5-v1_1-xxl",
     model_max_length=300,
     shardformer=True,
 )

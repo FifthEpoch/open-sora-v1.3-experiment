@@ -33,7 +33,7 @@ model = dict(
 
 vae = dict(
     type="OpenSoraVAE_V1_3",
-    from_pretrained="path/to/OpenSora-VAE-v1.3",  # Will be replaced by script
+    from_pretrained="hpcai-tech/OpenSora-VAE-v1.3",
     z_channels=16,
     micro_batch_size=1,
     micro_batch_size_2d=4,

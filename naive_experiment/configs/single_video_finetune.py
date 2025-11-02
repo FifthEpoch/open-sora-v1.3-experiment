@@ -40,7 +40,7 @@ plugin = "zero2"  # Use ZeRO-2 for memory efficiency
 # Model settings
 model = dict(
     type="STDiT3-XL/2",
-    from_pretrained="path/to/OpenSora-STDiT-v4",  # Will be replaced by script
+    from_pretrained="hpcai-tech/OpenSora-STDiT-v4",
     qk_norm=True,
     enable_flash_attn=False,  # Disabled - flash-attn not available in current environment
     enable_layernorm_kernel=False,  # Disabled - apex not available in current environment
@@ -52,7 +52,7 @@ model = dict(
 
 vae = dict(
     type="OpenSoraVAE_V1_3",
-    from_pretrained="path/to/OpenSora-VAE-v1.3",  # Will be replaced by script
+    from_pretrained="hpcai-tech/OpenSora-VAE-v1.3",
     z_channels=16,
     micro_batch_size=1,
     micro_batch_size_2d=4,
