@@ -70,6 +70,7 @@ def extract_rar(rar_path: str, dest_dir: str) -> bool:
             print(f"Error extracting with 7z: {e}")
     
     print("ERROR: No extraction tool found. Please install one of:")
+    print("  - p7zip via conda (cluster, no sudo): conda install -c conda-forge p7zip")
     print("  - unrar: sudo apt-get install unrar (Linux) or brew install unrar (macOS)")
     print("  - unar: brew install unar (macOS)")
     print("  - p7zip: sudo apt-get install p7zip-full (Linux) or brew install p7zip (macOS)")

@@ -13,12 +13,18 @@ The HMDB51 (Human Motion Database 51) is an action recognition dataset containin
 
 1. **Install extraction tool** (if not already installed):
    
+   **On cluster (without sudo)**:
+   ```bash
+   # Install p7zip via conda (no sudo required)
+   conda install -c conda-forge p7zip
+   ```
+   
    On macOS:
    ```bash
    brew install unrar  # or: brew install unar
    ```
    
-   On Linux:
+   On Linux (with sudo):
    ```bash
    sudo apt-get install unrar  # or: sudo apt-get install p7zip-full
    ```
