@@ -15,6 +15,7 @@ from pathlib import Path
 
 try:
     from datasets import load_dataset
+    from huggingface_hub import login
 except ImportError:
     print("ERROR: 'datasets' package not found!")
     print("Please install it with: pip install datasets")
@@ -29,6 +30,28 @@ def main():
     print("=" * 60)
     print("HMDB51 Dataset Download (Hugging Face)")
     print("=" * 60)
+    
+    # Check for Hugging Face token
+    hf_token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_TOKEN') or os.environ.get('HF_API_TOKEN')
+    if not hf_token:
+        print("\nWARNING: No Hugging Face token found in environment variables.")
+        print("You may encounter rate limiting without authentication.")
+        print("\nTo set a token, use one of:")
+        print("  export HF_TOKEN='your_token_here'")
+        print("  export HUGGINGFACE_TOKEN='your_token_here'")
+        print("  export HF_API_TOKEN='your_token_here'")
+        print("\nGet your token from: https://huggingface.co/settings/tokens")
+        print("\nContinue without token? (y/n): ", end='')
+        response = input().strip().lower()
+        if response != 'y':
+            print("Exiting. Please set a token and try again.")
+            sys.exit(0)
+    else:
+        print("\nFound Hugging Face token, authenticating...")
+        try:
+            login(token=hf_token)
+        except Exception as e:
+            print(f"Warning: Could not authenticate with token: {e}")
     
     # Check if already downloaded
     hmdb51_org = script_dir / "hmdb51_org"
@@ -47,7 +70,9 @@ def main():
     
     try:
         # Load dataset - this will download if not cached
-        ds = load_dataset("divm/hmdb51", split="all", download_mode="force_redownload")
+        # Pass token if available
+        token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGINGFACE_TOKEN') or os.environ.get('HF_API_TOKEN')
+        ds = load_dataset("divm/hmdb51", split="all", download_mode="force_redownload", token=token)
         
         # The dataset structure from HF may be different, we need to reorganize it
         # to match the expected structure (action_class/video.avi)

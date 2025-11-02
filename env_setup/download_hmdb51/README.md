@@ -23,12 +23,18 @@ conda activate /scratch/wc3013/conda-envs/opensora13
 # Install datasets (should already be in requirements)
 pip install datasets
 
+# Set Hugging Face token (required to avoid rate limiting)
+export HF_TOKEN='your_huggingface_token_here'
+# Get your token from: https://huggingface.co/settings/tokens
+
 # Download using Hugging Face Datasets
 cd env_setup/download_hmdb51
 python download_hmdb51_hf.py
 ```
 
 This script downloads the dataset directly from Hugging Face and avoids any RAR extraction issues!
+
+**Note**: A Hugging Face account and API token is required to avoid rate limiting. Get your free token at https://huggingface.co/settings/tokens
 
 **Option 2: Manual RAR Download and Extract**
 
