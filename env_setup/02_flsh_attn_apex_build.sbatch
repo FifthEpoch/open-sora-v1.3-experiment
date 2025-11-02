@@ -33,6 +33,19 @@ python -c "import torch;print('Torch:', torch.__version__,'CUDA:', torch.version
 pip install -U "nvidia-cuda-nvcc-cu12==12.1.105"
 
 # Point CUDA_HOME & PATH/LD_LIBRARY_PATH to that toolkit
+# Debug: Print the actual structure
+python - <<'PY'
+import nvidia.cuda_nvcc as m
+from pathlib import Path
+p = Path(m.__file__).resolve()
+print(f"Module file: {p}")
+print(f"Module dir: {p.parent}")
+print(f"Parent: {p.parent.parent}")
+print(f"\nContents of parent directory:")
+for item in p.parent.parent.iterdir():
+    print(f"  {item.name}")
+PY
+
 export CUDA_HOME="$(python - <<'PY'
 import os, nvidia.cuda_nvcc as m
 from pathlib import Path
@@ -40,13 +53,31 @@ p = Path(m.__file__).resolve().parent  # .../site-packages/nvidia/cuda_nvcc
 print(str(p.parent))                   # .../site-packages/nvidia
 PY
 )"
+echo "CUDA_HOME (parent) set to: $CUDA_HOME"
+
+# Check if nvcc is directly in the module dir or in a subdirectory
+if [ -f "$CUDA_HOME/cuda_nvcc/bin/nvcc" ]; then
+    export CUDA_HOME="$CUDA_HOME/cuda_nvcc"
+    echo "Using nvcc from: $CUDA_HOME/cuda_nvcc/bin/nvcc"
+elif [ -f "$CUDA_HOME/bin/nvcc" ]; then
+    echo "Using nvcc from: $CUDA_HOME/bin/nvcc"
+elif [ -f "$(python -c 'import nvidia.cuda_nvcc as m; from pathlib import Path; print(Path(m.__file__).resolve().parent / "bin" / "nvcc")')" ]; then
+    export CUDA_HOME="$(python -c 'import nvidia.cuda_nvcc as m; from pathlib import Path; print(Path(m.__file__).resolve().parent)')"
+    echo "Using nvcc from module dir: $CUDA_HOME/bin/nvcc"
+else
+    echo "ERROR: Could not find nvcc binary!"
+    python - <<'PY'
+import nvidia.cuda_nvcc as m
+from pathlib import Path
+p = Path(m.__file__).resolve().parent
+print("Searching for nvcc...")
+for item in p.rglob("nvcc"):
+    print(f"Found: {item}")
+PY
+    exit 1
+fi
+
 echo "CUDA_HOME set to: $CUDA_HOME"
-
-# Fix: CUDA_HOME should point to nvidia/, then we append cuda_nvcc
-# But the python script already outputs the parent, so we need cuda_nvcc subdir
-export CUDA_HOME="$CUDA_HOME/cuda_nvcc"
-echo "CUDA_HOME corrected to: $CUDA_HOME"
-
 export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
 
