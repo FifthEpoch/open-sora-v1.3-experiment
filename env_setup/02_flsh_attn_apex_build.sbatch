@@ -28,96 +28,48 @@ conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
 
 python -c "import torch;print('Torch:', torch.__version__,'CUDA:', torch.version.cuda)"
 
-# Bring an NVCC that matches our cu12 runtime (no reliance on system CUDA-13)
-# This drops nvcc into site-packages under nvidia/cuda_nvcc.
-pip install -U "nvidia-cuda-nvcc-cu12==12.1.105"
-
-# Point CUDA_HOME & PATH/LD_LIBRARY_PATH to that toolkit
-# Debug: Print the actual structure
-python - <<'PY'
-import nvidia.cuda_nvcc as m
-from pathlib import Path
-p = Path(m.__file__).resolve()
-print(f"Module file: {p}")
-print(f"Module dir: {p.parent}")
-print(f"Parent: {p.parent.parent}")
-print(f"\nContents of parent directory:")
-for item in p.parent.parent.iterdir():
-    print(f"  {item.name}")
-PY
-
-export CUDA_HOME="$(python - <<'PY'
-import os, nvidia.cuda_nvcc as m
-from pathlib import Path
-p = Path(m.__file__).resolve().parent  # .../site-packages/nvidia/cuda_nvcc
-print(str(p.parent))                   # .../site-packages/nvidia
-PY
-)"
-echo "CUDA_HOME (parent) set to: $CUDA_HOME"
-
-# Check if nvcc is directly in the module dir or in a subdirectory
-if [ -f "$CUDA_HOME/cuda_nvcc/bin/nvcc" ]; then
-    export CUDA_HOME="$CUDA_HOME/cuda_nvcc"
-    echo "Using nvcc from: $CUDA_HOME/cuda_nvcc/bin/nvcc"
-elif [ -f "$CUDA_HOME/bin/nvcc" ]; then
-    echo "Using nvcc from: $CUDA_HOME/bin/nvcc"
-elif [ -f "$(python -c 'import nvidia.cuda_nvcc as m; from pathlib import Path; print(Path(m.__file__).resolve().parent / "bin" / "nvcc")')" ]; then
-    export CUDA_HOME="$(python -c 'import nvidia.cuda_nvcc as m; from pathlib import Path; print(Path(m.__file__).resolve().parent)')"
-    echo "Using nvcc from module dir: $CUDA_HOME/bin/nvcc"
+# Use system CUDA installation
+if [ -d "/usr/local/cuda-12.2" ]; then
+    export CUDA_HOME="/usr/local/cuda-12.2"
+elif [ -d "/usr/local/cuda-12" ]; then
+    export CUDA_HOME="/usr/local/cuda-12"
+elif [ -d "/usr/local/cuda" ]; then
+    export CUDA_HOME="/usr/local/cuda"
 else
-    echo "ERROR: Could not find nvcc binary!"
-    echo "Searching for nvcc recursively..."
-    python - <<'PY'
-import nvidia.cuda_nvcc as m
-from pathlib import Path
-p = Path(m.__file__).resolve().parent
-print(f"Searching from: {p}")
-print(f"Searching for nvcc in all subdirectories...")
-try:
-    for item in p.rglob("nvcc"):
-        if item.is_file():
-            print(f"Found nvcc: {item}")
-            print(f"  Parent dir: {item.parent}")
-            print(f"  Grandparent dir: {item.parent.parent}")
-    # If nothing found, list the directory structure
-    print("\nDirectory structure:")
-    for item in sorted(p.rglob("*")):
-        if item.is_dir():
-            print(f"  DIR:  {item}")
-        elif item.is_file():
-            print(f"  FILE: {item}")
-except Exception as e:
-    print(f"Error during search: {e}")
-PY
+    echo "ERROR: Could not find system CUDA installation"
     exit 1
 fi
 
-echo "CUDA_HOME set to: $CUDA_HOME"
+echo "Using system CUDA: $CUDA_HOME"
 export PATH="$CUDA_HOME/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64:${LD_LIBRARY_PATH:-}"
-
-# Verify nvcc is accessible
-echo "Checking nvcc installation:"
-ls -la "$CUDA_HOME/bin/nvcc" || echo "WARNING: nvcc not found at $CUDA_HOME/bin/nvcc"
-nvcc --version || echo "WARNING: nvcc not in PATH"
+nvcc --version
 
 # Hopper (H100/H200) arch; include others if you may run on A100 too:
 export TORCH_CUDA_ARCH_LIST="90"     # or "80;90" if you also use A100 nodes
 export MAX_JOBS="${SLURM_CPUS_PER_TASK:-8}"
+
+# Explicitly disable pip cache to avoid cross-device link errors
+export PIP_NO_CACHE_DIR=1
+
+# Verify environment variables
+echo "Build environment:"
+echo "  CUDA_HOME: $CUDA_HOME"
+echo "  TMPDIR: $TMPDIR"
+echo "  PIP_NO_CACHE_DIR: $PIP_NO_CACHE_DIR"
 
 # Build wheels in scratch directory
 WHEEL_DIR="${SCRATCH_BASE}/wheels/cu121_sm90"
 mkdir -p "${WHEEL_DIR}"
 
 # ---- FLASH-ATTN ----
-# Version family known to work with torch 2.2.x + cu12.x on Hopper.
-# --no-build-isolation ensures it sees the same torch/py build env.
-pip wheel -v --no-build-isolation --no-deps -w "$WHEEL_DIR" \
-  "flash-attn==2.5.8"
-
-# (Alternative if you prefer source pin)
-# git clone https://github.com/Dao-AILab/flash-attention.git
-# cd flash-attention && git checkout v2.5.8 && pip wheel -v --no-build-isolation --no-deps -w "$WHEEL_DIR" .
+# Build from source to avoid cross-device link issues with pip cache
+cd /scratch/wc3013/tmp
+rm -rf flash-attention
+git clone https://github.com/Dao-AILab/flash-attention.git
+cd flash-attention && git checkout v2.5.8
+pip wheel -v --no-build-isolation --no-deps -w "$WHEEL_DIR" .
+cd "$SCRIPT_DIR"
 
 # ---- APEX ----
 # Build both C++ and CUDA extensions (fused layernorm, FusedAdam, etc.)
