@@ -105,6 +105,7 @@ bash env_setup/04_installation_check.sh
 - lpips==0.1.4
 - scikit-image>=0.20.0
 - scikit-learn>=1.4.2
+- Note: detectron2 is **skipped** (only needed for OCR scoring, requires special compilation)
 
 ### Additional Tools
 - huggingface-hub (for checkpoint download)
@@ -112,8 +113,8 @@ bash env_setup/04_installation_check.sh
 - numpy<2.0.0
 
 ### Compiled Extensions
-- flash-attn==2.5.8
-- apex (from NVIDIA)
+- flash-attn==2.5.8 (built with CUDA 12.2, PyTorch is cu121 - may have version mismatch)
+- apex (from NVIDIA) - **NOTE: Build may fail due to CUDA 12.1/12.2 mismatch**
 
 ### System Tools
 - ffmpeg>=6,<7

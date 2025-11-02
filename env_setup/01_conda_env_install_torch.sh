@@ -41,7 +41,11 @@ pip install -r requirements/requirements-cu121.txt
 pip install -r requirements/requirements.txt
 
 # Install eval requirements (includes decord, lpips, scikit-image)
-pip install -r requirements/requirements-eval.txt
+# Note: detectron2 is skipped as it's only needed for OCR scoring and requires special compilation
+echo "Installing eval requirements (skipping detectron2)..."
+pip install imageio>=2.34.1 pyiqa==0.1.10 scikit-learn>=1.4.2 scikit-image>=0.20.0 \
+  lvis==0.5.3 boto3>=1.34.113 easydict>=1.9 fairscale>=0.4.13 \
+  decord==0.6.0 pytorchvideo==0.1.5 lpips==0.1.4
 
 # Install VAE requirements (includes opencv-python, pillow, einops)
 pip install -r requirements/requirements-vae.txt
