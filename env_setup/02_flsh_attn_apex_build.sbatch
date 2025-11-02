@@ -12,18 +12,19 @@ echo "Node: $(hostname)"
 nvidia-smi || true
 
 # --- env ---
-module purge
-# (Optional) load a modern GCC if your default is very old:
-# module load gcc/12
-
-source ~/.bashrc
-
-# Setup scratch environment variables
+# Setup scratch environment variables FIRST
 # NOTE: Ensure this path exists before running
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/00_set_scratch_env.sh"
 
-conda activate opensora13
+# Load modules
+module purge
+# (Optional) load a modern GCC if your default is very old:
+# module load gcc/12
+module load anaconda3/2024.02
+
+# Activate conda environment in scratch location
+conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
 
 python -c "import torch;print('Torch:', torch.__version__,'CUDA:', torch.version.cuda)"
 
