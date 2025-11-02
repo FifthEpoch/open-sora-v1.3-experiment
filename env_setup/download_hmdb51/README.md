@@ -10,7 +10,29 @@ The HMDB51 (Human Motion Database 51) is an action recognition dataset containin
 - **Total size**: ~2GB compressed
 - **Note**: The official download URL may be broken. If automatic download fails, you may need to manually download from the official website or find an alternative source.
 
-## Download Instructions
+## Download Options
+
+**Option 1: Use Hugging Face Datasets (Recommended - No RAR extraction needed!)**
+
+HMDB51 is available pre-extracted through Hugging Face Datasets. This avoids the RAR extraction problem entirely:
+
+```bash
+# Activate opensora13 environment
+conda activate /scratch/wc3013/conda-envs/opensora13
+
+# Install datasets (should already be in requirements)
+pip install datasets
+
+# Download using Hugging Face Datasets
+cd env_setup/download_hmdb51
+python download_hmdb51_hf.py
+```
+
+This script downloads the dataset directly from Hugging Face and avoids any RAR extraction issues!
+
+**Option 2: Manual RAR Download and Extract**
+
+## Manual Download Instructions
 
 1. **Install extraction tool** (if not already installed):
    
