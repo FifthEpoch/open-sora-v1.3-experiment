@@ -36,9 +36,24 @@ This script downloads the dataset directly from Hugging Face and avoids any RAR 
 
 **Note**: A Hugging Face account and API token is required to avoid rate limiting. Get your free token at https://huggingface.co/settings/tokens
 
-**Option 2: Manual RAR Download and Extract**
+**Option 2: Manual Download and Setup**
 
-## Manual Download Instructions
+If you've manually downloaded and unzipped HMDB51, you need to generate the `captions.txt` file:
+
+```bash
+# IMPORTANT: Activate the opensora13 conda environment first!
+conda activate /scratch/wc3013/conda-envs/opensora13
+
+# Generate captions from existing directory
+cd env_setup/download_hmdb51
+python generate_captions.py
+```
+
+This scans your existing `hmdb51_org/` directory and generates `captions.txt` based on folder names.
+
+**Option 3: Automatic Download Script (Requires unrar)**
+
+If you prefer the automatic download script:
 
 1. **Install extraction tool** (if not already installed):
    
@@ -80,9 +95,10 @@ After running the script, your directory will look like:
 
 ```
 env_setup/download_hmdb51/
-├── download_hmdb51.py       # Download script
+├── download_hmdb51.py       # Automatic download script (RAR extraction)
+├── download_hmdb51_hf.py    # Hugging Face Datasets download
+├── generate_captions.py     # Caption generation for manual downloads
 ├── README.md                 # This file
-├── hmdb51_org.rar            # Original archive (can be deleted after extraction)
 ├── hmdb51_org/               # Extracted videos organized by action class
 │   ├── apply_eye_makeup/
 │   ├── apply_lipstick/
