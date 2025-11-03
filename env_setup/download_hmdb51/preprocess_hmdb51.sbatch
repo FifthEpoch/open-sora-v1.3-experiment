@@ -1,9 +1,11 @@
 #!/bin/bash
 #SBATCH -J preprocess_hmdb51
-#SBATCH -p cpu
-#SBATCH -t 04:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH -t 08:00:00
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
+#SBATCH --output=slurm_preprocess_hmdb51.out
 
 set -euo pipefail
 
