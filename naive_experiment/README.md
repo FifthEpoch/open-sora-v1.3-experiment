@@ -61,6 +61,7 @@ naive_experiment/
 │   └── finetuned_inference.py        # Config for fine-tuned inference
 ├── scripts/
 │   ├── run_experiment.py              # Main orchestrator
+│   ├── run_experiment.sbatch          # SLURM batch submission script
 │   ├── baseline_inference.py          # Batch generate baselines
 │   ├── single_video_finetune.py      # Fine-tune on single video
 │   ├── finetuned_inference.py        # Generate with fine-tuned model
@@ -115,28 +116,45 @@ Following Open-Sora v1.3 VAE evaluation practices:
    python preprocess_hmdb51.py
    ```
 
-2. **Downloaded Open-Sora v1.3 checkpoints**:
-   ```bash
-   cd env_setup/download_checkpoints
-   python download_checkpoints.py --output-dir /path/to/checkpoints
-   ```
-
-3. **Installed Open-Sora dependencies**:
+2. **Installed Open-Sora dependencies**:
    - Flash-attention and apex are **optional** for this experiment
    - Configs set `enable_flash_attn=False` and `enable_layernorm_kernel=False`
    - See `env_setup/README.md` for full environment setup
 
 ## Usage
 
+### Option 1: Submit as SLURM batch job (Recommended for cluster)
+
 ```bash
-# Run the full experiment
+# Submit to H100 GPU partition
+cd naive_experiment/scripts
+sbatch run_experiment.sbatch
+```
+
+The script will:
+- Request 1 H100 GPU, 8 CPUs, 64GB RAM for 48 hours
+- Automatically configure scratch environment to avoid /home quotas
+- Load opensora13 conda environment
+- Download checkpoints from HuggingFace automatically
+- Process specified number of videos
+
+**Customize the experiment** by editing `run_experiment.sbatch`:
+- Modify `--num-videos` argument
+- Change output directory path
+- Adjust fine-tuning parameters
+
+### Option 2: Run interactively (Not recommended on login node)
+
+```bash
+# Run locally or on interactive GPU node
 cd naive_experiment
 python scripts/run_experiment.py \
     --data-csv /path/to/hmdb51/hmdb51_metadata.csv \
-    --checkpoint-path /path/to/OpenSora-STDiT-v4 \
     --output-dir results \
     --num-videos 10  # Start with a subset
 ```
+
+Note: Checkpoints will auto-download from HuggingFace if not specified.
 
 ## Expected Outcomes
 
