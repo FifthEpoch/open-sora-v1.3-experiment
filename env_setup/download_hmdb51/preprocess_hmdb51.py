@@ -395,6 +395,11 @@ def main(args):
         print("\nTo save disk space, you can delete the original dataset.")
         print("Only preprocessed videos will remain on disk.")
         
+        # Skip interactive prompt if --skip-cleanup flag is set
+        if args.skip_cleanup:
+            print("\nSkipping cleanup (--skip-cleanup flag set). Original dataset retained.")
+            return
+        
         response = input("\nDelete original dataset? (yes/no) [default: no]: ").strip().lower()
         
         if response in ['yes', 'y']:
@@ -423,6 +428,11 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Preprocess HMDB51 videos for Open-Sora v1.3')
+    parser.add_argument(
+        '--skip-cleanup', 
+        action='store_true',
+        help='Skip interactive cleanup prompt (for batch/job submissions)'
+    )
     args = parser.parse_args()
     main(args)
 
