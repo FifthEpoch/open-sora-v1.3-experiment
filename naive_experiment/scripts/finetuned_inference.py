@@ -18,11 +18,11 @@ from mmengine.config import Config
 from tqdm import tqdm
 
 from opensora.datasets.aspect import get_image_size, get_num_frames
+from opensora.datasets.utils import save_sample
 from opensora.registry import MODELS, SCHEDULERS, build_module
 from opensora.utils.inference_utils import (
     collect_references_batch,
     prep_ref_and_mask,
-    save_sample,
 )
 from opensora.utils.misc import create_logger, to_torch_dtype
 from opensora.utils.config_utils import parse_configs
@@ -151,9 +151,6 @@ def generate_continuation(
         dtype=dtype,
     )
     
-    # Encode text
-    text_emb = text_encoder.encode(text_encoder.tokenize_fn([caption]))['y']
-    
     # Generate
     with torch.no_grad():
         # Prepare timesteps (use same seed as baseline for fair comparison)
@@ -169,17 +166,17 @@ def generate_continuation(
         samples = scheduler.sample(
             model,
             text_encoder,
-            z=z,
-            z_cond=ref,
-            z_cond_mask=x_cond_mask,
-            prompts=[caption],
-            device=device,
+            z,
+            [caption],
+            device,
             additional_args=None,
             progress=False,
             mask=None,
             mask_index=mask_index,
             image_cfg_scale=None,
             neg_prompts=None,
+            z_cond=ref,
+            z_cond_mask=x_cond_mask,
             use_sdedit=cfg.get("use_sdedit", False),
             use_oscillation_guidance_for_text=cfg.get("use_oscillation_guidance_for_text", False),
             use_oscillation_guidance_for_image=cfg.get("use_oscillation_guidance_for_image", False),
@@ -187,7 +184,7 @@ def generate_continuation(
     
     # Decode
     with torch.no_grad():
-        samples = vae.decode(samples.to(dtype))
+        samples = vae.decode(samples.to(dtype)).squeeze(0)  # [B,C,T,H,W] -> [C,T,H,W]
     
     # Save
     video_name = Path(video_path).stem
@@ -196,7 +193,6 @@ def generate_continuation(
         samples,
         str(output_path),
         fps=cfg.fps,
-        loop=cfg.get("loop", 1),
     )
     
     return str(output_path)
