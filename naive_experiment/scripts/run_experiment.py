@@ -40,8 +40,8 @@ def run_command(cmd, logger, check=True):
 def main():
     parser = argparse.ArgumentParser(description="Run naive fine-tuning experiment")
     parser.add_argument("--data-csv", type=str, required=True, help="Path to HMDB51 metadata CSV")
-    parser.add_argument("--checkpoint-path", type=str, required=True, help="Path to Open-Sora STDiT checkpoint")
-    parser.add_argument("--vae-path", type=str, required=True, help="Path to Open-Sora VAE checkpoint")
+    parser.add_argument("--checkpoint-path", type=str, default="hpcai-tech/OpenSora-STDiT-v4", help="Open-Sora STDiT checkpoint path or HuggingFace ID")
+    parser.add_argument("--vae-path", type=str, default="hpcai-tech/OpenSora-VAE-v1.3", help="Open-Sora VAE checkpoint path or HuggingFace ID")
     parser.add_argument("--output-dir", type=str, required=True, help="Output directory for all results")
     parser.add_argument("--num-videos", type=int, default=None, help="Number of videos to process (None = all)")
     parser.add_argument("--condition-frames", type=int, default=8, help="Number of conditioning frames")
@@ -92,27 +92,11 @@ def main():
         logger.info("Step 1: Generating baseline outputs (O_b)")
         logger.info("="*70)
         
-        # Update config paths
-        import tempfile
-        with open(baseline_config, 'r') as f:
-            config_content = f.read()
-        config_content = config_content.replace(
-            'from_pretrained="path/to/OpenSora-STDiT-v4"',
-            f'from_pretrained="{args.checkpoint_path}"'
-        )
-        config_content = config_content.replace(
-            'from_pretrained="path/to/OpenSora-VAE-v1.3"',
-            f'from_pretrained="{args.vae_path}"'
-        )
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            temp_config = f.name
-            f.write(config_content)
-        
+        # Use original config file (already has correct HuggingFace IDs)
         cmd = [
             sys.executable,
             str(scripts_dir / "baseline_inference.py"),
-            "--config", temp_config,
+            "--config", str(baseline_config),
             "--data-csv", args.data_csv,
             "--checkpoint-path", args.checkpoint_path,
             "--vae-path", args.vae_path,
@@ -122,10 +106,7 @@ def main():
         if args.num_videos:
             cmd.extend(["--num-videos", str(args.num_videos)])
         
-        try:
-            run_command(cmd, logger)
-        finally:
-            os.unlink(temp_config)
+        run_command(cmd, logger)
         
         logger.info(f"Baseline generation complete. Manifest: {baseline_manifest}")
     else:
@@ -182,16 +163,13 @@ def main():
             # Generate with fine-tuned checkpoint
             logger.info("  Generating continuation with fine-tuned model...")
             
-            # Update finetuned inference config
+            # Update finetuned inference config (only need to replace fine-tuned checkpoint path)
+            import tempfile
             with open(finetuned_inference_config, 'r') as f:
                 inference_config = f.read()
             inference_config = inference_config.replace(
                 'from_pretrained="path/to/finetuned/checkpoint"',
                 f'from_pretrained="{video_ckpt_dir}"'
-            )
-            inference_config = inference_config.replace(
-                'from_pretrained="path/to/OpenSora-VAE-v1.3"',
-                f'from_pretrained="{args.vae_path}"'
             )
             
             with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -204,7 +182,6 @@ def main():
                     str(scripts_dir / "finetuned_inference.py"),
                     "--config", temp_inference_config,
                     "--finetuned-checkpoint", str(video_ckpt_dir),
-                    "--vae-path", args.vae_path,
                     "--video-path", original_path,
                     "--caption", caption,
                     "--save-dir", str(finetuned_output_dir),
