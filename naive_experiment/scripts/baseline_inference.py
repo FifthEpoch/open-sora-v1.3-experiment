@@ -30,13 +30,15 @@ from opensora.utils.inference_utils import (
 from opensora.utils.misc import create_logger, to_torch_dtype
 
 
-def load_model_and_components(config_path, checkpoint_path, vae_path, device, dtype):
+def load_model_and_components(config_path, checkpoint_path=None, vae_path=None, device=None, dtype=None):
     """Load model, VAE, text encoder, and scheduler."""
     cfg = Config.fromfile(config_path)
     
-    # Update checkpoint paths
-    cfg.model.from_pretrained = checkpoint_path
-    cfg.vae.from_pretrained = vae_path
+    # Update checkpoint paths only if provided (otherwise use config defaults)
+    if checkpoint_path is not None:
+        cfg.model.from_pretrained = checkpoint_path
+    if vae_path is not None:
+        cfg.vae.from_pretrained = vae_path
     
     # Build components
     text_encoder = build_module(cfg.text_encoder, MODELS, device=device)
@@ -217,8 +219,8 @@ def main():
     parser = argparse.ArgumentParser(description="Generate baseline video continuations")
     parser.add_argument("--config", type=str, required=True, help="Path to baseline inference config")
     parser.add_argument("--data-csv", type=str, required=True, help="Path to HMDB51 metadata CSV")
-    parser.add_argument("--checkpoint-path", type=str, required=True, help="Path to Open-Sora STDiT checkpoint")
-    parser.add_argument("--vae-path", type=str, required=True, help="Path to Open-Sora VAE checkpoint")
+    parser.add_argument("--checkpoint-path", type=str, default=None, help="Open-Sora STDiT checkpoint path or HuggingFace ID (optional, uses config default if not provided)")
+    parser.add_argument("--vae-path", type=str, default=None, help="Open-Sora VAE checkpoint path or HuggingFace ID (optional, uses config default if not provided)")
     parser.add_argument("--save-dir", type=str, required=True, help="Directory to save outputs")
     parser.add_argument("--condition-frames", type=int, default=8, help="Number of conditioning frames")
     parser.add_argument("--num-videos", type=int, default=None, help="Number of videos to process (None = all)")

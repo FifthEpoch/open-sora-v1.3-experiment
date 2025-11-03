@@ -98,11 +98,14 @@ def main():
             str(scripts_dir / "baseline_inference.py"),
             "--config", str(baseline_config),
             "--data-csv", args.data_csv,
-            "--checkpoint-path", args.checkpoint_path,
-            "--vae-path", args.vae_path,
             "--save-dir", str(baseline_output_dir),
             "--condition-frames", str(args.condition_frames),
         ]
+        # Only pass checkpoint paths if explicitly provided (not defaults)
+        if args.checkpoint_path and args.checkpoint_path not in ["hpcai-tech/OpenSora-STDiT-v4"]:
+            cmd.extend(["--checkpoint-path", args.checkpoint_path])
+        if args.vae_path and args.vae_path not in ["hpcai-tech/OpenSora-VAE-v1.3"]:
+            cmd.extend(["--vae-path", args.vae_path])
         if args.num_videos:
             cmd.extend(["--num-videos", str(args.num_videos)])
         
