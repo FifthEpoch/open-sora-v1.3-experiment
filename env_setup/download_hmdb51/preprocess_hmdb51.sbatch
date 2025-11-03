@@ -52,6 +52,9 @@ echo "Environment configured to use: ${SCRATCH_BASE}"
 module purge
 module load anaconda3/2024.02
 
+# Source conda initialization script
+source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
+
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
