@@ -98,6 +98,8 @@ env_setup/download_hmdb51/
 ├── download_hmdb51.py       # Automatic download script (RAR extraction)
 ├── download_hmdb51_hf.py    # Hugging Face Datasets download
 ├── generate_captions.py     # Caption generation for manual downloads
+├── preprocess_hmdb51.py     # Video preprocessing script
+├── preprocess_hmdb51.sbatch # SLURM batch submission script
 ├── README.md                 # This file
 ├── hmdb51_org/               # Extracted videos organized by action class
 │   ├── apply_eye_makeup/
