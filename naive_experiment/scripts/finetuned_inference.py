@@ -28,15 +28,17 @@ from opensora.utils.misc import create_logger, to_torch_dtype
 from opensora.utils.config_utils import parse_configs
 
 # Duplicate helper functions to avoid import issues
-def load_model_and_components(config_path, checkpoint_path, vae_path, device, dtype):
+def load_model_and_components(config_path, checkpoint_path, vae_path=None, device=None, dtype=None):
     """Load model, VAE, text encoder, and scheduler."""
     from mmengine.config import Config
     from opensora.datasets.aspect import get_image_size, get_num_frames
     from opensora.registry import MODELS, SCHEDULERS, build_module
     
     cfg = Config.fromfile(config_path)
-    cfg.model.from_pretrained = checkpoint_path
-    cfg.vae.from_pretrained = vae_path
+    cfg.model.from_pretrained = checkpoint_path  # Fine-tuned checkpoint is always required
+    # Update VAE path only if provided
+    if vae_path is not None:
+        cfg.vae.from_pretrained = vae_path
     
     text_encoder = build_module(cfg.text_encoder, MODELS, device=device)
     vae = build_module(cfg.vae, MODELS).to(device, dtype).eval()
@@ -204,7 +206,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generate fine-tuned video continuations")
     parser.add_argument("--config", type=str, required=True, help="Path to fine-tuned inference config")
     parser.add_argument("--finetuned-checkpoint", type=str, required=True, help="Path to fine-tuned checkpoint")
-    parser.add_argument("--vae-path", type=str, required=True, help="Path to Open-Sora VAE checkpoint")
+    parser.add_argument("--vae-path", type=str, default=None, help="Open-Sora VAE checkpoint path or HuggingFace ID (optional, uses config default if not provided)")
     parser.add_argument("--video-path", type=str, required=True, help="Path to video file")
     parser.add_argument("--caption", type=str, required=True, help="Video caption")
     parser.add_argument("--save-dir", type=str, required=True, help="Directory to save output")
