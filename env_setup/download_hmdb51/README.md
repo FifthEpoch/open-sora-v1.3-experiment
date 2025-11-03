@@ -135,7 +135,23 @@ pip install av opencv-python pillow torch torchvision numpy pandas tqdm
 
 ### Preprocessing Steps
 
-Run the preprocessing script:
+**Option 1: Submit SLURM batch job (Recommended for cluster use)**
+
+Video preprocessing is CPU-intensive and should be run as a batch job on the cluster:
+
+```bash
+cd env_setup/download_hmdb51
+sbatch preprocess_hmdb51.sbatch
+```
+
+The script will:
+- Request 16 CPU cores, 64GB RAM for 4 hours on the CPU partition
+- Automatically load the scratch environment to avoid /home quotas
+- Process all videos and save results to `hmdb51_processed/`
+- Generate `hmdb51_metadata.csv` with preprocessed video metadata
+- Skip interactive prompts (uses `--skip-cleanup` flag)
+
+**Option 2: Run interactively on login node (Not recommended)**
 
 ```bash
 # IMPORTANT: Activate the opensora13 conda environment first!
@@ -145,6 +161,8 @@ cd env_setup/download_hmdb51
 python preprocess_hmdb51.py
 ```
 
+Note: This may timeout or be interrupted for long-running jobs. Use sbatch instead.
+
 **What the preprocessing does:**
 
 1. **Center-crop to 480p**: Resizes and center-crops all videos to 640×480 pixels
@@ -152,7 +170,7 @@ python preprocess_hmdb51.py
 3. **Crop to 45 frames**: Uniformly crops each video to exactly 45 frames
 4. **Generate CSV metadata**: Creates `hmdb51_metadata.csv` with required fields
 5. **Skip short videos**: Videos shorter than 45 frames after resampling are skipped
-6. **Optional cleanup**: Prompts to delete original dataset to save disk space (~2GB)
+6. **Optional cleanup** (interactive mode only): Prompts to delete original dataset to save disk space (~2GB)
 
 ### Output Structure
 
