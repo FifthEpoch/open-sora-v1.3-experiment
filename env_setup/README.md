@@ -129,8 +129,15 @@ See `download_ucf101/README.md` for detailed instructions.
 
 ### Additional Tools
 - huggingface-hub (for checkpoint download)
+- datasets (for UCF-101 download from Hugging Face)
 - xformers==0.0.25.post1
 - numpy<2.0.0
+
+### Video Processing (Critical for UCF-101)
+- av (PyAV) - installed via conda for better ffmpeg compatibility
+- opencv-python (cv2) - from requirements-vae.txt
+- pandas - for CSV metadata
+- tqdm - for progress bars
 
 ### Compiled Extensions
 - flash-attn==2.5.8 (built with CUDA 12.2, PyTorch is cu121 - may have version mismatch)

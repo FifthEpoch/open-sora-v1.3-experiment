@@ -39,9 +39,13 @@ for lib in ["flash_attn", "apex", "decord", "av", "cv2", "lpips", "skimage", "ei
 
 # Check additional experiment dependencies
 print("\nChecking experiment-specific dependencies:")
-for lib in ["pandas", "numpy", "tqdm", "huggingface_hub", "colossalai", "mmengine"]:
+for lib in ["pandas", "numpy", "tqdm", "huggingface_hub", "datasets", "colossalai", "mmengine"]:
     status = "✓ OK" if pkgutil.find_loader(lib) else "✗ MISSING"
     print(f"  {lib:20s} {status}")
+
+# Note about av (PyAV)
+print("\nNote: 'av' (PyAV) is critical for video processing and UCF-101 preprocessing.")
+print("      If missing, install with: conda install -y av -c conda-forge")
 
 print("\n" + "="*60)
 print("If all checks pass, you're ready to run the experiment!")

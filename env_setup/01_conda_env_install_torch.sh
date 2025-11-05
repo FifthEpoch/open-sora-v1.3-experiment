@@ -34,10 +34,15 @@ pip install --index-url https://download.pytorch.org/whl/cu121 \
 pip install --index-url https://download.pytorch.org/whl/cu121 \
   xformers==0.0.25.post1
 
+# Install PyAV (av) via conda first (handles ffmpeg dependencies better than pip)
+# This is needed for UCF-101 preprocessing and video loading throughout the project
+echo "Installing PyAV (av) via conda..."
+conda install -y av -c conda-forge
+
 # pull the v1.3-pinned packages (no CUDA build yet)
 pip install -r requirements/requirements-cu121.txt
 
-# Install base requirements
+# Install base requirements (includes av>=12.0.0, but conda version takes precedence)
 pip install -r requirements/requirements.txt
 
 # Install eval requirements (includes decord, lpips, scikit-image)
@@ -50,5 +55,5 @@ pip install imageio>=2.34.1 pyiqa==0.1.10 scikit-learn>=1.4.2 scikit-image>=0.20
 # Install VAE requirements (includes opencv-python, pillow, einops)
 pip install -r requirements/requirements-vae.txt
 
-# Install huggingface-hub for checkpoint download script
-pip install huggingface-hub
+# Install huggingface-hub and datasets for checkpoint and UCF-101 dataset downloads
+pip install huggingface-hub datasets
