@@ -7,33 +7,40 @@ This experiment tests whether fine-tuning Open-Sora v1.3 with a single input vid
 ### Overview
 
 For each HMDB51 video V of length 45 frames:
-1. **Split**: V = [V' | GT]
-   - V' = first 8 frames (conditioning input, ~0.33s)
-   - GT = remaining 37 frames (ground truth for evaluation, ~1.54s)
+1. **Split**: V = [V_train | V_test]
+   - V_train = first 22 frames (frames 1-22, ~0.92s)
+   - V_test = remaining 23 frames (frames 23-45, ~0.96s for evaluation)
 
 2. **Baseline (O_b)**: 
-   - Generate 45 frames with first 8 conditioned on V' (using masks)
-   - Extract frames 9-45 as continuation
-   - Compare continuation to GT
+   - Generate 45 frames with first 22 conditioned (using masks)
+   - Extract frames 23-45 as continuation
+   - Compare continuation to V_test
 
 3. **Fine-tuned (O_f)**: 
-   - Fine-tune Open-Sora v1.3 on full V (all 45 frames) with v2v_head masking
-   - Generate 45 frames with first 8 conditioned on V' (using masks)
-   - Extract frames 9-45 as continuation
-   - Compare continuation to GT
+   - Fine-tune Open-Sora v1.3 on **only first 22 frames** (frames 1-22)
+     - Training uses frames 1-8 as conditioning, frames 9-22 as ground truth (14 frames)
+     - Model **never sees frames 23-45** during training
+   - Generate 45 frames with first 22 conditioned (using masks)
+   - Extract frames 23-45 as continuation
+   - Compare continuation to V_test
 
-4. **Evaluate**: Compare O_b and O_f continuations against GT using PSNR, SSIM, LPIPS
+4. **Evaluate**: Compare O_b and O_f continuations (frames 23-45) against V_test using PSNR, SSIM, LPIPS
+
+**Why This Design Ensures Fair Comparison**:
+- Fine-tuning only uses frames 1-22, never seeing the evaluation target (frames 23-45)
+- Both baseline and fine-tuned models generate the same frames (23-45) at inference time
+- Eliminates the unfair advantage of fine-tuned model having seen partial ground truth
 
 ### Key Considerations
 
 **Video Splitting**: 
-- We feed the **full 45-frame video** to the model
-- The model uses **masking** to condition on first 8 frames, generate remaining 37 frames (~1.5s)
-- During inference: `num_frames=45`, `condition_frame_length=8`, `cond_type="v2v_head"`
-- The mask ensures first 8 frames match the conditioning input, last 37 are generated
-- **Rationale**: ~18% conditioning / 82% generation matches Open-Sora v1.3 examples, giving enough continuation for visual evaluation
+- We feed the **full 45-frame video** to the model during inference
+- The model uses **masking** to condition on first 22 frames, generate remaining 23 frames (~0.96s)
+- During inference: `num_frames=45`, `condition_frame_length=22`, `cond_type="v2v_head"`
+- The mask ensures first 22 frames match the conditioning input, last 23 are generated
+- **Rationale**: ~49% conditioning / 51% generation provides substantial context while leaving meaningful continuation for evaluation
 
-**Dataset Size**: Our fine-tuning dataset contains exactly **one video sample** (45 frames total).
+**Dataset Size**: Our fine-tuning dataset contains exactly **one video sample** (22 frames only - frames 23-45 withheld).
 
 **Batch Size Strategy**: 
 - Batch size must be ≤ 1 since we only have one training sample
@@ -78,10 +85,12 @@ naive_experiment/
 
 Based on HMDB51 preprocessing (from `env_setup/download_hmdb51/README.md`):
 - Total frames: 45
-- Conditioning frames: 8 (~0.33s at 24 fps)
-- Continuation target: 37 frames (~1.54s)
+- Training frames: 22 (frames 1-22, ~0.92s at 24 fps)
+  - Within training: 8 conditioning frames + 14 ground truth frames
+- Evaluation target: 23 frames (frames 23-45, ~0.96s)
+- Inference conditioning: 22 frames (generates frames 23-45)
 
-**Note**: The `conditioning_frames: 32` field in HMDB51 metadata is only metadata. For our experiment, we use 8 conditioning frames to generate longer continuations that are easier to evaluate visually.
+**Note**: The `conditioning_frames: 32` field in HMDB51 metadata is only metadata. For our experiment, we use 22 conditioning frames at inference to ensure fair comparison with fine-tuning.
 
 ### Training Configuration
 
@@ -92,12 +101,13 @@ Based on HMDB51 preprocessing (from `env_setup/download_hmdb51/README.md`):
 - Accumulation steps: `1-4` (depending on memory)
 
 **Masking Strategy**:
-- **During fine-tuning**: Use `v2v_head` masking on the full 45-frame video
-  - First 22 frames are conditioned (masked to stay as input, training defaults to `latent_t // 2`)
-  - Model learns to generate remaining 23 frames that match GT
-- **During inference**: Use different masking
-  - First 8 frames are conditioned (via `condition_frame_length=8`)
-  - Generate remaining 37 frames for longer, more evaluable continuations
+- **During fine-tuning**: Use `v2v_head` masking on truncated 22-frame video
+  - First 8 frames are conditioned (masked to stay as input, via `latent_t // 2` approximation)
+  - Model learns to generate frames 9-22 that match GT (14 frames for training)
+  - Frames 23-45 are **never seen** during fine-tuning
+- **During inference**: Use same 22-frame conditioning
+  - First 22 frames are conditioned (via `condition_frame_length=22`)
+  - Generate frames 23-45 for fair evaluation (23 frames that model never saw during training)
 
 ### Evaluation Metrics
 

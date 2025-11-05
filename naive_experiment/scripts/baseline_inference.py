@@ -72,9 +72,9 @@ def load_model_and_components(config_path, checkpoint_path=None, vae_path=None, 
     return model, vae, text_encoder, scheduler, cfg, image_size, num_frames
 
 
-def split_video_for_conditioning(video_path, condition_frames=8, output_dir=None):
+def split_video_for_conditioning(video_path, condition_frames=22, output_dir=None):
     """
-    Split video into conditioning frames (first 8) and save as reference.
+    Split video into conditioning frames (first 22) and save as reference.
     Returns path to the conditioning video clip.
     """
     import av
@@ -218,7 +218,7 @@ def main():
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Open-Sora STDiT checkpoint path or HuggingFace ID (optional, uses config default if not provided)")
     parser.add_argument("--vae-path", type=str, default=None, help="Open-Sora VAE checkpoint path or HuggingFace ID (optional, uses config default if not provided)")
     parser.add_argument("--save-dir", type=str, required=True, help="Directory to save outputs")
-    parser.add_argument("--condition-frames", type=int, default=8, help="Number of conditioning frames")
+    parser.add_argument("--condition-frames", type=int, default=22, help="Number of conditioning frames")
     parser.add_argument("--num-videos", type=int, default=None, help="Number of videos to process (None = all)")
     parser.add_argument("--device", type=str, default="cuda", help="Device to use")
     

@@ -33,12 +33,56 @@ from datetime import timedelta
 import torch.distributed as dist
 
 
+def create_truncated_video(video_path, num_frames=22, output_dir=None):
+    """Create a truncated video with only first num_frames frames for training."""
+    import av
+    
+    if output_dir is None:
+        output_dir = Path(video_path).parent / "truncated_for_training"
+    else:
+        output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    video_name = Path(video_path).stem
+    truncated_path = output_dir / f"{video_name}_first{num_frames}frames.mp4"
+    
+    if truncated_path.exists():
+        return str(truncated_path)
+    
+    # Copy first num_frames frames to new video
+    container = av.open(str(video_path))
+    video_stream = container.streams.video[0]
+    
+    output_container = av.open(str(truncated_path), mode='w')
+    output_stream = output_container.add_stream('libx264', rate=24)
+    output_stream.width = video_stream.width
+    output_stream.height = video_stream.height
+    output_stream.pix_fmt = 'yuv420p'
+    
+    frame_count = 0
+    for frame in container.decode(video=0):
+        if frame_count >= num_frames:
+            break
+        for packet in output_stream.encode(frame):
+            output_container.mux(packet)
+        frame_count += 1
+    
+    # Flush encoder
+    for packet in output_stream.encode():
+        output_container.mux(packet)
+    
+    container.close()
+    output_container.close()
+    
+    return str(truncated_path)
+
+
 def create_single_video_csv(video_path, caption, output_csv):
-    """Create a CSV file with a single video entry for training."""
+    """Create a CSV file with a single video entry for training (using truncated video)."""
     df = pd.DataFrame([{
         'path': video_path,
         'text': caption,
-        'num_frames': 45,
+        'num_frames': 22,  # Only first 22 frames for training
         'height': 480,
         'width': 640,
         'fps': 24,
@@ -71,10 +115,15 @@ def main():
     cfg.vae.from_pretrained = args.vae_path
     cfg.lr = args.learning_rate
     
-    # Create temporary CSV with single video
+    # Create truncated video (first 22 frames only) for training
+    logger.info(f"Creating truncated video (first 22 frames) from: {args.video_path}")
+    truncated_video_path = create_truncated_video(args.video_path, num_frames=22)
+    logger.info(f"Truncated video saved to: {truncated_video_path}")
+    
+    # Create temporary CSV with single truncated video
     with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
         temp_csv = f.name
-        create_single_video_csv(args.video_path, args.caption, temp_csv)
+        create_single_video_csv(truncated_video_path, args.caption, temp_csv)
         cfg.dataset.data_path = temp_csv
     
     # Set output directory

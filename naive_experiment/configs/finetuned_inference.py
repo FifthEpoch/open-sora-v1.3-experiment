@@ -1,8 +1,8 @@
 # Configuration for inference with fine-tuned model
 # This generates O_f outputs using the video-specific fine-tuned weights
 
-num_frames = 45  # Total frames (8 conditioning + 37 continuation)
-condition_frame_length = 8  # Number of conditioning frames
+num_frames = 45  # Total frames (22 conditioning + 23 continuation)
+condition_frame_length = 22  # Number of conditioning frames
 resolution = "480p"
 aspect_ratio = "4:3"  # 640x480
 fps = 24

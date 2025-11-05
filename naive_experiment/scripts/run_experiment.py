@@ -44,7 +44,7 @@ def main():
     parser.add_argument("--vae-path", type=str, default="hpcai-tech/OpenSora-VAE-v1.3", help="Open-Sora VAE checkpoint path or HuggingFace ID")
     parser.add_argument("--output-dir", type=str, required=True, help="Output directory for all results")
     parser.add_argument("--num-videos", type=int, default=None, help="Number of videos to process (None = all)")
-    parser.add_argument("--condition-frames", type=int, default=8, help="Number of conditioning frames")
+    parser.add_argument("--condition-frames", type=int, default=22, help="Number of conditioning frames")
     parser.add_argument("--finetune-steps", type=int, default=20, help="Number of fine-tuning steps")
     parser.add_argument("--finetune-lr", type=float, default=1e-5, help="Fine-tuning learning rate")
     parser.add_argument("--skip-baseline", action="store_true", help="Skip baseline generation (if already done)")

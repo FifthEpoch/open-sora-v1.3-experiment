@@ -1,8 +1,8 @@
 # Configuration for baseline video continuation inference
 # This generates O_b outputs using vanilla Open-Sora v1.3 without fine-tuning
 
-num_frames = 45  # Total frames (8 conditioning + 37 continuation)
-condition_frame_length = 8  # Number of conditioning frames
+num_frames = 45  # Total frames (22 conditioning + 23 continuation)
+condition_frame_length = 22  # Number of conditioning frames
 resolution = "480p"
 aspect_ratio = "4:3"  # 640x480
 fps = 24

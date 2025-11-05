@@ -7,12 +7,13 @@ dataset = dict(
     transform_name="resize_crop",
 )
 
-# Single video bucket: 480p, 45 frames total
-# During training: uses v2v_head masking (first 22 frames conditioned)
-# During inference: uses condition_frame_length=8 (first 8 frames conditioned, generates 37)
+# Single video bucket: 480p, only first 22 frames used for training
+# Training uses frames 1-22: first 8 as conditioning, frames 9-22 as ground truth (14 frames)
+# Model never sees frames 23-45 during training - these are reserved for fair evaluation
+# During inference: uses condition_frame_length=22 (generates frames 23-45)
 bucket_config = {
     "480p": {
-        45: (1, 0),  # batch_size=1, no range for search
+        22: (1, 0),  # batch_size=1, only first 22 frames for training
     },
 }
 

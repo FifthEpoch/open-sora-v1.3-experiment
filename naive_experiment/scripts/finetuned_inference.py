@@ -67,7 +67,7 @@ def load_model_and_components(config_path, checkpoint_path, vae_path=None, devic
     return model, vae, text_encoder, scheduler, cfg, image_size, num_frames
 
 
-def split_video_for_conditioning(video_path, condition_frames=8, output_dir=None):
+def split_video_for_conditioning(video_path, condition_frames=22, output_dir=None):
     """Split video into conditioning frames and save as reference."""
     import av
     from pathlib import Path
@@ -206,7 +206,7 @@ def main():
     parser.add_argument("--video-path", type=str, required=True, help="Path to video file")
     parser.add_argument("--caption", type=str, required=True, help="Video caption")
     parser.add_argument("--save-dir", type=str, required=True, help="Directory to save output")
-    parser.add_argument("--condition-frames", type=int, default=8, help="Number of conditioning frames")
+    parser.add_argument("--condition-frames", type=int, default=22, help="Number of conditioning frames")
     parser.add_argument("--video-idx", type=int, default=0, help="Video index for naming")
     parser.add_argument("--device", type=str, default="cuda", help="Device to use")
     

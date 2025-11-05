@@ -29,8 +29,8 @@ except ImportError:
     print("Make sure you're running from the Open-Sora root directory")
 
 
-def extract_frames_from_video(video_path, start_frame=32, num_frames=13):
-    """Extract frames from video starting at start_frame."""
+def extract_frames_from_video(video_path, start_frame=22, num_frames=23):
+    """Extract frames from video starting at start_frame (frames 23-45)."""
     import av
     
     container = av.open(str(video_path))
@@ -119,7 +119,7 @@ def main():
     parser.add_argument("--baseline-outputs", type=str, required=True, help="Directory containing baseline outputs (O_b)")
     parser.add_argument("--finetuned-outputs", type=str, required=True, help="Directory containing fine-tuned outputs (O_f)")
     parser.add_argument("--manifest", type=str, required=True, help="CSV manifest with video mappings")
-    parser.add_argument("--condition-frames", type=int, default=8, help="Number of conditioning frames")
+    parser.add_argument("--condition-frames", type=int, default=22, help="Number of conditioning frames")
     parser.add_argument("--output-json", type=str, default="metrics.json", help="Output JSON file for metrics")
     
     args = parser.parse_args()
@@ -144,7 +144,7 @@ def main():
             'original_path': original_path,
         }
         
-        # Extract GT frames (frames 32-44 from original video)
+        # Extract GT frames (frames 23-45 from original video)
         try:
             gt_frames = extract_frames_from_video(
                 original_path,
