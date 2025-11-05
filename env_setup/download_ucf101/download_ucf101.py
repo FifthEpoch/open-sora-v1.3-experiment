@@ -13,6 +13,7 @@ This script:
 import os
 import sys
 import urllib.request
+import ssl
 import shutil
 from pathlib import Path
 from tqdm import tqdm
@@ -39,6 +40,15 @@ def download_file(url, output_path):
     """Download file with progress bar."""
     print(f"Downloading from: {url}")
     print(f"Saving to: {output_path}")
+    
+    # Create SSL context that doesn't verify certificates (needed for some institutional networks)
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    
+    # Create opener with custom SSL context
+    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl_context))
+    urllib.request.install_opener(opener)
     
     with DownloadProgressBar(unit='B', unit_scale=True, miniters=1, desc="Downloading") as t:
         urllib.request.urlretrieve(url, output_path, reporthook=t.update_to)
