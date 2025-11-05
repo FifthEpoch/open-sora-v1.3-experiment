@@ -33,30 +33,52 @@ UCF-101 remains the standard benchmark for video generation evaluation in 2024-2
 conda activate /scratch/wc3013/conda-envs/opensora13
 
 # Required packages (should already be installed)
-pip install rarfile tqdm
+pip install datasets huggingface-hub tqdm
 ```
 
-### Option 1: Automatic Download (Recommended)
+### Option 1: Download from Hugging Face (Recommended - No unrar needed!)
 
-The download script will:
-1. Download UCF-101 dataset (~6.5GB)
-2. Extract videos
-3. Perform stratified sampling (2,000 videos, ~20 per class)
-4. Generate captions.txt
+**Best for cluster environments without sudo access.**
+
+The script downloads from Hugging Face Hub (ZIP format, no RAR extraction needed):
+
+```bash
+cd env_setup/download_ucf101
+
+# Optional: Set HuggingFace token to avoid rate limiting
+export HF_TOKEN='your_token_here'  # Get from https://huggingface.co/settings/tokens
+
+# Download and sample
+python download_ucf101_hf.py
+```
+
+**Advantages:**
+- ✅ No unrar/unar dependency
+- ✅ Cached downloads (can resume if interrupted)
+- ✅ Automatic extraction
+- ✅ Works on any cluster
+
+**What it does:**
+1. Downloads UCF-101 from `quchenyuan/UCF101-ZIP` (~7GB)
+2. Extracts videos to `ucf101_org/`
+3. Performs stratified sampling (2,000 videos, ~20 per class)
+4. Generates `captions.txt`
+
+### Option 2: Download from Official Source (Requires unrar)
+
+**Only use if you have unrar/unar installed.**
 
 ```bash
 cd env_setup/download_ucf101
 python download_ucf101.py
 ```
 
-**Note**: The script requires RAR extraction. It will try:
+**Note**: Requires RAR extraction tools:
 - Python `rarfile` library (install with: `pip install rarfile`)
 - `unrar` command (macOS: `brew install unrar`, Linux: `sudo apt-get install unrar`)
 - `unar` command (macOS: `brew install unar`)
 
-If extraction fails, you can manually download and extract UCF101.rar from the official site.
-
-### Option 2: Manual Download
+### Option 3: Manual Download
 
 If automatic download fails:
 
@@ -80,17 +102,19 @@ After download and sampling:
 
 ```
 env_setup/download_ucf101/
-├── download_ucf101.py          # Download and sampling script
-├── preprocess_ucf101.py        # Video preprocessing script
-├── preprocess_ucf101.sbatch    # SLURM batch job for preprocessing
-├── README.md                    # This file
-├── UCF101.rar                   # Downloaded archive (~6.5GB)
-├── ucf101_org/                  # Extracted videos (sampled 2,000)
-│   ├── v_ApplyEyeMakeup_g01_c01.avi
-│   ├── v_ApplyEyeMakeup_g01_c02.avi
-│   └── ... (~2,000 videos)
-├── captions.txt                 # Video-caption pairs
-└── sampling_metadata.json       # Sampling statistics
+├── download_ucf101.py           # Download from official source (requires unrar)
+├── download_ucf101_hf.py        # Download from Hugging Face (recommended)
+├── preprocess_ucf101.py         # Video preprocessing script
+├── preprocess_ucf101.sbatch     # SLURM batch job for preprocessing
+├── README.md                     # This file
+├── ucf101_org/                   # Extracted videos (sampled 2,000)
+│   ├── ApplyEyeMakeup/
+│   │   ├── v_ApplyEyeMakeup_g01_c01.avi
+│   │   └── ... (~20 videos per class)
+│   ├── ApplyLipstick/
+│   └── ... (101 action class folders)
+├── captions.txt                  # Video-caption pairs
+└── sampling_metadata.json        # Sampling statistics
 ```
 
 ## Stratified Sampling Details
