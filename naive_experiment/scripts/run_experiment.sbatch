@@ -91,7 +91,7 @@ cd "${SCRIPT_DIR}"
 
 # Run experiment
 python run_experiment.py \
-    --data-csv /scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_hmdb51/hmdb51_metadata.csv \
+    --data-csv /scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_metadata.csv \
     --output-dir results \
     --num-videos 10
 

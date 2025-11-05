@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate baseline video continuation outputs (O_b) for all HMDB51 videos.
+Generate baseline video continuation outputs (O_b) for all UCF-101 videos.
 
 This script loads the vanilla Open-Sora v1.3 checkpoint once and generates
 continuations for all videos in the dataset.
@@ -214,7 +214,7 @@ def generate_continuation(
 def main():
     parser = argparse.ArgumentParser(description="Generate baseline video continuations")
     parser.add_argument("--config", type=str, required=True, help="Path to baseline inference config")
-    parser.add_argument("--data-csv", type=str, required=True, help="Path to HMDB51 metadata CSV")
+    parser.add_argument("--data-csv", type=str, required=True, help="Path to UCF-101 metadata CSV")
     parser.add_argument("--checkpoint-path", type=str, default=None, help="Open-Sora STDiT checkpoint path or HuggingFace ID (optional, uses config default if not provided)")
     parser.add_argument("--vae-path", type=str, default=None, help="Open-Sora VAE checkpoint path or HuggingFace ID (optional, uses config default if not provided)")
     parser.add_argument("--save-dir", type=str, required=True, help="Directory to save outputs")

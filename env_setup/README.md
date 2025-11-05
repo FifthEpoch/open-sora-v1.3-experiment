@@ -38,7 +38,7 @@ bash env_setup/01_conda_env_install_torch.sh
 ### 2. Install FFmpeg
 **File:** `03_ffmpeg.sh`
 - Installs FFmpeg for video processing
-- Required by PyAV for HMDB51 preprocessing and inference
+- Required by PyAV for UCF-101 preprocessing and inference
 
 **Run on:** Login node (no GPU needed)
 
@@ -78,6 +78,26 @@ sbatch env_setup/02_flsh_attn_apex_build.sbatch
 ```bash
 bash env_setup/04_installation_check.sh
 ```
+
+### 5. Download and Preprocess UCF-101 Dataset
+**Directory:** `download_ucf101/`
+- Downloads UCF-101 dataset (101 action classes, 13,320 videos)
+- Performs stratified sampling (2,000 videos, ~20 per class)
+- Preprocesses to 640×480, 24fps, 45 frames
+- Generates metadata CSV for training
+
+**Run on:** Download on login node, preprocessing via SLURM batch job
+
+```bash
+# Download and sample dataset
+cd env_setup/download_ucf101
+python download_ucf101.py
+
+# Preprocess videos (submit as batch job)
+sbatch preprocess_ucf101.sbatch
+```
+
+See `download_ucf101/README.md` for detailed instructions.
 
 ## Required Dependencies Summary
 
@@ -134,6 +154,11 @@ sbatch env_setup/02_flsh_attn_apex_build.sbatch
 
 # 4. Verify (auto-loads scratch env)
 bash env_setup/04_installation_check.sh
+
+# 5. Download and preprocess UCF-101 dataset
+cd env_setup/download_ucf101
+python download_ucf101.py
+sbatch preprocess_ucf101.sbatch
 ```
 
 **Note:** Steps 1, 2, and 4 automatically load the scratch environment configuration!

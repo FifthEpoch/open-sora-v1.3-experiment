@@ -6,7 +6,7 @@ This experiment tests whether fine-tuning Open-Sora v1.3 with a single input vid
 
 ### Overview
 
-For each HMDB51 video V of length 45 frames:
+For each UCF-101 video V of length 45 frames:
 1. **Split**: V = [V_train | V_test]
    - V_train = first 22 frames (frames 1-22, ~0.92s)
    - V_test = remaining 23 frames (frames 23-45, ~0.96s for evaluation)
@@ -79,18 +79,38 @@ naive_experiment/
     └── metrics.json                   # Evaluation results
 ```
 
+## Dataset: UCF-101
+
+We use **UCF-101** (University of Central Florida - 101 action classes) as our evaluation dataset:
+
+**Why UCF-101?**
+- **Community Standard**: Used in recent video generation papers (W.A.L.T ECCV 2024, TrajVLM-Gen 2025, DIGAN ICLR 2022)
+- **Benchmark Comparability**: Established FVD baselines enable direct comparison with published work
+- **Dynamic Motion**: 101 action classes include sports, gymnastics, martial arts (large bodily movements)
+- **Visually Engaging**: Action-rich videos make compelling demo material for presentations
+- **Manageable Scale**: 2,000 videos (stratified sampling) balances diversity with computational feasibility
+
+**Dataset Statistics**:
+- Total videos: 2,000 (sampled from 13,320 via stratified sampling)
+- Action classes: 101 (sports, music, daily activities)
+- Sampling strategy: ~20 videos per class for balanced representation
+- Native resolution: 320×240 (upscaled to 640×480 during preprocessing)
+- Preprocessed: 640×480, 24 fps, 45 frames per video
+
+See `env_setup/download_ucf101/README.md` for dataset details and download instructions.
+
 ## Methodology
 
 ### Video Splitting
 
-Based on HMDB51 preprocessing (from `env_setup/download_hmdb51/README.md`):
+Based on UCF-101 preprocessing (from `env_setup/download_ucf101/README.md`):
 - Total frames: 45
 - Training frames: 22 (frames 1-22, ~0.92s at 24 fps)
   - Within training: 8 conditioning frames + 14 ground truth frames
 - Evaluation target: 23 frames (frames 23-45, ~0.96s)
 - Inference conditioning: 22 frames (generates frames 23-45)
 
-**Note**: The `conditioning_frames: 32` field in HMDB51 metadata is only metadata. For our experiment, we use 22 conditioning frames at inference to ensure fair comparison with fine-tuning.
+**Note**: The `conditioning_frames: 22` field in UCF-101 metadata matches our inference design.
 
 ### Training Configuration
 
@@ -119,11 +139,11 @@ Following Open-Sora v1.3 VAE evaluation practices:
 
 ## Prerequisites
 
-1. **Downloaded and preprocessed HMDB51 dataset**:
+1. **Downloaded and preprocessed UCF-101 dataset**:
    ```bash
-   cd env_setup/download_hmdb51
-   python download_hmdb51.py
-   python preprocess_hmdb51.py
+   cd env_setup/download_ucf101
+   python download_ucf101.py
+   sbatch preprocess_ucf101.sbatch
    ```
 
 2. **Installed Open-Sora dependencies**:
@@ -159,7 +179,7 @@ The script will:
 # Run locally or on interactive GPU node
 cd naive_experiment
 python scripts/run_experiment.py \
-    --data-csv /path/to/hmdb51/hmdb51_metadata.csv \
+    --data-csv /path/to/ucf101/ucf101_metadata.csv \
     --output-dir results \
     --num-videos 10  # Start with a subset
 ```
@@ -182,5 +202,5 @@ Note: Checkpoints will auto-download from HuggingFace if not specified.
 
 - Open-Sora v1.3: https://github.com/hpcaitech/Open-Sora/tree/opensora/v1.3
 - Commands Documentation: https://github.com/hpcaitech/Open-Sora/blob/opensora/v1.3/docs/commands.md
-- HMDB51 Dataset: https://serre-lab.clps.brown.edu/wp-content/uploads/2013/10/hmdb51_org.rar
+- UCF-101 Dataset: https://www.crcv.ucf.edu/research/data-sets/ucf101/
 

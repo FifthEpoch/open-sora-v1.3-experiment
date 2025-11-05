@@ -39,7 +39,7 @@ def run_command(cmd, logger, check=True):
 
 def main():
     parser = argparse.ArgumentParser(description="Run naive fine-tuning experiment")
-    parser.add_argument("--data-csv", type=str, required=True, help="Path to HMDB51 metadata CSV")
+    parser.add_argument("--data-csv", type=str, required=True, help="Path to UCF-101 metadata CSV")
     parser.add_argument("--checkpoint-path", type=str, default="hpcai-tech/OpenSora-STDiT-v4", help="Open-Sora STDiT checkpoint path or HuggingFace ID")
     parser.add_argument("--vae-path", type=str, default="hpcai-tech/OpenSora-VAE-v1.3", help="Open-Sora VAE checkpoint path or HuggingFace ID")
     parser.add_argument("--output-dir", type=str, required=True, help="Output directory for all results")
