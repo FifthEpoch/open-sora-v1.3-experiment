@@ -36,9 +36,41 @@ conda activate /scratch/wc3013/conda-envs/opensora13
 pip install datasets huggingface-hub tqdm
 ```
 
-### Option 1: Download from Hugging Face (Recommended - No unrar needed!)
+### Option 1: Single SLURM Job (Recommended - Fully Automated!)
 
-**Best for cluster environments without sudo access.**
+**Best for cluster use - downloads AND preprocesses in one job.**
+
+Submit a single batch job that handles everything:
+
+```bash
+cd env_setup/download_ucf101
+
+# Optional: Set HuggingFace token to avoid rate limiting
+export HF_TOKEN='your_token_here'  # Get from https://huggingface.co/settings/tokens
+
+# Submit job (downloads from HF + preprocesses)
+sbatch preprocess_ucf101.sbatch
+```
+
+**What the job does:**
+1. Downloads UCF-101 from Hugging Face `quchenyuan/UCF101-ZIP` (~7GB)
+2. Performs stratified sampling (2,000 videos, ~20 per class)
+3. Generates `captions.txt`
+4. Preprocesses to 640×480, 24fps, 45 frames
+5. Generates `ucf101_metadata.csv`
+
+**Advantages:**
+- ✅ **One command** - no manual steps
+- ✅ Runs in background (10 hour time limit)
+- ✅ Skips download if videos already exist
+- ✅ No unrar/unar dependency
+- ✅ Automatic error handling
+
+**Output:** `slurm_download_prep_ucf101.out`
+
+### Option 2: Manual Download from Hugging Face
+
+**For testing or if you want more control.**
 
 The script downloads from Hugging Face Hub (ZIP format, no RAR extraction needed):
 
@@ -50,6 +82,9 @@ export HF_TOKEN='your_token_here'  # Get from https://huggingface.co/settings/to
 
 # Download and sample
 python download_ucf101_hf.py
+
+# Then preprocess
+sbatch preprocess_ucf101.sbatch  # Will skip download step
 ```
 
 **Advantages:**
@@ -64,7 +99,7 @@ python download_ucf101_hf.py
 3. Performs stratified sampling (2,000 videos, ~20 per class)
 4. Generates `captions.txt`
 
-### Option 2: Download from Official Source (Requires unrar)
+### Option 3: Download from Official Source (Requires unrar)
 
 **Only use if you have unrar/unar installed.**
 
@@ -78,7 +113,7 @@ python download_ucf101.py
 - `unrar` command (macOS: `brew install unrar`, Linux: `sudo apt-get install unrar`)
 - `unar` command (macOS: `brew install unar`)
 
-### Option 3: Manual Download
+### Option 4: Manual Download
 
 If automatic download fails:
 
@@ -133,33 +168,28 @@ This ensures the evaluation dataset covers all motion types while remaining comp
 
 ## Preprocessing for Open-Sora v1.3
 
-After downloading and sampling, preprocess videos for training.
+The `preprocess_ucf101.sbatch` job handles both download and preprocessing automatically!
 
-### Requirements
+### Automatic (Recommended - Already Done!)
 
-All dependencies should already be installed in the opensora13 conda environment:
+If you submitted the sbatch job from Option 1 above, preprocessing is already included. The job will:
+- Download UCF-101 from Hugging Face (if not exists)
+- Perform stratified sampling (2,000 videos)
+- Preprocess all videos to 640×480, 24fps, 45 frames
+- Generate `ucf101_metadata.csv`
 
-```bash
-pip install av opencv-python pillow torch torchvision numpy pandas tqdm
-```
+**No additional steps needed!** Just wait for the job to complete.
 
-### Option 1: Submit SLURM Batch Job (Recommended)
+### Manual Preprocessing Only
 
-Video preprocessing is CPU-intensive and should be run as a batch job:
+If you manually downloaded videos and want to preprocess them separately:
 
 ```bash
 cd env_setup/download_ucf101
-sbatch preprocess_ucf101.sbatch
+sbatch preprocess_ucf101.sbatch  # Will detect existing videos and skip download
 ```
 
-The batch job will:
-- Request 16 CPU cores, 64GB RAM for 8 hours on CPU partition
-- Automatically configure scratch environment (avoids /home quotas)
-- Process all 2,000 videos to `ucf101_processed/`
-- Generate `ucf101_metadata.csv` with training metadata
-- Run non-interactively (uses `--skip-cleanup` flag)
-
-### Option 2: Run Interactively (Not Recommended for Cluster)
+Or run interactively (not recommended for cluster):
 
 ```bash
 conda activate /scratch/wc3013/conda-envs/opensora13

@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH -J preprocess_ucf101
+#SBATCH -J download_prep_ucf101
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH -t 08:00:00
+#SBATCH -t 10:00:00
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
-#SBATCH --output=slurm_preprocess_ucf101.out
+#SBATCH --output=slurm_download_prep_ucf101.out
 
 echo "=========================================="
-echo "UCF-101 Video Preprocessing Job"
+echo "UCF-101 Download & Preprocessing Job"
 echo "=========================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $SLURM_NODELIST"
@@ -86,11 +86,6 @@ echo ""
 echo "Checking required packages..."
 python -c "import av; import numpy; import pandas; import cv2; print('✓ Required packages available')"
 
-echo ""
-echo "=========================================="
-echo "Starting preprocessing..."
-echo "=========================================="
-
 # Diagnostic: Show which python and packages
 echo ""
 echo "Diagnostic information:"
@@ -102,9 +97,59 @@ echo ""
 # Navigate to script directory
 cd "${SCRATCH_BASE}/open-sora-v1.3-experiment/env_setup/download_ucf101"
 echo "Working directory: $(pwd)"
+echo ""
+
+# ============================================================================
+# Step 1: Download UCF-101 from Hugging Face (if not already downloaded)
+# ============================================================================
+echo "=========================================="
+echo "Step 1: Downloading UCF-101 Dataset"
+echo "=========================================="
+echo ""
+
+if [ -d "ucf101_org" ] && [ "$(ls -A ucf101_org/*.avi 2>/dev/null | wc -l)" -gt 0 ]; then
+    echo "✓ UCF-101 videos already exist in ucf101_org/"
+    echo "  Skipping download step."
+    VIDEO_COUNT=$(find ucf101_org -name "*.avi" | wc -l)
+    echo "  Found ${VIDEO_COUNT} videos"
+else
+    echo "Downloading UCF-101 from Hugging Face..."
+    echo "Note: This will download ~7GB and may take 15-30 minutes"
+    echo ""
+    
+    # Run download script (it will prompt for cleanup, so we pipe 'yes' to it)
+    echo "yes" | python download_ucf101_hf.py
+    
+    if [ $? -ne 0 ]; then
+        echo "✗ ERROR: Download failed!"
+        echo "Please check the error messages above."
+        exit 1
+    fi
+    
+    echo ""
+    echo "✓ Download complete!"
+fi
+
+echo ""
+
+# ============================================================================
+# Step 2: Preprocess videos
+# ============================================================================
+echo "=========================================="
+echo "Step 2: Preprocessing Videos"
+echo "=========================================="
+echo ""
 
 # Run preprocessing (non-interactive with --skip-cleanup)
 python preprocess_ucf101.py --skip-cleanup
+
+if [ $? -ne 0 ]; then
+    echo "✗ ERROR: Preprocessing failed!"
+    exit 1
+fi
+
+echo ""
+echo "✓ Preprocessing complete!"
 
 echo ""
 echo "=========================================="
