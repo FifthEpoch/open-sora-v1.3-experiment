@@ -58,8 +58,17 @@ module load anaconda3/2024.02
 # Source conda initialization script
 source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
 
+# Configure conda to recognize custom environment location
+conda config --append envs_dirs "${SCRATCH_BASE}/conda-envs"
+conda config --append pkgs_dirs "${SCRATCH_BASE}/conda-pkgs"
+
+echo ""
+echo "Conda environments:"
+conda env list
+
 # Activate conda environment in scratch location
-echo "Activating conda environment..."
+echo ""
+echo "Activating conda environment: ${SCRATCH_BASE}/conda-envs/opensora13"
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
 
 # Verify GPU availability
