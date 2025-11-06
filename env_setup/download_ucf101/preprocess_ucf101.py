@@ -26,6 +26,14 @@ def center_crop_resize(frame, target_height=480, target_width=640):
     Center crop and resize frame to target dimensions.
     UCF-101 is 320×240, we upscale to 640×480.
     """
+    # Safety check: ensure frame is a numpy array
+    if not isinstance(frame, np.ndarray):
+        raise TypeError(f"Frame must be numpy array, got {type(frame)}")
+    
+    # Ensure frame has correct shape (H, W, C)
+    if len(frame.shape) != 3:
+        raise ValueError(f"Frame must have 3 dimensions (H, W, C), got shape {frame.shape}")
+    
     h, w = frame.shape[:2]
     
     # Calculate aspect ratios
@@ -111,10 +119,31 @@ def read_video(video_path):
         
         frames = []
         for frame in container.decode(video=0):
-            img = frame.to_ndarray(format='rgb24')
-            frames.append(img)
+            try:
+                # Convert frame to numpy array
+                img = frame.to_ndarray(format='rgb24')
+                
+                # Verify it's actually a numpy array
+                if not isinstance(img, np.ndarray):
+                    print(f"Warning: Frame is not numpy array, type: {type(img)}")
+                    continue
+                
+                # Verify shape is correct (H, W, C)
+                if len(img.shape) != 3 or img.shape[2] != 3:
+                    print(f"Warning: Frame has incorrect shape: {img.shape}")
+                    continue
+                
+                frames.append(img)
+            except Exception as e:
+                print(f"Warning: Failed to convert frame: {e}")
+                continue
         
         container.close()
+        
+        if len(frames) == 0:
+            print(f"Error: No valid frames extracted from {video_path}")
+            return None, None
+        
         return frames, fps
     except Exception as e:
         print(f"Error reading {video_path}: {e}")
