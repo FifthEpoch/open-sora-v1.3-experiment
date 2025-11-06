@@ -205,39 +205,64 @@ def process_video(video_path, output_base, target_fps=24, target_frames=45, targ
     
     Returns: (success, output_path, num_frames, caption) or (False, None, None, None)
     """
-    # Read video
-    frames, fps = read_video(video_path)
-    if frames is None or len(frames) == 0:
+    try:
+        # Read video
+        frames, fps = read_video(video_path)
+        if frames is None or len(frames) == 0:
+            return False, None, None, None
+        
+        # Center crop and resize - process each frame with error handling
+        processed_frames = []
+        for i, frame in enumerate(frames):
+            try:
+                # Double-check frame validity before processing
+                if not isinstance(frame, np.ndarray):
+                    print(f"  Warning: Frame {i} is not numpy array in {video_path.name}, skipping")
+                    continue
+                
+                if len(frame.shape) != 3 or frame.shape[2] != 3:
+                    print(f"  Warning: Frame {i} has invalid shape {frame.shape} in {video_path.name}, skipping")
+                    continue
+                
+                processed_frame = center_crop_resize(frame, target_height, target_width)
+                processed_frames.append(processed_frame)
+            except Exception as e:
+                print(f"  Warning: Failed to process frame {i} in {video_path.name}: {e}")
+                continue
+        
+        if len(processed_frames) == 0:
+            print(f"  Error: No frames could be processed for {video_path.name}")
+            return False, None, None, None
+        
+        # Resample to target fps
+        resampled_frames = resample_video(processed_frames, fps, target_fps)
+        
+        # Crop to target number of frames
+        cropped_frames = crop_to_n_frames(resampled_frames, target_frames)
+        if cropped_frames is None:
+            return False, None, None, None
+        
+        # Determine output path (maintain directory structure)
+        relative_path = video_path.relative_to(video_path.parents[1])  # Relative to ucf101_org parent
+        output_path = output_base / relative_path.parent / f"{video_path.stem}.mp4"
+        
+        # Write video
+        write_video(cropped_frames, output_path, target_fps)
+        
+        # Get caption from filename or directory
+        class_name = parse_ucf101_filename(video_path.name)
+        if class_name is None:
+            class_name = video_path.parent.name
+        
+        # Convert to readable caption
+        caption = ''.join([' ' + c.lower() if c.isupper() else c for c in class_name]).strip()
+        caption = caption.replace('_', ' ')
+        
+        return True, output_path, target_frames, caption
+    
+    except Exception as e:
+        print(f"  Error processing video {video_path.name}: {e}")
         return False, None, None, None
-    
-    # Center crop and resize
-    processed_frames = [center_crop_resize(f, target_height, target_width) for f in frames]
-    
-    # Resample to target fps
-    resampled_frames = resample_video(processed_frames, fps, target_fps)
-    
-    # Crop to target number of frames
-    cropped_frames = crop_to_n_frames(resampled_frames, target_frames)
-    if cropped_frames is None:
-        return False, None, None, None
-    
-    # Determine output path (maintain directory structure)
-    relative_path = video_path.relative_to(video_path.parents[1])  # Relative to ucf101_org parent
-    output_path = output_base / relative_path.parent / f"{video_path.stem}.mp4"
-    
-    # Write video
-    write_video(cropped_frames, output_path, target_fps)
-    
-    # Get caption from filename or directory
-    class_name = parse_ucf101_filename(video_path.name)
-    if class_name is None:
-        class_name = video_path.parent.name
-    
-    # Convert to readable caption
-    caption = ''.join([' ' + c.lower() if c.isupper() else c for c in class_name]).strip()
-    caption = caption.replace('_', ' ')
-    
-    return True, output_path, target_frames, caption
 
 
 def main():
