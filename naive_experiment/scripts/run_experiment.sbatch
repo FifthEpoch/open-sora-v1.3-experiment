@@ -1,12 +1,11 @@
 #!/bin/bash
 #SBATCH -J naive_finetune_exp
-#SBATCH -p gpu
 #SBATCH --gres=gpu:h100:1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH -t 48:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
+#SBATCH -t 47:59:59
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=96G
 #SBATCH --output=slurm_run_experiment.out
 #SBATCH --error=slurm_run_experiment.err
 
