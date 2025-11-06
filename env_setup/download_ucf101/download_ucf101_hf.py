@@ -108,62 +108,78 @@ def download_and_extract_ucf101(output_dir):
     print(f"✓ Dataset loaded! Found {len(dataset)} videos")
     
     # Extract videos to output directory
-    print("\nExtracting videos to disk...")
+    print("\nAccessing dataset cache...")
     
-    for idx, example in enumerate(tqdm(dataset, desc="Extracting videos")):
+    # HuggingFace datasets stores downloaded videos in a cache directory
+    # Instead of iterating through the dataset (which tries to decode videos),
+    # we'll access the cache directly
+    
+    # Get the cache directory for this dataset
+    from datasets.config import HF_DATASETS_CACHE
+    cache_dir = Path(HF_DATASETS_CACHE) if HF_DATASETS_CACHE else Path.home() / ".cache" / "huggingface" / "datasets"
+    
+    print(f"Looking for cached videos in: {cache_dir}")
+    
+    # Find all .avi files in the cache
+    cached_videos = []
+    for cache_path in cache_dir.rglob("*.avi"):
+        cached_videos.append(cache_path)
+    
+    if not cached_videos:
+        print("\n⚠️  No .avi files found in cache. Trying alternative approach...")
+        print("The dataset may store videos differently. Let me try accessing the dataset structure...")
+        
+        # Alternative: Try to access the underlying Arrow table directly
         try:
-            # Get video path and label
-            video_path = example.get('video') or example.get('file') or example.get('path')
-            label = example.get('label')
+            # Access the dataset without decoding
+            dataset_path = dataset.cache_files[0]['filename'] if dataset.cache_files else None
+            if dataset_path:
+                print(f"Dataset cache file: {dataset_path}")
+                # Look for videos near the cache file
+                dataset_cache_dir = Path(dataset_path).parent
+                cached_videos = list(dataset_cache_dir.rglob("*.avi"))
+                print(f"Found {len(cached_videos)} videos near cache file")
+        except Exception as e:
+            print(f"Alternative approach failed: {e}")
+    
+    if not cached_videos:
+        print("\n❌ ERROR: Could not find cached video files.")
+        print("The UCF-101 dataset from Hugging Face may require 'torchcodec' for video decoding.")
+        print("\nAlternative solution:")
+        print("1. Download UCF-101 directly from official source")
+        print("2. Use Option 3 in README with manual download")
+        print("\nOr install torchcodec (experimental):")
+        print("  pip install torchcodec")
+        return False
+    
+    print(f"\nFound {len(cached_videos)} videos in cache")
+    print("Organizing videos by class...")
+    
+    # Process cached videos
+    for video_path in tqdm(cached_videos, desc="Organizing videos"):
+        try:
+            video_filename = video_path.name
             
-            if video_path is None:
-                print(f"\n⚠️  Warning: Could not find video in example {idx}")
-                continue
-            
-            # Determine class name from label or filename
-            if isinstance(label, str):
-                class_name = label
-            else:
-                # Try to parse from filename
-                if isinstance(video_path, str):
-                    video_filename = Path(video_path).name
-                else:
-                    video_filename = f"video_{idx}.avi"
-                
-                class_name = parse_ucf101_filename(video_filename)
-                if class_name is None:
-                    class_name = f"class_{label}" if label is not None else f"unknown_{idx}"
+            # Parse class name from filename
+            class_name = parse_ucf101_filename(video_filename)
+            if class_name is None:
+                # Try to use parent directory name
+                class_name = video_path.parent.name
+                if class_name in ['train', 'test', 'data', 'videos']:
+                    # Skip generic directory names
+                    continue
             
             # Create class directory
             class_dir = output_dir / class_name
             class_dir.mkdir(exist_ok=True)
             
-            # Determine output filename
-            if isinstance(video_path, str):
-                video_filename = Path(video_path).name
-            else:
-                video_filename = f"video_{idx}.avi"
-            
+            # Copy video to organized structure
             output_path = class_dir / video_filename
-            
-            # Save video
-            # The video might be a path (string) or bytes
-            if isinstance(video_path, str):
-                # If it's a path, copy the file
-                if Path(video_path).exists():
-                    shutil.copy2(video_path, output_path)
-            elif isinstance(video_path, bytes):
-                # If it's bytes, write directly
-                with open(output_path, 'wb') as f:
-                    f.write(video_path)
-            else:
-                # Try to get the file path from the dataset cache
-                # Hugging Face datasets often store files in cache
-                print(f"\n⚠️  Unexpected video_path type: {type(video_path)}")
-                continue
+            if not output_path.exists():
+                shutil.copy2(video_path, output_path)
                 
         except Exception as e:
-            print(f"\n⚠️  Warning: Failed to extract video {idx}: {e}")
+            print(f"\n⚠️  Warning: Failed to process {video_path.name}: {e}")
             continue
     
     print(f"\n✓ Videos extracted to {output_dir}")
