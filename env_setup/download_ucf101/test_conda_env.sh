@@ -30,10 +30,23 @@ source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
 echo "✓ Conda sourced"
 echo ""
 
-echo "Step 4: Configure conda for custom paths"
+echo "Step 4: Deactivate any existing conda environment"
+echo "-------------------------------------------------"
+# If already in an env, deactivate first for clean activation
+if [ -n "${CONDA_PREFIX}" ]; then
+    echo "Currently in environment: ${CONDA_PREFIX}"
+    echo "Deactivating for clean test..."
+    conda deactivate 2>/dev/null || true
+    conda deactivate 2>/dev/null || true  # May need twice if nested
+fi
+echo "✓ Ready for fresh activation"
+echo ""
+
+echo "Step 5: Configure conda for custom paths"
 echo "----------------------------------------"
-conda config --append envs_dirs "${CONDA_ENVS_PATH}"
-conda config --append pkgs_dirs "${CONDA_PKGS_DIRS}"
+# Use --prepend to ensure our path is searched first
+conda config --prepend envs_dirs "${CONDA_ENVS_PATH}" 2>/dev/null || true
+conda config --prepend pkgs_dirs "${CONDA_PKGS_DIRS}" 2>/dev/null || true
 echo ""
 echo "Current conda env_dirs:"
 conda config --show envs_dirs
@@ -42,12 +55,12 @@ echo "Current conda pkgs_dirs:"
 conda config --show pkgs_dirs
 echo ""
 
-echo "Step 5: List available environments"
+echo "Step 6: List available environments"
 echo "-----------------------------------"
 conda env list
 echo ""
 
-echo "Step 6: Check if opensora13 environment exists"
+echo "Step 7: Check if opensora13 environment exists"
 echo "----------------------------------------------"
 if [ -d "${CONDA_ENVS_PATH}/opensora13" ]; then
     echo "✓ Environment found at: ${CONDA_ENVS_PATH}/opensora13"
@@ -60,7 +73,7 @@ else
 fi
 echo ""
 
-echo "Step 7: Activate environment with full path"
+echo "Step 8: Activate environment with full path"
 echo "-------------------------------------------"
 echo "Command: conda activate ${CONDA_ENVS_PATH}/opensora13"
 conda activate "${CONDA_ENVS_PATH}/opensora13"
@@ -73,7 +86,7 @@ else
 fi
 echo ""
 
-echo "Step 8: Verify activation"
+echo "Step 9: Verify activation"
 echo "------------------------"
 echo "CONDA_PREFIX: ${CONDA_PREFIX}"
 echo "CONDA_DEFAULT_ENV: ${CONDA_DEFAULT_ENV}"
@@ -81,7 +94,7 @@ echo "Which python: $(which python)"
 echo "Python path: $(python -c 'import sys; print(sys.executable)')"
 echo ""
 
-echo "Step 9: Test package imports"
+echo "Step 10: Test package imports"
 echo "----------------------------"
 python << 'EOF'
 import sys

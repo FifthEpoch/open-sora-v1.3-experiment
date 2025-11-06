@@ -58,9 +58,12 @@ module load anaconda3/2024.02
 # Source conda initialization script
 source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
 
-# Configure conda to recognize custom environment location
-conda config --append envs_dirs "${SCRATCH_BASE}/conda-envs"
-conda config --append pkgs_dirs "${SCRATCH_BASE}/conda-pkgs"
+# Deactivate any existing environment for clean activation
+conda deactivate 2>/dev/null || true
+
+# Configure conda to recognize custom environment location (use --prepend for priority)
+conda config --prepend envs_dirs "${SCRATCH_BASE}/conda-envs" 2>/dev/null || true
+conda config --prepend pkgs_dirs "${SCRATCH_BASE}/conda-pkgs" 2>/dev/null || true
 
 echo ""
 echo "Conda environments:"
