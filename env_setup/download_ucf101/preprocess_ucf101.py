@@ -133,6 +133,15 @@ def read_video(video_path):
                     print(f"Warning: Frame has incorrect shape: {img.shape}")
                     continue
                 
+                # Ensure proper memory layout and contiguity for OpenCV
+                # PyAV sometimes returns non-contiguous arrays that cv2 can't handle
+                if not img.flags['C_CONTIGUOUS']:
+                    img = np.ascontiguousarray(img)
+                
+                # Ensure uint8 dtype (required by OpenCV)
+                if img.dtype != np.uint8:
+                    img = img.astype(np.uint8)
+                
                 frames.append(img)
             except Exception as e:
                 print(f"Warning: Failed to convert frame: {e}")
