@@ -202,3 +202,9 @@ tools/caption/pllava_dir/PLLaVA/
 vbench
 !eval/vbench
 vbench2_beta_i2v
+
+# SLURM job outputs
+slurm-*.out
+slurm_*.out
+slurm_*.err
+**/slurm_log/

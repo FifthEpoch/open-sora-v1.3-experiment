@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 """
-Download UCF-101 dataset from Hugging Face and perform stratified sampling.
+Download UCF-101 dataset from official source and perform stratified sampling.
 
 This script:
-1. Downloads UCF-101 from Hugging Face (no RAR extraction needed!)
-2. Extracts videos to ucf101_org/ directory
+1. Downloads UCF-101 from official CRCV source using wget/curl
+2. Extracts RAR archive (tries unrar, unar, or rarfile)
 3. Performs stratified sampling to select 2000 videos (~20 per class)
 4. Deletes non-sampled videos to save disk space
 5. Generates captions.txt for training
 
-Advantages over RAR download:
-- No unrar/unar dependency
-- Automatic download management via Hugging Face Hub
-- Cached downloads (resume if interrupted)
+Note: Originally tried HuggingFace but it requires torchcodec for video decoding.
+This version downloads directly from official source - more reliable but needs RAR extraction.
 """
 
 import os
@@ -24,7 +22,7 @@ import json
 import shutil
 
 # Dataset configuration
-HF_DATASET = "quchenyuan/UCF101-ZIP"
+UCF101_URL = "https://www.crcv.ucf.edu/data/UCF101/UCF101.rar"
 TARGET_VIDEOS = 2000
 NUM_CLASSES = 101
 VIDEOS_PER_CLASS = TARGET_VIDEOS // NUM_CLASSES  # ~19 videos per class
@@ -56,134 +54,155 @@ def parse_ucf101_filename(filename):
 
 def download_and_extract_ucf101(output_dir):
     """
-    Download UCF-101 from Hugging Face and extract to output_dir.
+    Download UCF-101 directly using wget (simpler and more reliable than HuggingFace).
     """
-    try:
-        from datasets import load_dataset
-    except ImportError:
-        print("❌ ERROR: datasets library not found!")
-        print("Please install it with: pip install datasets")
-        sys.exit(1)
-    
-    # Check for HuggingFace token
-    hf_token = os.environ.get('HF_TOKEN')
-    if not hf_token:
-        print("\n⚠️  WARNING: HF_TOKEN environment variable not set.")
-        print("You may encounter rate limiting without authentication.")
-        print("Get your token from: https://huggingface.co/settings/tokens")
-        
-        response = input("\nContinue without token? (yes/no): ").strip().lower()
-        if response not in ['yes', 'y']:
-            print("\nTo set your token:")
-            print("  export HF_TOKEN='your_token_here'")
-            print("Then run this script again.")
-            sys.exit(0)
-    
     print("\n" + "=" * 70)
-    print("Downloading UCF-101 from Hugging Face")
+    print("Downloading UCF-101 from Official Source")
     print("=" * 70)
-    print(f"Dataset: {HF_DATASET}")
     print(f"Output directory: {output_dir}")
-    print("\nThis may take a while (~7GB download)...")
-    print("Downloads are cached, so you can safely interrupt and resume.\n")
+    print("\nThis will download ~6.5GB and may take 15-30 minutes...\n")
     
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Load dataset (downloads if not cached)
-    print("Loading dataset from Hugging Face Hub...")
+    # Download URL (official UCF-101 source)
+    ucf101_url = "https://www.crcv.ucf.edu/data/UCF101/UCF101.rar"
+    rar_file = output_dir.parent / "UCF101.rar"
+    
+    # Check if RAR already downloaded
+    if rar_file.exists():
+        print(f"✓ Found existing download: {rar_file}")
+        print(f"  Size: {rar_file.stat().st_size / (1024**3):.2f} GB")
+    else:
+        print(f"Downloading from: {ucf101_url}")
+        print(f"Saving to: {rar_file}")
+        print("\nNote: This uses wget. Download progress will be shown below.\n")
+        
+        # Use wget for download (more reliable than urllib for large files)
+        import subprocess
+        try:
+            # Create SSL context that doesn't verify certificates
+            result = subprocess.run(
+                ['wget', '--no-check-certificate', '-O', str(rar_file), ucf101_url],
+                check=True,
+                capture_output=False  # Show progress
+            )
+            print("\n✓ Download complete!")
+        except subprocess.CalledProcessError as e:
+            print(f"\n✗ wget failed: {e}")
+            print("\nTrying with curl...")
+            try:
+                result = subprocess.run(
+                    ['curl', '-k', '-L', '-o', str(rar_file), ucf101_url],
+                    check=True,
+                    capture_output=False
+                )
+                print("\n✓ Download complete!")
+            except subprocess.CalledProcessError as e2:
+                print(f"\n✗ curl also failed: {e2}")
+                print("\n❌ ERROR: Could not download UCF-101.")
+                print("\nPlease download manually:")
+                print(f"1. Visit: https://www.crcv.ucf.edu/research/data-sets/ucf101/")
+                print(f"2. Download UCF101.rar (~6.5GB)")
+                print(f"3. Save to: {rar_file}")
+                print(f"4. Re-run this script")
+                return False
+        except FileNotFoundError:
+            print("\n✗ wget and curl not found!")
+            print("\n❌ ERROR: Need wget or curl to download.")
+            print("\nPlease download manually:")
+            print(f"1. Visit: https://www.crcv.ucf.edu/research/data-sets/ucf101/")
+            print(f"2. Download UCF101.rar (~6.5GB)")
+            print(f"3. Save to: {rar_file}")
+            print(f"4. Re-run this script")
+            return False
+    
+    # Extract RAR file
+    print(f"\nExtracting {rar_file}...")
+    print("This may take 10-15 minutes...")
+    
+    # Try unrar first
+    if shutil.which('unrar'):
+        print("Using unrar...")
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['unrar', 'x', '-y', str(rar_file), str(output_dir.parent)],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            print("✓ Extraction complete!")
+            
+            # UCF-101 extracts to UCF-101/ directory, move contents to ucf101_org/
+            extracted_dir = output_dir.parent / "UCF-101"
+            if extracted_dir.exists():
+                print(f"Moving videos from {extracted_dir} to {output_dir}...")
+                for item in extracted_dir.iterdir():
+                    shutil.move(str(item), str(output_dir))
+                extracted_dir.rmdir()
+                print("✓ Videos organized!")
+            
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"✗ unrar failed: {e.stderr}")
+    
+    # Try unar
+    if shutil.which('unar'):
+        print("Using unar...")
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['unar', '-o', str(output_dir.parent), str(rar_file)],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            print("✓ Extraction complete!")
+            
+            # UCF-101 extracts to UCF-101/ directory, move contents to ucf101_org/
+            extracted_dir = output_dir.parent / "UCF-101"
+            if extracted_dir.exists():
+                print(f"Moving videos from {extracted_dir} to {output_dir}...")
+                for item in extracted_dir.iterdir():
+                    shutil.move(str(item), str(output_dir))
+                extracted_dir.rmdir()
+                print("✓ Videos organized!")
+            
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"✗ unar failed: {e.stderr}")
+    
+    # Try Python rarfile
     try:
-        if hf_token:
-            from huggingface_hub import login
-            login(token=hf_token)
+        import rarfile
+        print("Using Python rarfile library...")
+        with rarfile.RarFile(str(rar_file)) as rf:
+            rf.extractall(str(output_dir.parent))
+        print("✓ Extraction complete!")
         
-        dataset = load_dataset(HF_DATASET, split="train", trust_remote_code=True)
+        # UCF-101 extracts to UCF-101/ directory, move contents to ucf101_org/
+        extracted_dir = output_dir.parent / "UCF-101"
+        if extracted_dir.exists():
+            print(f"Moving videos from {extracted_dir} to {output_dir}...")
+            for item in extracted_dir.iterdir():
+                shutil.move(str(item), str(output_dir))
+            extracted_dir.rmdir()
+            print("✓ Videos organized!")
+        
+        return True
+    except ImportError:
+        pass
     except Exception as e:
-        print(f"\n❌ ERROR: Failed to load dataset from Hugging Face: {e}")
-        print("\nTroubleshooting:")
-        print("1. Check your internet connection")
-        print("2. Verify HF_TOKEN is valid (if set)")
-        print("3. Try: pip install --upgrade datasets huggingface-hub")
-        sys.exit(1)
+        print(f"✗ rarfile failed: {e}")
     
-    print(f"✓ Dataset loaded! Found {len(dataset)} videos")
-    
-    # Extract videos to output directory
-    print("\nAccessing dataset cache...")
-    
-    # HuggingFace datasets stores downloaded videos in a cache directory
-    # Instead of iterating through the dataset (which tries to decode videos),
-    # we'll access the cache directly
-    
-    # Get the cache directory for this dataset
-    from datasets.config import HF_DATASETS_CACHE
-    cache_dir = Path(HF_DATASETS_CACHE) if HF_DATASETS_CACHE else Path.home() / ".cache" / "huggingface" / "datasets"
-    
-    print(f"Looking for cached videos in: {cache_dir}")
-    
-    # Find all .avi files in the cache
-    cached_videos = []
-    for cache_path in cache_dir.rglob("*.avi"):
-        cached_videos.append(cache_path)
-    
-    if not cached_videos:
-        print("\n⚠️  No .avi files found in cache. Trying alternative approach...")
-        print("The dataset may store videos differently. Let me try accessing the dataset structure...")
-        
-        # Alternative: Try to access the underlying Arrow table directly
-        try:
-            # Access the dataset without decoding
-            dataset_path = dataset.cache_files[0]['filename'] if dataset.cache_files else None
-            if dataset_path:
-                print(f"Dataset cache file: {dataset_path}")
-                # Look for videos near the cache file
-                dataset_cache_dir = Path(dataset_path).parent
-                cached_videos = list(dataset_cache_dir.rglob("*.avi"))
-                print(f"Found {len(cached_videos)} videos near cache file")
-        except Exception as e:
-            print(f"Alternative approach failed: {e}")
-    
-    if not cached_videos:
-        print("\n❌ ERROR: Could not find cached video files.")
-        print("The UCF-101 dataset from Hugging Face may require 'torchcodec' for video decoding.")
-        print("\nAlternative solution:")
-        print("1. Download UCF-101 directly from official source")
-        print("2. Use Option 3 in README with manual download")
-        print("\nOr install torchcodec (experimental):")
-        print("  pip install torchcodec")
-        return False
-    
-    print(f"\nFound {len(cached_videos)} videos in cache")
-    print("Organizing videos by class...")
-    
-    # Process cached videos
-    for video_path in tqdm(cached_videos, desc="Organizing videos"):
-        try:
-            video_filename = video_path.name
-            
-            # Parse class name from filename
-            class_name = parse_ucf101_filename(video_filename)
-            if class_name is None:
-                # Try to use parent directory name
-                class_name = video_path.parent.name
-                if class_name in ['train', 'test', 'data', 'videos']:
-                    # Skip generic directory names
-                    continue
-            
-            # Create class directory
-            class_dir = output_dir / class_name
-            class_dir.mkdir(exist_ok=True)
-            
-            # Copy video to organized structure
-            output_path = class_dir / video_filename
-            if not output_path.exists():
-                shutil.copy2(video_path, output_path)
-                
-        except Exception as e:
-            print(f"\n⚠️  Warning: Failed to process {video_path.name}: {e}")
-            continue
-    
-    print(f"\n✓ Videos extracted to {output_dir}")
-    return True
+    print("\n❌ ERROR: No RAR extraction tool available!")
+    print("\nThe RAR file was downloaded to: {rar_file}")
+    print("\nPlease install one of:")
+    print("  - unrar: sudo apt-get install unrar")
+    print("  - unar: sudo apt-get install unar")
+    print("  - rarfile: pip install rarfile")
+    print("\nOr manually extract UCF101.rar to create ucf101_org/ directory")
+    return False
 
 
 def scan_videos(base_dir):
