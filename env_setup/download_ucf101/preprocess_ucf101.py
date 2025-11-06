@@ -65,7 +65,23 @@ def center_crop_resize(frame, target_height=480, target_width=640):
     frame = np.ascontiguousarray(frame)
     
     # Then resize to target dimensions
-    frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
+    # Workaround for cv2.resize bug with PyAV frames: convert to BGR and back
+    try:
+        # Try direct resize first
+        frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
+    except Exception as e:
+        # If that fails, try converting color space as workaround
+        # This forces cv2 to make a proper internal copy
+        try:
+            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            frame_bgr = cv2.resize(frame_bgr, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
+            frame = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        except Exception as e2:
+            # Last resort: use PIL
+            from PIL import Image
+            img_pil = Image.fromarray(frame)
+            img_pil = img_pil.resize((target_width, target_height), Image.LANCZOS)
+            frame = np.array(img_pil)
     
     return frame
 
