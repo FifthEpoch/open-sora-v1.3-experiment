@@ -246,10 +246,7 @@ def process_video(video_path, output_base, target_fps=24, target_frames=45, targ
         # Read video
         frames, fps = read_video(video_path)
         if frames is None or len(frames) == 0:
-            print(f"  DEBUG: read_video returned None or empty for {video_path.name}")
             return False, None, None, None
-        
-        print(f"  DEBUG: Loaded {len(frames)} frames at {fps:.2f} fps from {video_path.name}")
         
         # Center crop and resize - process each frame with error handling
         processed_frames = []
@@ -261,42 +258,24 @@ def process_video(video_path, output_base, target_fps=24, target_frames=45, targ
                     continue
                 
                 if len(frame.shape) != 3 or frame.shape[2] != 3:
-                    print(f"  Warning: Frame {i} has invalid shape {frame.shape} in {video_path.name}, skipping")
                     continue
-                
-                # Debug first frame to see what's wrong
-                if i == 0:
-                    print(f"  DEBUG Frame 0: type={type(frame)}, dtype={frame.dtype}, shape={frame.shape}, "
-                          f"contiguous={frame.flags['C_CONTIGUOUS']}, "
-                          f"writeable={frame.flags['WRITEABLE']}")
                 
                 processed_frame = center_crop_resize(frame, target_height, target_width)
                 processed_frames.append(processed_frame)
             except Exception as e:
-                print(f"  Warning: Failed to process frame {i} in {video_path.name}: {e}")
-                if i == 0:
-                    import traceback
-                    print(f"  Full traceback for frame 0:")
-                    traceback.print_exc()
+                # Silently skip problematic frames
                 continue
         
         if len(processed_frames) == 0:
-            print(f"  Error: No frames could be processed for {video_path.name}")
             return False, None, None, None
-        
-        print(f"  DEBUG: After processing, have {len(processed_frames)} frames")
         
         # Resample to target fps
         resampled_frames = resample_video(processed_frames, fps, target_fps)
-        print(f"  DEBUG: After resampling from {fps:.2f} to {target_fps} fps, have {len(resampled_frames)} frames")
         
         # Crop to target number of frames
         cropped_frames = crop_to_n_frames(resampled_frames, target_frames)
         if cropped_frames is None:
-            print(f"  DEBUG: crop_to_n_frames returned None - video too short ({len(resampled_frames)} < {target_frames} frames required)")
             return False, None, None, None
-        
-        print(f"  DEBUG: After cropping to {target_frames} frames, ready to write")
         
         # Determine output path (maintain directory structure)
         relative_path = video_path.relative_to(video_path.parents[1])  # Relative to ucf101_org parent
