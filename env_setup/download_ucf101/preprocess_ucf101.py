@@ -34,6 +34,15 @@ def center_crop_resize(frame, target_height=480, target_width=640):
     if len(frame.shape) != 3:
         raise ValueError(f"Frame must have 3 dimensions (H, W, C), got shape {frame.shape}")
     
+    # Ensure frame is contiguous and proper dtype for cv2
+    if not frame.flags['C_CONTIGUOUS']:
+        frame = np.ascontiguousarray(frame)
+    if frame.dtype != np.uint8:
+        frame = frame.astype(np.uint8)
+    
+    # Make a clean copy to ensure cv2 compatibility
+    frame = np.copy(frame)
+    
     h, w = frame.shape[:2]
     
     # Calculate aspect ratios
@@ -51,6 +60,9 @@ def center_crop_resize(frame, target_height=480, target_width=640):
         new_h = int(w / target_aspect)
         start_y = (h - new_h) // 2
         frame = frame[start_y:start_y + new_h, :]
+    
+    # Ensure cropped frame is also contiguous
+    frame = np.ascontiguousarray(frame)
     
     # Then resize to target dimensions
     frame = cv2.resize(frame, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
@@ -236,10 +248,20 @@ def process_video(video_path, output_base, target_fps=24, target_frames=45, targ
                     print(f"  Warning: Frame {i} has invalid shape {frame.shape} in {video_path.name}, skipping")
                     continue
                 
+                # Debug first frame to see what's wrong
+                if i == 0:
+                    print(f"  DEBUG Frame 0: type={type(frame)}, dtype={frame.dtype}, shape={frame.shape}, "
+                          f"contiguous={frame.flags['C_CONTIGUOUS']}, "
+                          f"writeable={frame.flags['WRITEABLE']}")
+                
                 processed_frame = center_crop_resize(frame, target_height, target_width)
                 processed_frames.append(processed_frame)
             except Exception as e:
                 print(f"  Warning: Failed to process frame {i} in {video_path.name}: {e}")
+                if i == 0:
+                    import traceback
+                    print(f"  Full traceback for frame 0:")
+                    traceback.print_exc()
                 continue
         
         if len(processed_frames) == 0:
