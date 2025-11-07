@@ -89,10 +89,11 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA av
 # Set OMP threads to match requested CPUs
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-# Check bitsandbytes version (should be >=0.43.0 for PyTorch 2.2.2)
+# Check bitsandbytes version (should be 0.43.x for PyTorch 2.2.2)
 echo "========================================"
 echo "Checking bitsandbytes version..."
 python -c "import bitsandbytes; print(f'bitsandbytes version: {bitsandbytes.__version__}')" || echo "WARNING: bitsandbytes import failed - run env_setup/fix_bitsandbytes.sh first!"
+echo "Note: Compatible version for PyTorch 2.2.2 is bitsandbytes 0.43.x"
 echo "========================================"
 
 # --- Run Experiment ---

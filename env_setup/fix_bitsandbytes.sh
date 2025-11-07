@@ -29,10 +29,11 @@ echo ""
 echo "Current bitsandbytes version:"
 pip show bitsandbytes | grep Version || echo "Not installed"
 
-# Upgrade bitsandbytes
+# Install correct bitsandbytes version
 echo ""
-echo "Upgrading bitsandbytes to version compatible with PyTorch 2.2.2..."
-pip install --upgrade 'bitsandbytes>=0.43.0' --no-cache-dir
+echo "Installing bitsandbytes version compatible with PyTorch 2.2.2..."
+echo "Target: bitsandbytes 0.43.3 (last version supporting PyTorch 2.2.x)"
+pip install 'bitsandbytes==0.43.3' --no-cache-dir --force-reinstall
 
 # Verify new version
 echo ""
