@@ -94,15 +94,17 @@ echo "========================================"
 echo "Starting experiment..."
 echo "========================================"
 
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Set absolute paths
+PROJECT_ROOT="/scratch/wc3013/open-sora-v1.3-experiment"
+SCRIPT_DIR="${PROJECT_ROOT}/naive_experiment/scripts"
 
-# Navigate to naive_experiment directory
+# Navigate to script directory
 cd "${SCRIPT_DIR}"
+echo "Working directory: $(pwd)"
 
-# Run experiment
-python run_experiment.py \
-    --data-csv /scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_metadata.csv \
+# Run experiment with absolute path to script
+python "${SCRIPT_DIR}/run_experiment.py" \
+    --data-csv "${PROJECT_ROOT}/env_setup/download_ucf101/ucf101_metadata.csv" \
     --output-dir results \
     --num-videos 10
 
