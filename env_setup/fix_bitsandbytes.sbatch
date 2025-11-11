@@ -73,6 +73,13 @@ echo "Ensuring PyTorch 2.2.2 with CUDA 12.1..."
 echo "================================================"
 pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121 --no-cache-dir
 
+# Downgrade NumPy to 1.x (PyTorch 2.2.2 compiled against NumPy 1.x)
+echo ""
+echo "================================================"
+echo "Downgrading NumPy to 1.26.4 (compatible with PyTorch 2.2.2)..."
+echo "================================================"
+pip install 'numpy<2' --no-cache-dir --force-reinstall
+
 # Install correct bitsandbytes version
 echo ""
 echo "================================================"
@@ -85,6 +92,7 @@ echo ""
 echo "================================================"
 echo "New package versions:"
 echo "================================================"
+python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
 python -c "import torch; print(f'PyTorch: {torch.__version__}')"
 python -c "import xformers; print(f'xformers: {xformers.__version__}')"
 pip show bitsandbytes | grep Version
@@ -94,6 +102,8 @@ echo ""
 echo "================================================"
 echo "Testing package imports on GPU node..."
 echo "================================================"
+python -c "import numpy; print(f'✓ NumPy import successful')"
+python -c "import cv2; print(f'✓ OpenCV import successful')"
 python -c "import torch; print(f'✓ PyTorch import successful')"
 python -c "import xformers; print(f'✓ xformers import successful')"
 python -c "import bitsandbytes; print(f'✓ bitsandbytes import successful')"
