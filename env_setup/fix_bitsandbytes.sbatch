@@ -81,12 +81,12 @@ echo "Step 2: Ensuring PyTorch 2.2.2 with CUDA 12.1..."
 echo "================================================"
 pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121 --no-cache-dir
 
-# Install correct bitsandbytes version
+# Install correct bitsandbytes version WITHOUT upgrading dependencies
 echo ""
 echo "================================================"
-echo "Step 3: Installing bitsandbytes 0.43.3 for PyTorch 2.2.2..."
+echo "Step 3: Installing bitsandbytes 0.43.3 (without upgrading deps)..."
 echo "================================================"
-pip install 'bitsandbytes==0.43.3' --no-cache-dir --force-reinstall
+pip install 'bitsandbytes==0.43.3' --no-cache-dir --force-reinstall --no-deps
 
 # Verify new versions
 echo ""
