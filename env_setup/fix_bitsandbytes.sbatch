@@ -62,28 +62,29 @@ echo ""
 echo "================================================"
 echo "Current package versions:"
 echo "================================================"
+python -c "import numpy; print(f'NumPy: {numpy.__version__}')" || echo "NumPy not found"
 python -c "import torch; print(f'PyTorch: {torch.__version__}')" || echo "PyTorch not found"
 python -c "import xformers; print(f'xformers: {xformers.__version__}')" || echo "xformers not found"
 pip show bitsandbytes | grep Version || echo "bitsandbytes not found"
 
+# CRITICAL: Downgrade NumPy FIRST (PyTorch 2.2.2 compiled against NumPy 1.x)
+echo ""
+echo "================================================"
+echo "Step 1: Downgrading NumPy to 1.x (compatible with PyTorch 2.2.2)..."
+echo "================================================"
+pip install 'numpy<2' --no-cache-dir --force-reinstall
+
 # Reinstall PyTorch 2.2.2 (in case it was upgraded)
 echo ""
 echo "================================================"
-echo "Ensuring PyTorch 2.2.2 with CUDA 12.1..."
+echo "Step 2: Ensuring PyTorch 2.2.2 with CUDA 12.1..."
 echo "================================================"
 pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121 --no-cache-dir
-
-# Downgrade NumPy to 1.x (PyTorch 2.2.2 compiled against NumPy 1.x)
-echo ""
-echo "================================================"
-echo "Downgrading NumPy to 1.26.4 (compatible with PyTorch 2.2.2)..."
-echo "================================================"
-pip install 'numpy<2' --no-cache-dir --force-reinstall
 
 # Install correct bitsandbytes version
 echo ""
 echo "================================================"
-echo "Installing bitsandbytes 0.43.3 for PyTorch 2.2.2..."
+echo "Step 3: Installing bitsandbytes 0.43.3 for PyTorch 2.2.2..."
 echo "================================================"
 pip install 'bitsandbytes==0.43.3' --no-cache-dir --force-reinstall
 
