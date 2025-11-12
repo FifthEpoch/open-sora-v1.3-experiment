@@ -73,6 +73,11 @@ echo ""
 echo "Activating conda environment: ${SCRATCH_BASE}/conda-envs/opensora13"
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
 
+# Fix libstdc++ compatibility for PyAV (av package)
+# PyAV from conda-forge requires GLIBCXX_3.4.30, ensure conda's libstdc++ takes priority
+export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+echo "LD_LIBRARY_PATH set to: $LD_LIBRARY_PATH"
+
 # Verify GPU availability
 echo "========================================"
 echo "GPU Information"
