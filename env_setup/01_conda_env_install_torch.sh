@@ -17,6 +17,9 @@ fi
 module purge || true
 module load anaconda3/2025.06
 
+# Initialize conda for bash (required before conda activate)
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
+
 # Configure conda to use scratch directories
 conda config --add envs_dirs "${SCRATCH_BASE}/conda-envs" 2>/dev/null || true
 conda config --add pkgs_dirs "${SCRATCH_BASE}/conda-pkgs" 2>/dev/null || true
