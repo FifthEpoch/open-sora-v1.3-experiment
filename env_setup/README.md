@@ -20,33 +20,44 @@ Follow these scripts **in order** (each depends on the previous):
 source env_setup/00_set_scratch_env.sh
 ```
 
-### 1. Create Conda Environment and Install PyTorch
-**File:** `01_conda_env_install_torch.sh`
+### 1. Create Conda Environment and Install All Dependencies
+**Files:** 
+- `01_conda_env_install_torch.sh` (shell script version)
+- `02_create_conda_env.sbatch` (SLURM batch job version, **recommended**)
+
+**What it does:**
 - **Auto-loads scratch environment** - no manual sourcing needed!
-- Creates conda environment with Python 3.9 **in `/scratch/wc3013/conda-envs/`**
-- Installs PyTorch 2.2.2 + CUDA 12.1
-- Installs xformers
-- Installs basic dependencies from requirements
+- Creates conda environment with Python 3.9 in `/scratch/wc3013/conda-envs/`
+- **Installs all dependencies in correct order to avoid version conflicts:**
+  - NumPy 1.26.4 (NumPy 2.x breaks PyTorch 2.2.2)
+  - PyTorch 2.2.2 + CUDA 12.1
+  - xformers 0.0.25.post1
+  - bitsandbytes 0.43.3 (with `--no-deps` to prevent upgrades)
+  - PyAV (av) via conda for video processing
+  - All Open-Sora requirements
+  - Eval and VAE requirements
+- **Verifies all package versions are correct**
 - Configures conda to use scratch directories permanently
 
-**Run on:** Login node (no GPU needed)
+**Run on:** Login node or submit as batch job (recommended for reliability)
 
+**Option A: SLURM batch job (recommended)**
+```bash
+cd env_setup
+sbatch 02_create_conda_env.sbatch
+
+# Monitor progress
+tail -f slurm_create_env.out
+```
+
+**Option B: Direct shell execution**
 ```bash
 bash env_setup/01_conda_env_install_torch.sh
 ```
 
-### 2. Install FFmpeg
-**File:** `03_ffmpeg.sh`
-- Installs FFmpeg for video processing
-- Required by PyAV for UCF-101 preprocessing and inference
+**Note:** The sbatch version is more reliable for long-running installations and provides better logging.
 
-**Run on:** Login node (no GPU needed)
-
-```bash
-bash env_setup/03_ffmpeg.sh
-```
-
-### 3. Build Flash Attention and Apex
+### 2. Build Flash Attention and Apex
 **File:** `02_flsh_attn_apex_build.sbatch`
 - Builds flash-attn 2.5.8 (must match GPU architecture)
 - Builds apex (for FusedLayerNorm, FusedAdam)
@@ -68,18 +79,7 @@ sbatch env_setup/02_flsh_attn_apex_build.sbatch
 - Line 99: Change to your repo path
 - Wheels are built in scratch directory automatically
 
-### 4. Verify Installation
-**File:** `04_installation_check.sh`
-- Checks that all dependencies are installed correctly
-- Verifies imports work
-
-**Run on:** Login node
-
-```bash
-bash env_setup/04_installation_check.sh
-```
-
-### 5. Download and Preprocess UCF-101 Dataset
+### 3. Download and Preprocess UCF-101 Dataset
 **Directory:** `download_ucf101/`
 - Downloads UCF-101 dataset (101 action classes, 13,320 videos)
 - Performs stratified sampling (2,000 videos, ~20 per class)
@@ -149,26 +149,26 @@ See `download_ucf101/README.md` for detailed instructions.
 ## Quick Start
 
 ```bash
-# 1. Create environment (auto-loads scratch env)
-bash env_setup/01_conda_env_install_torch.sh
+# 1. Create environment with all dependencies (recommended: SLURM batch job)
+cd env_setup
+sbatch 02_create_conda_env.sbatch
+# Monitor: tail -f slurm_create_env.out
 
-# 2. Install FFmpeg (auto-loads scratch env)
-bash env_setup/03_ffmpeg.sh
-
-# 3. Build compiled extensions (on GPU node)
+# 2. Build compiled extensions (on GPU node)
 # Edit 02_flsh_attn_apex_build.sbatch first!
-sbatch env_setup/02_flsh_attn_apex_build.sbatch
+sbatch 02_flsh_attn_apex_build.sbatch
 
-# 4. Verify (auto-loads scratch env)
-bash env_setup/04_installation_check.sh
-
-# 5. Download and preprocess UCF-101 dataset
-cd env_setup/download_ucf101
-python download_ucf101.py
+# 3. Download and preprocess UCF-101 dataset
+cd download_ucf101
 sbatch preprocess_ucf101.sbatch
+# Monitor: tail -f slurm_download_prep_ucf101.out
+
+# 4. Run naive experiment
+cd ../../naive_experiment/scripts
+sbatch run_experiment.sbatch
 ```
 
-**Note:** Steps 1, 2, and 4 automatically load the scratch environment configuration!
+**Note:** All scripts automatically load the scratch environment configuration!
 
 ## Cluster-Specific Notes
 
