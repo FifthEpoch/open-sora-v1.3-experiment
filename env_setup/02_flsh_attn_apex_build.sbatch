@@ -12,10 +12,12 @@ echo "Node: $(hostname)"
 nvidia-smi || true
 
 # --- env ---
-# Setup scratch environment variables FIRST
-# NOTE: Ensure this path exists before running
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/00_set_scratch_env.sh"
+# Set base directory (absolute path - SLURM runs script in different location)
+SCRATCH_BASE="/scratch/wc3013"
+PROJECT_ROOT="${SCRATCH_BASE}/open-sora-v1.3-experiment"
+
+# Load environment configuration using absolute path
+source "${PROJECT_ROOT}/env_setup/00_set_scratch_env.sh"
 
 # Load modules
 module purge
@@ -128,8 +130,8 @@ PY
 echo "Built wheels are in $WHEEL_DIR"
 
 # ---- OTHER OPEN-SORA v1.3 REQUIREMENTS ----
-# NOTE: Update this path to your actual repo location
-cd /path/to/your/repo/Open-Sora-1.3
+# Install Open-Sora in development mode using absolute path
+cd "${PROJECT_ROOT}"
 pip install -v -e .
 # (optional) TensorNVMe for fast disk I/O; fall back if io_uring not available
 DISABLE_URING=1 pip install -v --no-build-isolation git+https://github.com/hpcaitech/TensorNVMe.git || true

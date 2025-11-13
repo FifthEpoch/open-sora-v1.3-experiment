@@ -23,9 +23,12 @@ echo "Node: $SLURM_NODELIST"
 echo "Start time: $(date)"
 echo ""
 
-# Get script directory and load environment configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/00_set_scratch_env.sh"
+# Set base directory (absolute path - SLURM runs script in different location)
+SCRATCH_BASE="/scratch/wc3013"
+PROJECT_ROOT="${SCRATCH_BASE}/open-sora-v1.3-experiment"
+
+# Load environment configuration using absolute path
+source "${PROJECT_ROOT}/env_setup/00_set_scratch_env.sh"
 
 # Load anaconda module
 echo "Loading anaconda module..."
@@ -106,7 +109,7 @@ echo ""
 echo "========================================"
 echo "Installing Open-Sora Requirements"
 echo "========================================"
-cd "${SCRIPT_DIR}/.."
+cd "${PROJECT_ROOT}"
 
 echo "Installing Open-Sora v1.3 CUDA requirements..."
 pip install -r requirements/requirements-cu121.txt
