@@ -53,10 +53,11 @@ mkdir -p "${TMPDIR}"
 echo "Environment configured to use scratch base: ${SCRATCH_BASE}"
 
 # Load anaconda module
-module load anaconda3/2024.02
+module purge
+module load anaconda3/2025.06
 
 # Source conda for shell
-source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
 
 # Deactivate any existing environment for clean activation
 conda deactivate 2>/dev/null || true

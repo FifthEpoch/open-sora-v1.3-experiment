@@ -15,7 +15,7 @@ fi
 
 # login node (no GPU)
 module purge || true
-module load anaconda3/2024.02
+module load anaconda3/2025.06
 
 # Configure conda to use scratch directories
 conda config --add envs_dirs "${SCRATCH_BASE}/conda-envs" 2>/dev/null || true

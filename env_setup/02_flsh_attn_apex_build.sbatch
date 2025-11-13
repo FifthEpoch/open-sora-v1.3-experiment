@@ -21,7 +21,7 @@ source "${SCRIPT_DIR}/00_set_scratch_env.sh"
 module purge
 # (Optional) load a modern GCC if your default is very old:
 # module load gcc/12
-module load anaconda3/2024.02
+module load anaconda3/2025.06
 
 # Activate conda environment in scratch location
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"

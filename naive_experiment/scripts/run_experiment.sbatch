@@ -52,10 +52,10 @@ echo "Environment configured to use: ${SCRATCH_BASE}"
 
 # Load conda module
 module purge
-module load anaconda3/2024.02
+module load anaconda3/2025.06
 
 # Source conda initialization script
-source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
 
 # Deactivate any existing environment for clean activation
 conda deactivate 2>/dev/null || true

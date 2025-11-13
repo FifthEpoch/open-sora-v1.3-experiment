@@ -20,13 +20,14 @@ echo ""
 
 echo "Step 2: Load anaconda module"
 echo "----------------------------"
-module load anaconda3/2024.02
+module purge
+module load anaconda3/2025.06
 echo "✓ Module loaded"
 echo ""
 
 echo "Step 3: Source conda initialization"
 echo "-----------------------------------"
-source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
 echo "✓ Conda sourced"
 echo ""
 

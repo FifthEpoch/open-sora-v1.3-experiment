@@ -13,8 +13,8 @@ SCRATCH_BASE="/scratch/wc3013"
 
 # Load conda
 module purge
-module load anaconda3/2024.02
-source /share/apps/anaconda3/2024.02/etc/profile.d/conda.sh
+module load anaconda3/2025.06
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
 
 # Configure conda paths
 conda config --prepend envs_dirs "${SCRATCH_BASE}/conda-envs" 2>/dev/null || true
