@@ -57,27 +57,41 @@ bash env_setup/01_conda_env_install_torch.sh
 
 **Note:** The sbatch version is more reliable for long-running installations and provides better logging.
 
-### 2. Build Flash Attention and Apex
+### 2. Build Flash Attention and Apex (OPTIONAL - Can Be Skipped)
+
+**⚠️ IMPORTANT: This step is OPTIONAL and can be skipped entirely.**
+
+Open-Sora v1.3 works perfectly fine without flash-attn and apex. These packages only provide speed optimizations (2-3x faster) but are not required for correctness.
+
+**Why are they difficult to install?**
+- **flash-attn**: Requires exact CUDA toolkit version match with PyTorch's CUDA version. The build process looks for `nvcc` in PyTorch's package directory, but conda-installed PyTorch doesn't include the full CUDA toolkit there. Additionally, it must be compiled for your specific GPU architecture (H100/H200 = compute capability 9.0), which requires the CUDA toolkit to be available during build.
+  
+- **apex**: NVIDIA's apex library has strict CUDA version requirements and often fails when there's a mismatch between the CUDA version used to build PyTorch (12.1 in our case) and the CUDA toolkit available on the system. The build process is fragile and frequently breaks with newer CUDA versions.
+
+**If you want to try building them anyway:**
+
 **File:** `02_flsh_attn_apex_build.sbatch`
 - Builds flash-attn 2.5.8 (must match GPU architecture)
 - Builds apex (for FusedLayerNorm, FusedAdam)
 - Installs Open-Sora in development mode
-- **IMPORTANT:** Edit line 99 to point to your repo path
 
 **Run on:** GPU node (submit via SLURM)
 
 ```bash
-# Edit the sbatch file first!
-nano env_setup/02_flsh_attn_apex_build.sbatch
-
-# Then submit
 sbatch env_setup/02_flsh_attn_apex_build.sbatch
 ```
 
 **Key Configuration:**
 - Line 46: `TORCH_CUDA_ARCH_LIST="90"` for H100/H200
-- Line 99: Change to your repo path
-- Wheels are built in scratch directory automatically
+- Builds to `${SCRATCH_BASE}/wheels/`
+
+**If builds fail:** Don't worry! Just ensure your configs have:
+- `enable_flash_attn=False`
+- `enable_layernorm_kernel=False`
+
+The code will automatically fall back to:
+- Standard PyTorch attention (or SDPA if available)
+- Standard `nn.LayerNorm` instead of FusedLayerNorm
 
 ### 3. Download and Preprocess UCF-101 Dataset
 **Directory:** `download_ucf101/`
@@ -154,9 +168,9 @@ cd env_setup
 sbatch 02_create_conda_env.sbatch
 # Monitor: tail -f slurm_create_env.out
 
-# 2. Build compiled extensions (on GPU node)
-# Edit 02_flsh_attn_apex_build.sbatch first!
-sbatch 02_flsh_attn_apex_build.sbatch
+# 2. (OPTIONAL) Build flash-attn and apex for speed optimization
+# Skip this step if you encounter build errors - it's not required!
+# sbatch 02_flsh_attn_apex_build.sbatch
 
 # 3. Download and preprocess UCF-101 dataset
 cd download_ucf101
@@ -168,7 +182,10 @@ cd ../../naive_experiment/scripts
 sbatch run_experiment.sbatch
 ```
 
-**Note:** All scripts automatically load the scratch environment configuration!
+**Note:** 
+- All scripts automatically load the scratch environment configuration!
+- Step 2 (flash-attn/apex) is optional and can be skipped entirely
+- The experiment will work fine without these packages, just 2-3x slower
 
 ## Cluster-Specific Notes
 
@@ -190,16 +207,32 @@ If your cluster uses environment modules, you may need to load:
 
 ## Troubleshooting
 
-### "No module named 'flash_attn'"
-- Run the sbatch script on a GPU node with matching architecture
-- Check that TORCH_CUDA_ARCH_LIST matches your GPU
+### Flash-attn or apex build failures
+**This is expected and OK!** These packages have strict requirements:
 
-### "ffmpeg not found"
-- Run `bash env_setup/03_ffmpeg.sh`
+**Common errors:**
+- `FileNotFoundError: nvcc` - PyTorch's conda package doesn't include the full CUDA toolkit
+- `CUDA version mismatch` - apex requires exact CUDA version alignment
+- `fatal: not a git repository` - build process expects git context
+
+**Solution:** Skip these packages entirely!
+1. Don't run `02_flsh_attn_apex_build.sbatch`
+2. Ensure all your config files have:
+   ```python
+   enable_flash_attn=False
+   enable_layernorm_kernel=False
+   ```
+3. The code will automatically use standard PyTorch implementations
+4. Your experiment will run correctly, just 2-3x slower
+
+### "No module named 'flash_attn'" during inference
+- This means your config has `enable_flash_attn=True` but flash-attn isn't installed
+- Change to `enable_flash_attn=False` in your config file
+- The naive experiment configs already have this set correctly
 
 ### "No module named 'opensora'"
-- Run the sbatch script (installs via `pip install -e .`)
-- Check that repo path on line 99 is correct
+- Run: `cd /scratch/wc3013/open-sora-v1.3-experiment && pip install -e .`
+- Or run the `02_flsh_attn_apex_build.sbatch` which includes this step
 
 ### "decord" import errors
 - Decord is installed via requirements-eval.txt

@@ -7,7 +7,6 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32GB
 #SBATCH --time=02:00:00
-#SBATCH --partition=cpu
 
 # Create conda environment with all dependencies correctly versioned
 # This script consolidates environment creation and dependency installation

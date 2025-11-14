@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH -J naive_finetune_exp
-#SBATCH --gres=gpu:h100:1
+#SBATCH -J rtx_naive_finetune_exp
+#SBATCH --gres=gpu:1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH -t 47:59:59
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=96G
-#SBATCH --output=slurm_run_experiment.out
-#SBATCH --error=slurm_run_experiment.err
+#SBATCH --output=rtx_slurm_run_experiment.out
+#SBATCH --error=rtx_slurm_run_experiment.err
 
 set -euo pipefail
 
