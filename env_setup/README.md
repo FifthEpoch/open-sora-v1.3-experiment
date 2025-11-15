@@ -160,32 +160,57 @@ See `download_ucf101/README.md` for detailed instructions.
 ### System Tools
 - ffmpeg>=6,<7
 
-## Quick Start
+## Quick Start (Recommended)
+
+### One-Command Environment Setup
 
 ```bash
-# 1. Create environment with all dependencies (recommended: SLURM batch job)
-cd env_setup
-sbatch 02_create_conda_env.sbatch
-# Monitor: tail -f slurm_create_env.out
+cd /scratch/wc3013/open-sora-v1.3-experiment/env_setup
+sbatch setup_environment.sbatch
 
-# 2. (OPTIONAL) Build flash-attn and apex for speed optimization
-# Skip this step if you encounter build errors - it's not required!
-# sbatch 02_flsh_attn_apex_build.sbatch
-
-# 3. Download and preprocess UCF-101 dataset
-cd download_ucf101
-sbatch preprocess_ucf101.sbatch
-# Monitor: tail -f slurm_download_prep_ucf101.out
-
-# 4. Run naive experiment
-cd ../../naive_experiment/scripts
-sbatch run_experiment.sbatch
+# Monitor progress
+tail -f slurm_setup_env_*.out
 ```
 
-**Note:** 
-- All scripts automatically load the scratch environment configuration!
-- Step 2 (flash-attn/apex) is optional and can be skipped entirely
-- The experiment will work fine without these packages, just 2-3x slower
+This **single comprehensive script**:
+- ✅ Creates environment with Python 3.10
+- ✅ Installs all dependencies in correct order
+- ✅ Prevents NumPy/package version conflicts
+- ✅ Verifies installation automatically
+- ✅ Safe to run multiple times (idempotent)
+- ✅ Self-healing (detects and fixes common issues)
+
+### Complete Workflow
+
+```bash
+# 1. Setup environment (one-time, ~30-60 min)
+cd env_setup
+sbatch setup_environment.sbatch
+# Wait for completion, then check: tail slurm_setup_env_*.out
+
+# 2. Download and preprocess UCF-101 dataset (~8-10 hours)
+cd download_ucf101
+sbatch preprocess_ucf101.sbatch
+
+# 3. Run naive experiment
+cd ../../naive_experiment/scripts
+sbatch rtx_run_experiment.sbatch
+```
+
+### What Gets Installed
+
+- Python 3.10 (required for modern type hints)
+- NumPy 1.26.x (locked to prevent 2.x upgrade)
+- PyTorch 2.2.2 + CUDA 12.1
+- xformers 0.0.25.post1
+- bitsandbytes 0.43.3
+- PyAV (video processing)
+- All Open-Sora requirements
+- Evaluation metrics (LPIPS, SSIM, etc.)
+
+### Note on flash-attn and apex
+
+These are **optional** and **not installed** by default. The consolidated setup provides a working environment without them. The experiment will run correctly, just 2-3x slower. See section below if you want to try building them anyway.
 
 ## Cluster-Specific Notes
 
@@ -206,6 +231,36 @@ If your cluster uses environment modules, you may need to load:
 - CUDA toolkit (though PyTorch includes CUDA)
 
 ## Troubleshooting
+
+### Environment setup fails
+
+**Check the error log:**
+```bash
+cat slurm_setup_env_*.err
+```
+
+**Common issues:**
+
+1. **NumPy upgraded to 2.x during setup**
+   - The script should prevent this, but if it happens:
+   ```bash
+   conda activate /scratch/wc3013/conda-envs/opensora13
+   pip install 'numpy<2' --force-reinstall --no-cache-dir
+   rm -rf $CONDA_PREFIX/lib/python*/site-packages/numpy-2.*.dist-info
+   ```
+
+2. **Verification fails**
+   - Check what's wrong:
+   ```bash
+   conda activate /scratch/wc3013/conda-envs/opensora13
+   python -c "import sys, numpy, torch; print(sys.version, numpy.__version__, torch.__version__)"
+   ```
+
+3. **Start fresh**
+   ```bash
+   rm -rf /scratch/wc3013/conda-envs/opensora13
+   sbatch setup_environment.sbatch
+   ```
 
 ### Flash-attn or apex build failures
 **This is expected and OK!** These packages have strict requirements:
