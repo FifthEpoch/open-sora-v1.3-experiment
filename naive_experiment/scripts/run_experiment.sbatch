@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J naive_finetune_exp
-#SBATCH --gres=gpu:h100:1
+#SBATCH --gres=gpu:h200:1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH -t 47:59:59
