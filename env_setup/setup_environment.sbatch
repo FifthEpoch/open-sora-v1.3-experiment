@@ -104,11 +104,25 @@ if [ "$CONDA_PREFIX" != "${ENV_PATH}" ]; then
     exit 1
 fi
 
+# Explicitly ensure conda env's bin is first in PATH
+export PATH="${ENV_PATH}/bin:${PATH}"
+
 echo "✓ Environment activated"
 echo "  Python: $(python --version)"
 echo "  Location: ${CONDA_PREFIX}"
 echo "  Python executable: $(which python)"
 echo "  PYTHONNOUSERSITE: ${PYTHONNOUSERSITE}"
+
+# Critical verification: ensure we're using the environment's Python
+PYTHON_PATH=$(which python)
+if [[ ! "$PYTHON_PATH" =~ ^${ENV_PATH} ]]; then
+    echo "❌ ERROR: Python executable is not from the conda environment!"
+    echo "  Expected: ${ENV_PATH}/bin/python"
+    echo "  Got: ${PYTHON_PATH}"
+    echo "  PATH: ${PATH}"
+    exit 1
+fi
+echo "✓ Using environment's Python: ${PYTHON_PATH}"
 
 # ==============================================================================
 # Check Python Version
