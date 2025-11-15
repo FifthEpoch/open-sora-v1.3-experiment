@@ -176,7 +176,25 @@ pip install --index-url https://download.pytorch.org/whl/cu121 \
 # Step 3.3: Install PyTorch dependencies (except NumPy which we already have)
 echo ""
 echo "Step 3.3: Installing PyTorch dependencies..."
+# Install standard Python dependencies
 pip install typing-extensions sympy networkx jinja2 fsspec filelock pillow
+
+# Step 3.4: Install CUDA dependencies that PyTorch needs
+echo ""
+echo "Step 3.4: Installing CUDA dependencies for PyTorch..."
+pip install --index-url https://download.pytorch.org/whl/cu121 \
+  nvidia-cublas-cu12==12.1.3.1 \
+  nvidia-cuda-cupti-cu12==12.1.105 \
+  nvidia-cuda-nvrtc-cu12==12.1.105 \
+  nvidia-cuda-runtime-cu12==12.1.105 \
+  nvidia-cudnn-cu12==8.9.2.26 \
+  nvidia-cufft-cu12==11.0.2.54 \
+  nvidia-curand-cu12==10.3.2.106 \
+  nvidia-cusolver-cu12==11.4.5.107 \
+  nvidia-cusparse-cu12==12.1.0.106 \
+  nvidia-nccl-cu12==2.19.3 \
+  nvidia-nvtx-cu12==12.1.105 \
+  triton==2.2.0
 
 echo ""
 echo "Verifying core ML stack..."
@@ -208,13 +226,6 @@ echo ""
 echo "=============================================================================="
 echo "Step 4: bitsandbytes Installation"
 echo "=============================================================================="
-echo "Installing bitsandbytes dependencies first..."
-echo ""
-
-# Install triton (required by bitsandbytes)
-pip install triton
-
-echo ""
 echo "Installing bitsandbytes 0.43.3 with --no-deps..."
 echo "⚠️  Using --no-deps prevents it from upgrading NumPy/PyTorch"
 echo ""
