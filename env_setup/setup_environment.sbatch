@@ -255,15 +255,13 @@ echo ""
 
 conda install -y av -c conda-forge
 
-# Conda might have upgraded NumPy - force it back to 1.x
+# Conda might have upgraded NumPy and/or OpenCV - fix both
 echo ""
-echo "Ensuring NumPy stays at 1.x after conda install..."
+echo "Enforcing compatible NumPy 1.x + OpenCV 4.9.x versions..."
+# Install OpenCV without deps to prevent NumPy upgrade
+pip install --no-deps --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
+# Then force NumPy 1.x
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
-
-# Fix OpenCV version to one compatible with NumPy 1.x
-echo ""
-echo "Installing OpenCV 4.9.x (compatible with NumPy 1.x)..."
-pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 
 echo ""
 echo "Verifying PyAV..."
@@ -297,9 +295,9 @@ echo "Installing VAE requirements..."
 pip install -r requirements/requirements-vae.txt
 
 echo ""
-echo "Ensuring NumPy stays at 1.x after requirements install..."
+echo "Enforcing compatible NumPy 1.x + OpenCV 4.9.x versions..."
+pip install --no-deps --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
-pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 
 echo "✓ Open-Sora requirements installed"
 
@@ -322,9 +320,9 @@ pip install 'numpy<2' \
   pytorchvideo==0.1.5 lpips==0.1.4
 
 echo ""
-echo "Ensuring NumPy stays at 1.x after eval requirements..."
+echo "Enforcing compatible NumPy 1.x + OpenCV 4.9.x versions..."
+pip install --no-deps --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
-pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 
 echo "✓ Evaluation requirements installed"
 
@@ -336,9 +334,9 @@ echo "Installing Hugging Face tools..."
 pip install huggingface-hub datasets
 
 echo ""
-echo "Ensuring NumPy stays at 1.x after HuggingFace install..."
+echo "Enforcing compatible NumPy 1.x + OpenCV 4.9.x versions..."
+pip install --no-deps --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
-pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 
 echo "✓ Hugging Face tools installed"
 
