@@ -255,6 +255,11 @@ echo ""
 
 conda install -y av -c conda-forge
 
+# Conda might have upgraded NumPy - force it back to 1.x
+echo ""
+echo "Ensuring NumPy stays at 1.x after conda install..."
+pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
+
 echo ""
 echo "Verifying PyAV..."
 python -c "
@@ -286,6 +291,10 @@ echo ""
 echo "Installing VAE requirements..."
 pip install -r requirements/requirements-vae.txt
 
+echo ""
+echo "Ensuring NumPy stays at 1.x after requirements install..."
+pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
+
 echo "✓ Open-Sora requirements installed"
 
 # ==============================================================================
@@ -306,6 +315,10 @@ pip install 'numpy<2' \
   fairscale>=0.4.13 decord==0.6.0 \
   pytorchvideo==0.1.5 lpips==0.1.4
 
+echo ""
+echo "Ensuring NumPy stays at 1.x after eval requirements..."
+pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
+
 echo "✓ Evaluation requirements installed"
 
 # ==============================================================================
@@ -314,6 +327,10 @@ echo "✓ Evaluation requirements installed"
 echo ""
 echo "Installing Hugging Face tools..."
 pip install huggingface-hub datasets
+
+echo ""
+echo "Ensuring NumPy stays at 1.x after HuggingFace install..."
+pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
 
 echo "✓ Hugging Face tools installed"
 
