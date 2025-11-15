@@ -137,15 +137,27 @@ echo ""
 echo "=============================================================================="
 echo "Step 3: Core ML Stack Installation"
 echo "=============================================================================="
-echo "Installing NumPy 1.x + PyTorch 2.2.2 + xformers 0.0.25.post1 together..."
-echo "⚠️  CRITICAL: Installing together prevents NumPy 2.x upgrade"
+echo "Installing NumPy 1.x + PyTorch 2.2.2 + xformers 0.0.25.post1..."
+echo "⚠️  CRITICAL: NumPy must be installed from PyPI first, then PyTorch"
 echo ""
 
+# Step 3.1: Install NumPy 1.x from PyPI (PyTorch index only has NumPy 2.x)
+echo "Step 3.1: Installing NumPy 1.x from PyPI..."
+pip install 'numpy<2,>=1.26'
+
+# Step 3.2: Install PyTorch packages with --no-deps to prevent NumPy upgrade
+echo ""
+echo "Step 3.2: Installing PyTorch 2.2.2 + xformers with --no-deps..."
 pip install --index-url https://download.pytorch.org/whl/cu121 \
-  'numpy<2,>=1.26' \
+  --no-deps \
   torch==2.2.2 \
   torchvision==0.17.2 \
   xformers==0.0.25.post1
+
+# Step 3.3: Install PyTorch dependencies (except NumPy which we already have)
+echo ""
+echo "Step 3.3: Installing PyTorch dependencies..."
+pip install typing-extensions sympy networkx jinja2 fsspec filelock pillow
 
 echo ""
 echo "Verifying core ML stack..."
