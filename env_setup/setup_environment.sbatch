@@ -20,6 +20,9 @@
 
 set -euo pipefail
 
+# Prevent user site-packages from interfering with conda environment
+export PYTHONNOUSERSITE=1
+
 echo "=============================================================================="
 echo "Open-Sora v1.3 Environment Setup"
 echo "=============================================================================="
@@ -104,6 +107,8 @@ fi
 echo "✓ Environment activated"
 echo "  Python: $(python --version)"
 echo "  Location: ${CONDA_PREFIX}"
+echo "  Python executable: $(which python)"
+echo "  PYTHONNOUSERSITE: ${PYTHONNOUSERSITE}"
 
 # ==============================================================================
 # Check Python Version
@@ -189,6 +194,13 @@ echo ""
 echo "=============================================================================="
 echo "Step 4: bitsandbytes Installation"
 echo "=============================================================================="
+echo "Installing bitsandbytes dependencies first..."
+echo ""
+
+# Install triton (required by bitsandbytes)
+pip install triton
+
+echo ""
 echo "Installing bitsandbytes 0.43.3 with --no-deps..."
 echo "⚠️  Using --no-deps prevents it from upgrading NumPy/PyTorch"
 echo ""
