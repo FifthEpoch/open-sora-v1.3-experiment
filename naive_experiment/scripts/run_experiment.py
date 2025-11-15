@@ -202,6 +202,7 @@ def main():
                     })
                 else:
                     logger.warning(f"  Failed to generate for video {video_idx}")
+                    logger.error(f"  Error output:\n{result.stderr}")
                     finetuned_results.append({
                         'video_idx': video_idx,
                         'original_path': original_path,
