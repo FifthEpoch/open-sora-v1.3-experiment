@@ -260,6 +260,11 @@ echo ""
 echo "Ensuring NumPy stays at 1.x after conda install..."
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
 
+# Fix OpenCV version to one compatible with NumPy 1.x
+echo ""
+echo "Installing OpenCV 4.9.x (compatible with NumPy 1.x)..."
+pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
+
 echo ""
 echo "Verifying PyAV..."
 python -c "
@@ -294,6 +299,7 @@ pip install -r requirements/requirements-vae.txt
 echo ""
 echo "Ensuring NumPy stays at 1.x after requirements install..."
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
+pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 
 echo "✓ Open-Sora requirements installed"
 
@@ -318,6 +324,7 @@ pip install 'numpy<2' \
 echo ""
 echo "Ensuring NumPy stays at 1.x after eval requirements..."
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
+pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 
 echo "✓ Evaluation requirements installed"
 
@@ -331,6 +338,7 @@ pip install huggingface-hub datasets
 echo ""
 echo "Ensuring NumPy stays at 1.x after HuggingFace install..."
 pip install --force-reinstall --no-cache-dir 'numpy<2,>=1.26'
+pip install --force-reinstall --no-cache-dir 'opencv-python-headless<4.10,>=4.9'
 
 echo "✓ Hugging Face tools installed"
 
