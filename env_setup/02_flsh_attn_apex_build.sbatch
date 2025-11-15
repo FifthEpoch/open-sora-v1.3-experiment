@@ -8,6 +8,9 @@
 
 set -euo pipefail
 
+# Prevent user site-packages from interfering with conda environment
+export PYTHONNOUSERSITE=1
+
 echo "Node: $(hostname)"
 nvidia-smi || true
 

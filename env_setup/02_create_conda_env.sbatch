@@ -14,6 +14,9 @@
 
 set -euo pipefail
 
+# Prevent user site-packages from interfering with conda environment
+export PYTHONNOUSERSITE=1
+
 echo "========================================"
 echo "Creating OpenSora v1.3 Conda Environment"
 echo "========================================"

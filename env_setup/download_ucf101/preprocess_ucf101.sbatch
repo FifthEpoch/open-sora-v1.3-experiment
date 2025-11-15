@@ -7,6 +7,11 @@
 #SBATCH --mem=64G
 #SBATCH --output=slurm_download_prep_ucf101.out
 
+set -euo pipefail
+
+# Prevent user site-packages from interfering with conda environment
+export PYTHONNOUSERSITE=1
+
 echo "=========================================="
 echo "UCF-101 Download & Preprocessing Job"
 echo "=========================================="
