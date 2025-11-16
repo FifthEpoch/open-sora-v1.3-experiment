@@ -73,10 +73,26 @@ if [ $? -ne 0 ]; then
 fi
 echo "✓ Conda initialized"
 
+# Verify conda command is available
+echo "Verifying conda command is available..."
+CONDA_CMD=$(command -v conda 2>/dev/null || echo "")
+if [ -z "$CONDA_CMD" ]; then
+    echo "ERROR: conda command not found in PATH" >&2
+    echo "PATH: $PATH" >&2
+    exit 1
+fi
+echo "✓ Conda command found: $CONDA_CMD"
+
 # Deactivate any existing environment for clean activation
 echo "Deactivating any existing conda environment..."
-conda deactivate 2>/dev/null || true
-echo "✓ Deactivation complete (if any)"
+# Check if we're in an environment before trying to deactivate
+if [ -n "${CONDA_DEFAULT_ENV:-}" ]; then
+    echo "  Active environment detected: ${CONDA_DEFAULT_ENV}"
+    conda deactivate 2>/dev/null || true
+    echo "✓ Deactivated environment"
+else
+    echo "✓ No active environment to deactivate"
+fi
 
 # Configure conda to recognize custom environment location (use --prepend for priority)
 echo "Configuring conda to use scratch directories..."
