@@ -180,7 +180,8 @@ def generate_continuation(
         model_kwargs = {
             "height": int(image_size[0]),
             "width": int(image_size[1]),
-            "num_frames": int(num_frames),
+            # RF time sampler expects an indexable shape; provide 1D tuple
+            "num_frames": (int(num_frames),),
             "is_image": False,
         }
         samples = scheduler.sample(
