@@ -129,6 +129,20 @@ if [ $? -ne 0 ] || [ -z "$CONDA_PREFIX" ]; then
 fi
 echo "✓ Environment activated: $CONDA_PREFIX"
 
+# Explicitly ensure conda env's bin is first in PATH
+export PATH="${CONDA_PREFIX}/bin:${PATH}"
+echo "PATH updated to prioritize conda environment"
+
+# Verify we're using the environment's Python
+PYTHON_PATH=$(which python)
+if [[ ! "$PYTHON_PATH" =~ ^${CONDA_PREFIX} ]]; then
+    echo "ERROR: Python executable is not from the conda environment!" >&2
+    echo "  Expected: ${CONDA_PREFIX}/bin/python" >&2
+    echo "  Got: ${PYTHON_PATH}" >&2
+    exit 1
+fi
+echo "✓ Using environment's Python: ${PYTHON_PATH}"
+
 # Fix libstdc++ compatibility for PyAV (av package)
 # PyAV from conda-forge requires GLIBCXX_3.4.30, ensure conda's libstdc++ takes priority
 export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
