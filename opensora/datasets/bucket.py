@@ -100,7 +100,7 @@ class Bucket:
                     prob_t = prob[1]
                     if rng.random() > prob_t:
                         continue
-                if T > t_id * frame_interval and t_id != 1:
+                if T >= t_id * frame_interval and t_id != 1:
                     t_fail = False
                     break
             if t_fail:

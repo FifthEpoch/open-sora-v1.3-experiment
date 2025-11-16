@@ -19,6 +19,8 @@ import torch
 from mmengine.config import Config
 from torch.utils.data import Dataset
 
+from opensora.datasets.aspect import get_image_size
+
 # We'll use the existing training infrastructure
 from opensora.registry import MODELS
 from opensora.utils.misc import create_logger
@@ -79,12 +81,14 @@ def create_truncated_video(video_path, num_frames=22, output_dir=None):
 
 def create_single_video_csv(video_path, caption, output_csv):
     """Create a CSV file with a single video entry for training (using truncated video)."""
+    target_height, target_width = get_image_size("480p", "4:3")
+
     df = pd.DataFrame([{
         'path': video_path,
         'text': caption,
         'num_frames': 22,  # Only first 22 frames for training
-        'height': 480,
-        'width': 640,
+        'height': int(target_height),
+        'width': int(target_width),
         'fps': 24,
         'aspect_ratio': 1.33,  # 4:3
     }])

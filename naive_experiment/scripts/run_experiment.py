@@ -22,6 +22,7 @@ from tqdm import tqdm
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from opensora.datasets.aspect import get_image_size
 from opensora.utils.misc import create_logger
 
 
@@ -132,6 +133,7 @@ def main():
         logger.info("="*70)
         
         finetuned_results = []
+        target_height, target_width = get_image_size("480p", "4:3")
         
         for idx, row in tqdm(baseline_df.iterrows(), total=len(baseline_df), desc="Fine-tuning"):
             video_idx = row['video_idx']
@@ -158,8 +160,8 @@ def main():
                     'path': truncated_video_path,
                     'text': caption,
                     'num_frames': 22,  # Only first 22 frames for training
-                    'height': 480,
-                    'width': 640,
+                    'height': int(target_height),
+                    'width': int(target_width),
                     'fps': 24,
                     'aspect_ratio': 1.33,  # 4:3
                 }]).to_csv(temp_csv, index=False)
