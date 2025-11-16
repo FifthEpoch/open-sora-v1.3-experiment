@@ -186,7 +186,7 @@ def main():
         # Evaluate fine-tuned
         result['finetuned_path'] = finetuned_output
         result['finetuned_path_exists'] = bool(finetuned_output and os.path.exists(finetuned_output))
-        if finetuned_output and os.path.exists(finetetuned_output):
+        if finetuned_output and os.path.exists(finetuned_output):
             try:
                 finetuned_frames = load_generated_video(finetuned_output)
                 if finetuned_frames is not None:
