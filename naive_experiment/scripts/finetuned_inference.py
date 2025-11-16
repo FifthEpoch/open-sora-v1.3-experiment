@@ -168,10 +168,11 @@ def generate_continuation(
             x_cond_mask[:, :, mask_index, :, :] = 1.0
         
         # Run scheduler
-        # Model kwargs for RF scheduler time sampler
+        # Model kwargs for RF scheduler time sampler (expects explicit height/width keys)
         model_kwargs = {
-            "image_size": image_size,
-            "num_frames": num_frames,
+            "height": int(image_size[0]),
+            "width": int(image_size[1]),
+            "num_frames": int(num_frames),
             "is_image": False,
         }
         samples = scheduler.sample(
