@@ -243,6 +243,7 @@ def main():
     start_epoch = start_step = log_step = acc_step = 0
     running_loss = 0.0
     logger.info("Training for %s epochs with %s steps per epoch", cfg_epochs, num_steps_per_epoch)
+    saved_any_checkpoint = False
 
     # == resume ==
     if cfg.get("load", None) is not None:
@@ -506,6 +507,7 @@ def main():
                             global_step=global_step + 1,
                             batch_size=cfg.get("batch_size", None),
                         )
+                        saved_any_checkpoint = True
                         if dist.get_rank() == 0:
                             model_sharding(ema)
                         logger.info(
@@ -530,6 +532,24 @@ def main():
                     record_file.flush()
         sampler.reset()
         start_step = 0
+
+    # Fallback: ensure at least one checkpoint exists so downstream steps can proceed
+    if dist.get_rank() == 0 and not saved_any_checkpoint:
+        logger.warning("No checkpoints were saved during training; creating an initial checkpoint for downstream steps.")
+        os.makedirs(exp_dir, exist_ok=True)
+        _ = save(
+            booster,
+            exp_dir,
+            model=model,
+            ema=ema,
+            optimizer=optimizer,
+            lr_scheduler=lr_scheduler,
+            sampler=sampler,
+            epoch=0,
+            step=0,
+            global_step=0,
+            batch_size=cfg.get("batch_size", None),
+        )
 
 
 if __name__ == "__main__":
