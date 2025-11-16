@@ -26,6 +26,10 @@ echo "========================================"
 # Set scratch directory to avoid hitting /home quotas
 SCRATCH_BASE="/scratch/wc3013"
 
+# Define project locations (needed early for PYTHONPATH)
+PROJECT_ROOT="/scratch/wc3013/open-sora-v1.3-experiment"
+SCRIPT_DIR="${PROJECT_ROOT}/naive_experiment/scripts"
+
 # Create necessary directories
 mkdir -p "${SCRATCH_BASE}"/{conda-envs,conda-pkgs,py-cache/{pip,torch/extensions,models,triton,torch-inductor,colossalaJit,python},hf-cache/{datasets,hub,transformers},tmp,wandb,tensorboard,wheels}
 
@@ -179,10 +183,6 @@ echo "========================================"
 echo "========================================"
 echo "Starting experiment..."
 echo "========================================"
-
-# Set absolute paths
-PROJECT_ROOT="/scratch/wc3013/open-sora-v1.3-experiment"
-SCRIPT_DIR="${PROJECT_ROOT}/naive_experiment/scripts"
 
 # Navigate to script directory
 cd "${SCRIPT_DIR}"
