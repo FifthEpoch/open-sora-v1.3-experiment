@@ -307,6 +307,8 @@ def main():
             original_path = row['original_path']
             caption = row.get('caption', row.get('text', 'video'))
             baseline_path = row.get('baseline_output')
+            if not isinstance(baseline_path, str) or not baseline_path.strip():
+                baseline_path = None
             
             # Make path absolute
             if not os.path.isabs(original_path):
