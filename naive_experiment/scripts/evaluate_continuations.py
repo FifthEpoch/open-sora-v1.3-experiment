@@ -114,6 +114,8 @@ def evaluate_pair(gt_frames, generated_frames):
 
 
 def main():
+    import sys
+    
     parser = argparse.ArgumentParser(description="Evaluate video continuations")
     parser.add_argument("--original-videos", type=str, required=True, help="Directory containing original videos")
     parser.add_argument("--baseline-outputs", type=str, required=True, help="Directory containing baseline outputs (O_b)")
@@ -124,35 +126,70 @@ def main():
     
     args = parser.parse_args()
     
+    # Debug: Print to stderr so it shows up in SLURM .err file
+    print(f"[EVALUATION] Loading manifest from: {args.manifest}", file=sys.stderr)
+    
     # Load manifest
     manifest = pd.read_csv(args.manifest)
+    print(f"[EVALUATION] Loaded manifest with {len(manifest)} rows", file=sys.stderr)
+    print(f"[EVALUATION] Manifest columns: {list(manifest.columns)}", file=sys.stderr)
+    print(f"[EVALUATION] First few rows:\n{manifest.head()}", file=sys.stderr)
     
     results = []
     
     for idx, row in tqdm(manifest.iterrows(), total=len(manifest), desc="Evaluating"):
+        import sys
         video_idx = row.get('video_idx', idx)
         original_path = row['original_path']
-        baseline_output = row.get('baseline_output', None)
-        finetuned_output = row.get('finetuned_output', None)
+        baseline_output_raw = row.get('baseline_output', None)
+        finetuned_output_raw = row.get('finetuned_output', None)
+        
+        print(f"\n[EVALUATION] Processing video {video_idx} (row {idx}):", file=sys.stderr)
+        print(f"  Raw baseline_output type: {type(baseline_output_raw)}, value: {baseline_output_raw}", file=sys.stderr)
+        print(f"  Raw finetuned_output type: {type(finetuned_output_raw)}, value: {str(finetuned_output_raw)[:200] if finetuned_output_raw else None}", file=sys.stderr)
         
         # Robustness: convert non-string/NaN paths to None to avoid os.path.exists(TypeError)
-        if not isinstance(baseline_output, str) or baseline_output.strip() == '':
+        if not isinstance(baseline_output_raw, str) or (isinstance(baseline_output_raw, str) and baseline_output_raw.strip() == ''):
             baseline_output = None
-        if not isinstance(finetuned_output, str) or finetuned_output.strip() == '':
+            print(f"  → baseline_output set to None (invalid type or empty)", file=sys.stderr)
+        else:
+            baseline_output = baseline_output_raw.strip()
+        
+        if not isinstance(finetuned_output_raw, str) or (isinstance(finetuned_output_raw, str) and finetuned_output_raw.strip() == ''):
             finetuned_output = None
+            print(f"  → finetuned_output set to None (invalid type or empty)", file=sys.stderr)
+        else:
+            finetuned_output = finetuned_output_raw.strip()
+            # Extract last line if it contains multiple lines (from stdout pollution fix)
+            if '\n' in finetuned_output:
+                lines = finetuned_output.strip().split('\n')
+                # Take last line that looks like a path
+                for line in reversed(lines):
+                    if '/' in line and line.endswith('.mp4'):
+                        finetuned_output = line.strip()
+                        print(f"  → Extracted path from multi-line stdout: {finetuned_output}", file=sys.stderr)
+                        break
         
         # Make paths absolute
         if original_path and not os.path.isabs(original_path):
             original_path = os.path.join(args.original_videos, os.path.basename(original_path))
+            print(f"  Made original_path absolute: {original_path}", file=sys.stderr)
         
         # Ensure baseline and finetuned paths are absolute
         if baseline_output and not os.path.isabs(baseline_output):
             # If relative, assume it's relative to baseline_outputs directory
             baseline_output = os.path.join(args.baseline_outputs, baseline_output)
+            print(f"  Made baseline_output absolute: {baseline_output}", file=sys.stderr)
         
         if finetuned_output and not os.path.isabs(finetuned_output):
             # If relative, assume it's relative to finetuned_outputs directory
             finetuned_output = os.path.join(args.finetuned_outputs, finetuned_output)
+            print(f"  Made finetuned_output absolute: {finetuned_output}", file=sys.stderr)
+        
+        print(f"  Final paths:", file=sys.stderr)
+        print(f"    original_path exists: {os.path.exists(original_path) if original_path else 'N/A'} - {original_path}", file=sys.stderr)
+        print(f"    baseline_output exists: {os.path.exists(baseline_output) if baseline_output else 'N/A'} - {baseline_output}", file=sys.stderr)
+        print(f"    finetuned_output exists: {os.path.exists(finetuned_output) if finetuned_output else 'N/A'} - {finetuned_output}", file=sys.stderr)
         
         result = {
             'video_idx': video_idx,
@@ -181,36 +218,64 @@ def main():
         result['baseline_path_exists'] = bool(baseline_output and os.path.exists(baseline_output))
         if baseline_output and os.path.exists(baseline_output):
             try:
+                print(f"  [BASELINE] Loading video from: {baseline_output}", file=sys.stderr)
                 baseline_frames = load_generated_video(baseline_output)
                 if baseline_frames is not None:
+                    print(f"  [BASELINE] Loaded {len(baseline_frames)} frames", file=sys.stderr)
                     # Extract continuation portion (skip conditioning frames)
                     baseline_continuation = baseline_frames[args.condition_frames:]
+                    print(f"  [BASELINE] Continuation has {len(baseline_continuation)} frames (skipping first {args.condition_frames})", file=sys.stderr)
                     baseline_metrics = evaluate_pair(gt_frames, baseline_continuation)
+                    print(f"  [BASELINE] Metrics computed: {baseline_metrics}", file=sys.stderr)
                     result['baseline'] = baseline_metrics
+                else:
+                    print(f"  [BASELINE] WARNING: load_generated_video returned None", file=sys.stderr)
+                    result['baseline_error'] = "load_generated_video returned None"
             except Exception as e:
+                import traceback
+                print(f"  [BASELINE] ERROR: {str(e)}", file=sys.stderr)
+                print(f"  [BASELINE] Traceback:\n{traceback.format_exc()}", file=sys.stderr)
                 result['baseline_error'] = str(e)
         elif baseline_output:
+            print(f"  [BASELINE] ERROR: File not found: {baseline_output}", file=sys.stderr)
             result['baseline_error'] = f"Baseline output not found: {baseline_output}"
+        else:
+            print(f"  [BASELINE] SKIP: No baseline_output path provided", file=sys.stderr)
         
         # Evaluate fine-tuned
         result['finetuned_path'] = finetuned_output
         result['finetuned_path_exists'] = bool(finetuned_output and os.path.exists(finetuned_output))
         if finetuned_output and os.path.exists(finetuned_output):
             try:
+                print(f"  [FINETUNED] Loading video from: {finetuned_output}", file=sys.stderr)
                 finetuned_frames = load_generated_video(finetuned_output)
                 if finetuned_frames is not None:
+                    print(f"  [FINETUNED] Loaded {len(finetuned_frames)} frames", file=sys.stderr)
                     # Extract continuation portion
                     finetuned_continuation = finetuned_frames[args.condition_frames:]
+                    print(f"  [FINETUNED] Continuation has {len(finetuned_continuation)} frames (skipping first {args.condition_frames})", file=sys.stderr)
                     finetuned_metrics = evaluate_pair(gt_frames, finetuned_continuation)
+                    print(f"  [FINETUNED] Metrics computed: {finetuned_metrics}", file=sys.stderr)
                     result['finetuned'] = finetuned_metrics
+                else:
+                    print(f"  [FINETUNED] WARNING: load_generated_video returned None", file=sys.stderr)
+                    result['finetuned_error'] = "load_generated_video returned None"
             except Exception as e:
+                import traceback
+                print(f"  [FINETUNED] ERROR: {str(e)}", file=sys.stderr)
+                print(f"  [FINETUNED] Traceback:\n{traceback.format_exc()}", file=sys.stderr)
                 result['finetuned_error'] = str(e)
         elif finetuned_output:
+            print(f"  [FINETUNED] ERROR: File not found: {finetuned_output}", file=sys.stderr)
             result['finetuned_error'] = f"Finetuned output not found: {finetuned_output}"
+        else:
+            print(f"  [FINETUNED] SKIP: No finetuned_output path provided", file=sys.stderr)
         
         results.append(result)
     
     # Save results
+    print(f"\n[EVALUATION] Completed evaluation of {len(results)} videos", file=sys.stderr)
+    print(f"[EVALUATION] Saving results to: {args.output_json}", file=sys.stderr)
     with open(args.output_json, 'w') as f:
         json.dump(results, f, indent=2)
     

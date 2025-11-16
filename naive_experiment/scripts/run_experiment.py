@@ -334,8 +334,10 @@ def main():
                     # Extract only the last line (the output path) to avoid VAE loading messages
                     stdout_lines = result.stdout.strip().split('\n')
                     finetuned_output = stdout_lines[-1] if stdout_lines else None
+                    logger.info(f"  Captured stdout: {len(stdout_lines)} lines, last line: {finetuned_output}")
                     # Validate it's actually a path (contains '/' and ends with '.mp4')
                     if finetuned_output and '/' in finetuned_output and finetuned_output.endswith('.mp4'):
+                        logger.info(f"  ✓ Valid output path extracted: {finetuned_output}")
                         finetuned_results.append({
                             'video_idx': video_idx,
                             'original_path': original_path,
@@ -343,8 +345,9 @@ def main():
                             'caption': caption,
                         })
                     else:
-                        logger.warning(f"  Could not parse output path from stdout. Last line: {finetuned_output}")
-                        logger.warning(f"  Full stdout: {result.stdout[:500]}...")  # First 500 chars
+                        logger.warning(f"  ✗ Could not parse output path from stdout. Last line: {finetuned_output}")
+                        logger.warning(f"  Full stdout (first 1000 chars): {result.stdout[:1000]}...")
+                        logger.warning(f"  Full stdout (last 500 chars): ...{result.stdout[-500:]}")
                         finetuned_results.append({
                             'video_idx': video_idx,
                             'original_path': original_path,
@@ -388,8 +391,16 @@ def main():
     logger.info("="*70)
     
     # Merge manifests
+    logger.info(f"Loading baseline manifest: {baseline_manifest}")
     baseline_df = pd.read_csv(baseline_manifest)
+    logger.info(f"Baseline manifest has {len(baseline_df)} rows, columns: {list(baseline_df.columns)}")
+    logger.info(f"Baseline manifest sample:\n{baseline_df.head(2)}")
+    
+    logger.info(f"Loading finetuned manifest: {finetuned_manifest}")
     finetuned_df = pd.read_csv(finetuned_manifest)
+    logger.info(f"Finetuned manifest has {len(finetuned_df)} rows, columns: {list(finetuned_df.columns)}")
+    logger.info(f"Finetuned manifest sample:\n{finetuned_df.head(2)}")
+    
     merged_df = baseline_df.merge(
         finetuned_df[['video_idx', 'finetuned_output']],
         on='video_idx',
@@ -398,6 +409,9 @@ def main():
     
     merged_manifest = output_dir / "experiment_manifest.csv"
     merged_df.to_csv(merged_manifest, index=False)
+    logger.info(f"Merged manifest saved to: {merged_manifest}")
+    logger.info(f"Merged manifest has {len(merged_df)} rows, columns: {list(merged_df.columns)}")
+    logger.info(f"Merged manifest sample:\n{merged_df.head(2)}")
     
     # Run evaluation
     cmd = [
