@@ -168,6 +168,8 @@ def main():
             continue
         
         # Evaluate baseline
+        result['baseline_path'] = baseline_output
+        result['baseline_path_exists'] = bool(baseline_output and os.path.exists(baseline_output))
         if baseline_output and os.path.exists(baseline_output):
             try:
                 baseline_frames = load_generated_video(baseline_output)
@@ -178,9 +180,13 @@ def main():
                     result['baseline'] = baseline_metrics
             except Exception as e:
                 result['baseline_error'] = str(e)
+        elif baseline_output:
+            result['baseline_error'] = f"Baseline output not found: {baseline_output}"
         
         # Evaluate fine-tuned
-        if finetuned_output and os.path.exists(finetuned_output):
+        result['finetuned_path'] = finetuned_output
+        result['finetuned_path_exists'] = bool(finetuned_output and os.path.exists(finetuned_output))
+        if finetuned_output and os.path.exists(finetetuned_output):
             try:
                 finetuned_frames = load_generated_video(finetuned_output)
                 if finetuned_frames is not None:
@@ -190,6 +196,8 @@ def main():
                     result['finetuned'] = finetuned_metrics
             except Exception as e:
                 result['finetuned_error'] = str(e)
+        elif finetuned_output:
+            result['finetuned_error'] = f"Finetuned output not found: {finetuned_output}"
         
         results.append(result)
     

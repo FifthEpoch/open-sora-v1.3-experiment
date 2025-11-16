@@ -54,7 +54,10 @@ def main():
     
     # Setup
     logger = create_logger()
+    # Use absolute output directory to avoid relative path issues in manifests/eval
     output_dir = Path(args.output_dir)
+    if not output_dir.is_absolute():
+        output_dir = Path.cwd() / output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Paths
@@ -223,24 +226,54 @@ def main():
                 "--outputs", str(video_ckpt_dir),
             ]
             
-            finetune_result = run_command(finetune_cmd, logger, check=False)
+            # Capture fine-tune stdout/stderr to files for debugging
+            finetune_stdout_path = video_ckpt_dir / "finetune_stdout.log"
+            finetune_stderr_path = video_ckpt_dir / "finetune_stderr.log"
+            with open(finetune_stdout_path, "w") as f_out, open(finetune_stderr_path, "w") as f_err:
+                finetune_result = subprocess.run(finetune_cmd, stdout=f_out, stderr=f_err, text=True)
+            # Log directory contents after training attempt
+            try:
+                logger.info(f"  Contents of checkpoint dir ({video_ckpt_dir}):")
+                for p in sorted(video_ckpt_dir.iterdir()):
+                    logger.info(f"    - {p.name}{'/' if p.is_dir() else ''}")
+            except Exception as e:
+                logger.warning(f"  Could not list checkpoint dir: {e}")
+
             if finetune_result.returncode != 0:
                 logger.error(f"  Fine-tuning failed for video {video_idx}")
-                logger.error(f"  Error output:\n{finetune_result.stderr}")
+                try:
+                    tail_err = Path(finetune_stderr_path).read_text()[-2000:]
+                except Exception:
+                    tail_err = "<unable to read stderr log>"
+                logger.error(f"  See logs:\n    stdout: {finetune_stdout_path}\n    stderr: {finetune_stderr_path}")
+                logger.error(f"  Stderr tail:\n{tail_err}")
                 finetuned_results.append({
                     'video_idx': video_idx,
                     'original_path': original_path,
                     'finetuned_output': None,
-                    'error': f"Fine-tuning failed: {finetune_result.stderr[:500]}",
+                    'error': f"Fine-tuning failed; see {finetune_stderr_path}",
                 })
                 os.unlink(temp_finetune_config)
                 continue
             
-            # Find the saved checkpoint (will be in epoch{epoch}-global_step{global_step}/model/)
-            # Since we save every step (ckpt_every=1), find the latest checkpoint
-            epoch_dirs = sorted([d for d in video_ckpt_dir.iterdir() if d.is_dir() and d.name.startswith("epoch")])
+            # Find the saved checkpoint
+            # train.py creates an experiment subdir: outputs/{index}-{model_name}/epoch{epoch}-global_step{step}/model
+            exp_subdirs = sorted([d for d in video_ckpt_dir.iterdir() if d.is_dir()])
+            if not exp_subdirs:
+                logger.error(f"  No experiment directory found under {video_ckpt_dir}")
+                finetuned_results.append({
+                    'video_idx': video_idx,
+                    'original_path': original_path,
+                    'finetuned_output': None,
+                    'error': f"No experiment directory found after fine-tuning",
+                })
+                os.unlink(temp_finetune_config)
+                continue
+            latest_exp_dir = exp_subdirs[-1]
+            # Since we save every step (ckpt_every=1), find the latest epoch dir
+            epoch_dirs = sorted([d for d in latest_exp_dir.iterdir() if d.is_dir() and d.name.startswith("epoch")])
             if not epoch_dirs:
-                logger.error(f"  No checkpoint directories found in {video_ckpt_dir}")
+                logger.error(f"  No checkpoint directories found in {latest_exp_dir}")
                 finetuned_results.append({
                     'video_idx': video_idx,
                     'original_path': original_path,
@@ -319,9 +352,8 @@ def main():
                 os.unlink(temp_finetune_config)
                 os.unlink(temp_csv)
             
-            # Cleanup fine-tuned checkpoint to save space
-            logger.info("  Cleaning up fine-tuned checkpoint...")
-            shutil.rmtree(video_ckpt_dir, ignore_errors=True)
+            # Do NOT clean up checkpoints/logs; keep for debugging and evaluation
+            logger.info("  Keeping fine-tuned checkpoint directory for inspection.")
         
         # Save fine-tuned manifest
         finetuned_output_dir.mkdir(parents=True, exist_ok=True)
