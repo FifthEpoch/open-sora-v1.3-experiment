@@ -26,6 +26,10 @@ echo "========================================"
 # Set scratch directory to avoid hitting /home quotas
 SCRATCH_BASE="/scratch/wc3013"
 
+# Define project locations (needed early for PYTHONPATH)
+PROJECT_ROOT="/scratch/wc3013/open-sora-v1.3-experiment"
+SCRIPT_DIR="${PROJECT_ROOT}/naive_experiment/scripts"
+
 # Create necessary directories
 mkdir -p "${SCRATCH_BASE}"/{conda-envs,conda-pkgs,py-cache/{pip,torch/extensions,models,triton,torch-inductor,colossalaJit,python},hf-cache/{datasets,hub,transformers},tmp,wandb,tensorboard,wheels}
 
@@ -76,10 +80,25 @@ echo ""
 echo "Activating conda environment: ${SCRATCH_BASE}/conda-envs/opensora13"
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
 
+# Explicitly ensure conda env's bin is first in PATH and verify python
+export PATH="${CONDA_PREFIX}/bin:${PATH}"
+PYTHON_PATH=$(which python)
+echo "Using Python: ${PYTHON_PATH}"
+if [[ ! "$PYTHON_PATH" =~ ^${CONDA_PREFIX} ]]; then
+    echo "ERROR: Python executable is not from the conda environment!" >&2
+    echo "  Expected: ${CONDA_PREFIX}/bin/python" >&2
+    echo "  Got: ${PYTHON_PATH}" >&2
+    exit 1
+fi
+
 # Fix libstdc++ compatibility for PyAV (av package)
 # PyAV from conda-forge requires GLIBCXX_3.4.30, ensure conda's libstdc++ takes priority
 export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
 echo "LD_LIBRARY_PATH set to: $LD_LIBRARY_PATH"
+
+# Ensure Python can import the repo modules (opensora, etc.)
+export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
+echo "PYTHONPATH set to: ${PYTHONPATH}"
 
 # Verify GPU availability
 echo "========================================"
@@ -110,8 +129,7 @@ echo "Starting experiment..."
 echo "========================================"
 
 # Set absolute paths
-PROJECT_ROOT="/scratch/wc3013/open-sora-v1.3-experiment"
-SCRIPT_DIR="${PROJECT_ROOT}/naive_experiment/scripts"
+# (already defined above)
 
 # Navigate to script directory
 cd "${SCRIPT_DIR}"
