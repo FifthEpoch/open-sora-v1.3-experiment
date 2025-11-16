@@ -135,6 +135,12 @@ def main():
         baseline_output = row.get('baseline_output', None)
         finetuned_output = row.get('finetuned_output', None)
         
+        # Robustness: convert non-string/NaN paths to None to avoid os.path.exists(TypeError)
+        if not isinstance(baseline_output, str):
+            baseline_output = None
+        if not isinstance(finetuned_output, str):
+            finetuned_output = None
+        
         # Make paths absolute
         if not os.path.isabs(original_path):
             original_path = os.path.join(args.original_videos, os.path.basename(original_path))
