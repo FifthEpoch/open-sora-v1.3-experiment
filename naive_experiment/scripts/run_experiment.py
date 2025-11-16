@@ -10,9 +10,11 @@ This script coordinates the entire experiment:
 import argparse
 import json
 import os
+import random
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from time import time
 
@@ -24,6 +26,70 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from opensora.datasets.aspect import get_image_size
 from opensora.utils.misc import create_logger
+
+
+CLASS_COL = "__class_name"
+
+
+def annotate_class_column(df):
+    if CLASS_COL in df.columns:
+        return df
+    if "path" not in df.columns:
+        raise ValueError("Dataset CSV must include a 'path' column for stratified sampling.")
+    df = df.copy()
+    df[CLASS_COL] = df["path"].apply(lambda p: Path(p).parent.name)
+    return df
+
+
+def stratified_sample_df(df, total_samples, logger, random_state=42):
+    df = annotate_class_column(df)
+    if len(df) <= total_samples:
+        logger.info(
+            "Requested %d videos but dataset only contains %d rows; using full dataset.",
+            total_samples,
+            len(df),
+        )
+        return df
+
+    class_groups = {}
+    rng = random.Random(random_state)
+    for class_name, group in df.groupby(CLASS_COL):
+        indices = group.index.tolist()
+        rng.shuffle(indices)
+        class_groups[class_name] = indices
+
+    selected_indices = []
+    active_classes = [cls for cls, idxs in class_groups.items() if idxs]
+
+    while active_classes and len(selected_indices) < total_samples:
+        next_round = []
+        for cls in active_classes:
+            indices = class_groups[cls]
+            if not indices:
+                continue
+            selected_indices.append(indices.pop())
+            if indices:
+                next_round.append(cls)
+            if len(selected_indices) == total_samples:
+                break
+        active_classes = next_round
+
+    selected_df = df.loc[selected_indices].reset_index(drop=True)
+    logger.info(
+        "Stratified sampling selected %d videos across %d classes.",
+        len(selected_df),
+        selected_df[CLASS_COL].nunique(),
+    )
+    logger.info("Class distribution: %s", selected_df[CLASS_COL].value_counts().to_dict())
+
+    if len(selected_df) < total_samples:
+        logger.warning(
+            "Requested %d samples but only %d were available after stratification.",
+            total_samples,
+            len(selected_df),
+        )
+
+    return selected_df
 
 
 def run_command(cmd, logger, check=True):
@@ -38,6 +104,82 @@ def run_command(cmd, logger, check=True):
     return result
 
 
+def evaluate_single_video(
+    video_idx,
+    original_path,
+    baseline_path,
+    finetuned_path,
+    scripts_dir,
+    baseline_output_dir,
+    finetuned_output_dir,
+    metrics_output,
+    condition_frames,
+    original_videos_root,
+    logger,
+):
+    """Run evaluation for a single video and append results to metrics file."""
+    if not baseline_path and not finetuned_path:
+        logger.warning(f"  Skipping evaluation for video {video_idx}: no outputs available")
+        return
+
+    tmp_manifest = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".csv").name)
+    tmp_metrics = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".json").name)
+
+    try:
+        row = {
+            "video_idx": video_idx,
+            "original_path": original_path,
+            "baseline_output": baseline_path or "",
+            "finetuned_output": finetuned_path or "",
+        }
+        pd.DataFrame([row]).to_csv(tmp_manifest, index=False)
+
+        cmd = [
+            sys.executable,
+            str(scripts_dir / "evaluate_continuations.py"),
+            "--original-videos",
+            original_videos_root,
+            "--baseline-outputs",
+            str(baseline_output_dir),
+            "--finetuned-outputs",
+            str(finetuned_output_dir),
+            "--manifest",
+            str(tmp_manifest),
+            "--condition-frames",
+            str(condition_frames),
+            "--output-json",
+            str(tmp_metrics),
+        ]
+
+        result = run_command(cmd, logger, check=False)
+        if result.returncode != 0:
+            logger.error(f"  Evaluation failed for video {video_idx}")
+            logger.error(f"  Stdout:\n{result.stdout}")
+            logger.error(f"  Stderr:\n{result.stderr}")
+            return
+
+        with open(tmp_metrics, "r") as f:
+            new_entries = json.load(f)
+
+        if metrics_output.exists():
+            with open(metrics_output, "r") as f:
+                metrics_data = json.load(f)
+            metrics_data = [entry for entry in metrics_data if entry.get("video_idx") != video_idx]
+        else:
+            metrics_data = []
+
+        metrics_data.extend(new_entries)
+        with open(metrics_output, "w") as f:
+            json.dump(metrics_data, f, indent=2)
+        logger.info(f"  Metrics updated for video {video_idx}. Total evaluated samples: {len(metrics_data)}")
+    finally:
+        for tmp_path in (tmp_manifest, tmp_metrics):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run naive fine-tuning experiment")
     parser.add_argument("--data-csv", type=str, required=True, help="Path to UCF-101 metadata CSV")
@@ -50,6 +192,11 @@ def main():
     parser.add_argument("--finetune-lr", type=float, default=1e-5, help="Fine-tuning learning rate")
     parser.add_argument("--skip-baseline", action="store_true", help="Skip baseline generation (if already done)")
     parser.add_argument("--skip-finetuning", action="store_true", help="Skip fine-tuning (evaluate existing results)")
+    parser.add_argument(
+        "--stratified",
+        action="store_true",
+        help="When limiting --num-videos, evenly sample across classes instead of taking the first N rows",
+    )
     
     args = parser.parse_args()
     
@@ -60,6 +207,7 @@ def main():
     if not output_dir.is_absolute():
         output_dir = Path.cwd() / output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
+    original_videos_root = str(Path(args.data_csv).parent)
     
     # Paths
     config_dir = Path(__file__).parent.parent / "configs"
@@ -74,13 +222,33 @@ def main():
     finetuned_checkpoints_dir = output_dir / "finetuned_checkpoints"
     metrics_output = output_dir / "metrics.json"
     
-    # Load dataset
-    df = pd.read_csv(args.data_csv)
+    # Load dataset and optionally run stratified sampling
+    df_full = annotate_class_column(pd.read_csv(args.data_csv))
+    data_csv_for_run = args.data_csv
+    temp_data_csv = None
+
     if args.num_videos is not None:
-        df = df.head(args.num_videos)
+        if args.stratified:
+            selected_df = stratified_sample_df(df_full, args.num_videos, logger)
+            tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+            selected_df.drop(columns=[CLASS_COL], errors="ignore").to_csv(tmp_file.name, index=False)
+            data_csv_for_run = tmp_file.name
+            temp_data_csv = tmp_file.name
+        else:
+            selected_df = df_full.head(args.num_videos).copy()
+    else:
+        selected_df = df_full.copy()
+
+    selected_count = len(selected_df)
+    class_counts = selected_df[CLASS_COL].value_counts().to_dict()
     
     logger.info(f"Experiment Configuration:")
-    logger.info(f"  Total videos: {len(df)}")
+    logger.info(f"  Dataset rows available: {len(df_full)}")
+    logger.info(f"  Total videos selected for this run: {selected_count}")
+    if args.num_videos is not None:
+        logger.info(f"  Stratified sampling enabled: {bool(args.stratified)}")
+    logger.info(f"  Classes represented: {selected_df[CLASS_COL].nunique()}")
+    logger.info(f"  Class distribution: {class_counts}")
     logger.info(f"  Condition frames: {args.condition_frames}")
     logger.info(f"  Fine-tune steps: {args.finetune_steps}")
     logger.info(f"  Fine-tune LR: {args.finetune_lr}")
@@ -101,7 +269,7 @@ def main():
             sys.executable,
             str(scripts_dir / "baseline_inference.py"),
             "--config", str(baseline_config),
-            "--data-csv", args.data_csv,
+            "--data-csv", data_csv_for_run,
             "--save-dir", str(baseline_output_dir),
             "--condition-frames", str(args.condition_frames),
         ]
@@ -111,7 +279,7 @@ def main():
         if args.vae_path and args.vae_path not in ["hpcai-tech/OpenSora-VAE-v1.3"]:
             cmd.extend(["--vae-path", args.vae_path])
         if args.num_videos:
-            cmd.extend(["--num-videos", str(args.num_videos)])
+            cmd.extend(["--num-videos", str(selected_count)])
         
         run_command(cmd, logger)
         
@@ -139,10 +307,13 @@ def main():
             video_idx = row['video_idx']
             original_path = row['original_path']
             caption = row.get('caption', row.get('text', 'video'))
+            baseline_path = row.get('baseline_output')
             
             # Make path absolute
             if not os.path.isabs(original_path):
                 original_path = os.path.join(Path(args.data_csv).parent, original_path)
+            if baseline_path and not os.path.isabs(baseline_path):
+                baseline_path = os.path.join(str(baseline_output_dir), baseline_path)
             
             logger.info(f"\nProcessing video {video_idx}: {Path(original_path).name}")
             
@@ -190,7 +361,7 @@ def main():
             )
             finetune_config_content = finetune_config_content.replace(
                 'ckpt_every = 50',
-                f'ckpt_every = 1'  # Save every step (since we want the final checkpoint)
+                f'ckpt_every = 10'  # Save every 10 steps to reduce checkpoint churn
             )
             finetune_config_content = finetune_config_content.replace(
                 'lr = 1e-5',
@@ -346,6 +517,19 @@ def main():
                             'finetuned_output': finetuned_output,
                             'caption': caption,
                         })
+                        evaluate_single_video(
+                            video_idx,
+                            original_path,
+                            baseline_path,
+                            finetuned_output,
+                            scripts_dir,
+                            baseline_output_dir,
+                            finetuned_output_dir,
+                            metrics_output,
+                            args.condition_frames,
+                            original_videos_root,
+                            logger,
+                        )
                     else:
                         logger.warning(f"  ✗ Could not parse output path from stdout. Last line: {finetuned_output}")
                         logger.warning(f"  Full stdout (first 1000 chars): {result.stdout[:1000]}...")
@@ -356,6 +540,19 @@ def main():
                             'finetuned_output': None,
                             'error': f"Could not parse output path from stdout",
                         })
+                        evaluate_single_video(
+                            video_idx,
+                            original_path,
+                            baseline_path,
+                            None,
+                            scripts_dir,
+                            baseline_output_dir,
+                            finetuned_output_dir,
+                            metrics_output,
+                            args.condition_frames,
+                            original_videos_root,
+                            logger,
+                        )
                 else:
                     logger.warning(f"  Failed to generate for video {video_idx}")
                     logger.error(f"  Error output:\n{result.stderr}")
@@ -365,6 +562,19 @@ def main():
                         'finetuned_output': None,
                         'error': result.stderr,
                     })
+                    evaluate_single_video(
+                        video_idx,
+                        original_path,
+                        baseline_path,
+                        None,
+                        scripts_dir,
+                        baseline_output_dir,
+                        finetuned_output_dir,
+                        metrics_output,
+                        args.condition_frames,
+                        original_videos_root,
+                        logger,
+                    )
             finally:
                 os.unlink(temp_inference_config)
                 os.unlink(temp_finetune_config)
@@ -429,6 +639,9 @@ def main():
     
     run_command(cmd, logger)
     
+    if temp_data_csv and os.path.exists(temp_data_csv):
+        os.unlink(temp_data_csv)
+
     logger.info("\n" + "="*70)
     logger.info("Experiment Complete!")
     logger.info("="*70)

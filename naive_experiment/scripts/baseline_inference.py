@@ -219,6 +219,7 @@ def generate_continuation(
         samples,
         str(output_path),
         fps=cfg.fps,
+        write_video_backend="pyav",
     )
     
     return str(output_path)
