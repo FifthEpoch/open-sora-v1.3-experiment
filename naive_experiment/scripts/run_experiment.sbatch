@@ -83,13 +83,22 @@ if [ -z "$CONDA_CMD" ]; then
 fi
 echo "✓ Conda command found: $CONDA_CMD"
 
-# Deactivate any existing environment for clean activation
-echo "Deactivating any existing conda environment..."
-# Check if we're in an environment before trying to deactivate
-if [ -n "${CONDA_DEFAULT_ENV:-}" ]; then
-    echo "  Active environment detected: ${CONDA_DEFAULT_ENV}"
-    conda deactivate 2>/dev/null || true
-    echo "✓ Deactivated environment"
+# Check if we're already in the target environment
+TARGET_ENV="${SCRATCH_BASE}/conda-envs/opensora13"
+if [ "${CONDA_PREFIX:-}" = "${TARGET_ENV}" ]; then
+    echo "✓ Already in target environment: ${TARGET_ENV}"
+elif [ -n "${CONDA_DEFAULT_ENV:-}" ]; then
+    echo "Deactivating existing environment: ${CONDA_DEFAULT_ENV}"
+    # Use set +e to allow deactivate to fail without exiting script
+    set +e
+    conda deactivate 2>/dev/null
+    DEACTIVATE_EXIT=$?
+    set -e
+    if [ $DEACTIVATE_EXIT -eq 0 ]; then
+        echo "✓ Deactivated environment"
+    else
+        echo "⚠️  Deactivate failed (exit code: $DEACTIVATE_EXIT), continuing anyway..."
+    fi
 else
     echo "✓ No active environment to deactivate"
 fi
