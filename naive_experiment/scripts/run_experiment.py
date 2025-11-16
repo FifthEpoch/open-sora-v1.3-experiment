@@ -141,17 +141,24 @@ def main():
             
             logger.info(f"\nProcessing video {video_idx}: {Path(original_path).name}")
             
-            # Create single-video CSV for fine-tuning
+            # Create truncated video (first 22 frames) for training
+            logger.info("  Creating truncated video (first 22 frames) for training...")
+            from naive_experiment.scripts.single_video_finetune import create_truncated_video
+            truncated_video_path = create_truncated_video(original_path, num_frames=22)
+            logger.info(f"  Truncated video saved to: {truncated_video_path}")
+            
+            # Create single-video CSV for fine-tuning (using truncated video)
             import tempfile
             with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
                 temp_csv = f.name
                 pd.DataFrame([{
-                    'path': original_path,
+                    'path': truncated_video_path,
                     'text': caption,
-                    'num_frames': 45,
+                    'num_frames': 22,  # Only first 22 frames for training
                     'height': 480,
                     'width': 640,
                     'fps': 24,
+                    'aspect_ratio': 1.33,  # 4:3
                 }]).to_csv(temp_csv, index=False)
             
             # Fine-tune checkpoint directory for this video
@@ -160,19 +167,113 @@ def main():
             
             # Fine-tune
             logger.info(f"  Fine-tuning for {args.finetune_steps} steps...")
-            # Note: This requires modifying train.py to support max_steps argument
-            # For now, we'll use a workaround by modifying the config
+            
+            # Create temporary fine-tuning config with correct paths
+            import tempfile
+            import shutil
+            with open(finetune_config, 'r') as f:
+                finetune_config_content = f.read()
+            
+            # Update config: outputs, epochs (since 1 epoch = 1 step with batch_size=1 and 1 video), ckpt_every, lr
+            finetune_config_content = finetune_config_content.replace(
+                'outputs = "naive_experiment/results/finetuned_checkpoints"',
+                f'outputs = "{video_ckpt_dir}"'
+            )
+            finetune_config_content = finetune_config_content.replace(
+                'epochs = 1',
+                f'epochs = {args.finetune_steps}'  # With batch_size=1 and 1 video, 1 epoch = 1 step
+            )
+            finetune_config_content = finetune_config_content.replace(
+                'ckpt_every = 50',
+                f'ckpt_every = 1'  # Save every step (since we want the final checkpoint)
+            )
+            finetune_config_content = finetune_config_content.replace(
+                'lr = 1e-5',
+                f'lr = {args.finetune_lr}'
+            )
+            
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+                temp_finetune_config = f.name
+                f.write(finetune_config_content)
+            
+            # Update the config with data path before running training
+            from mmengine.config import Config
+            train_cfg = Config.fromfile(temp_finetune_config)
+            train_cfg.dataset.data_path = temp_csv
+            train_cfg.model.from_pretrained = args.checkpoint_path
+            train_cfg.vae.from_pretrained = args.vae_path
+            
+            # Save updated config
+            train_cfg.dump(temp_finetune_config)
+            
+            # Run fine-tuning via train.py
+            train_script = Path(__file__).parent.parent.parent / "scripts" / "train.py"
+            finetune_cmd = [
+                "torchrun",
+                "--standalone",
+                "--nproc_per_node", "1",
+                str(train_script),
+                temp_finetune_config,
+                "--data-path", temp_csv,
+                "--ckpt-path", args.checkpoint_path,
+                "--outputs", str(video_ckpt_dir),
+            ]
+            
+            finetune_result = run_command(finetune_cmd, logger, check=False)
+            if finetune_result.returncode != 0:
+                logger.error(f"  Fine-tuning failed for video {video_idx}")
+                logger.error(f"  Error output:\n{finetune_result.stderr}")
+                finetuned_results.append({
+                    'video_idx': video_idx,
+                    'original_path': original_path,
+                    'finetuned_output': None,
+                    'error': f"Fine-tuning failed: {finetune_result.stderr[:500]}",
+                })
+                os.unlink(temp_finetune_config)
+                continue
+            
+            # Find the saved checkpoint (will be in epoch{epoch}-global_step{global_step}/model/)
+            # Since we save every step (ckpt_every=1), find the latest checkpoint
+            epoch_dirs = sorted([d for d in video_ckpt_dir.iterdir() if d.is_dir() and d.name.startswith("epoch")])
+            if not epoch_dirs:
+                logger.error(f"  No checkpoint directories found in {video_ckpt_dir}")
+                finetuned_results.append({
+                    'video_idx': video_idx,
+                    'original_path': original_path,
+                    'finetuned_output': None,
+                    'error': f"No checkpoint found after fine-tuning",
+                })
+                os.unlink(temp_finetune_config)
+                continue
+            
+            # Use the latest checkpoint (last epoch/step)
+            latest_ckpt_dir = epoch_dirs[-1]
+            expected_ckpt_subdir = latest_ckpt_dir / "model"
+            if not expected_ckpt_subdir.exists():
+                logger.error(f"  Checkpoint model directory not found at {expected_ckpt_subdir}")
+                finetuned_results.append({
+                    'video_idx': video_idx,
+                    'original_path': original_path,
+                    'finetuned_output': None,
+                    'error': f"Checkpoint model directory not found at {expected_ckpt_subdir}",
+                })
+                os.unlink(temp_finetune_config)
+                continue
+            
+            logger.info(f"  Using checkpoint: {latest_ckpt_dir}")
+            
+            # The checkpoint path for loading is the parent of 'model' (epoch{epoch}-global_step{global_step})
+            actual_ckpt_path = expected_ckpt_subdir.parent
             
             # Generate with fine-tuned checkpoint
             logger.info("  Generating continuation with fine-tuned model...")
             
             # Update finetuned inference config (only need to replace fine-tuned checkpoint path)
-            import tempfile
             with open(finetuned_inference_config, 'r') as f:
                 inference_config = f.read()
             inference_config = inference_config.replace(
                 'from_pretrained="path/to/finetuned/checkpoint"',
-                f'from_pretrained="{video_ckpt_dir}"'
+                f'from_pretrained="{actual_ckpt_path}"'
             )
             
             with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -184,7 +285,7 @@ def main():
                     sys.executable,
                     str(scripts_dir / "finetuned_inference.py"),
                     "--config", temp_inference_config,
-                    "--finetuned-checkpoint", str(video_ckpt_dir),
+                    "--finetuned-checkpoint", str(actual_ckpt_path),
                     "--video-path", original_path,
                     "--caption", caption,
                     "--save-dir", str(finetuned_output_dir),
@@ -211,6 +312,7 @@ def main():
                     })
             finally:
                 os.unlink(temp_inference_config)
+                os.unlink(temp_finetune_config)
                 os.unlink(temp_csv)
             
             # Cleanup fine-tuned checkpoint to save space
@@ -218,6 +320,7 @@ def main():
             shutil.rmtree(video_ckpt_dir, ignore_errors=True)
         
         # Save fine-tuned manifest
+        finetuned_output_dir.mkdir(parents=True, exist_ok=True)
         finetuned_df = pd.DataFrame(finetuned_results)
         finetuned_manifest = finetuned_output_dir / "finetuned_manifest.csv"
         finetuned_df.to_csv(finetuned_manifest, index=False)
