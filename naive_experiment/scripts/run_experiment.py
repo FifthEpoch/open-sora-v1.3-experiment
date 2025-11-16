@@ -193,9 +193,9 @@ def main():
     parser.add_argument("--skip-baseline", action="store_true", help="Skip baseline generation (if already done)")
     parser.add_argument("--skip-finetuning", action="store_true", help="Skip fine-tuning (evaluate existing results)")
     parser.add_argument(
-        "--stratified",
+        "--no-stratified",
         action="store_true",
-        help="When limiting --num-videos, evenly sample across classes instead of taking the first N rows",
+        help="Disable the default class-balanced sampling when --num-videos is set",
     )
     
     args = parser.parse_args()
@@ -228,7 +228,7 @@ def main():
     temp_data_csv = None
 
     if args.num_videos is not None:
-        if args.stratified:
+        if not args.no_stratified:
             selected_df = stratified_sample_df(df_full, args.num_videos, logger)
             tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
             selected_df.drop(columns=[CLASS_COL], errors="ignore").to_csv(tmp_file.name, index=False)
@@ -246,7 +246,7 @@ def main():
     logger.info(f"  Dataset rows available: {len(df_full)}")
     logger.info(f"  Total videos selected for this run: {selected_count}")
     if args.num_videos is not None:
-        logger.info(f"  Stratified sampling enabled: {bool(args.stratified)}")
+        logger.info(f"  Stratified sampling enabled: {not args.no_stratified}")
     logger.info(f"  Classes represented: {selected_df[CLASS_COL].nunique()}")
     logger.info(f"  Class distribution: {class_counts}")
     logger.info(f"  Condition frames: {args.condition_frames}")
