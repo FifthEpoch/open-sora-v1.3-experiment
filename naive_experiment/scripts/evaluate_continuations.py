@@ -136,14 +136,23 @@ def main():
         finetuned_output = row.get('finetuned_output', None)
         
         # Robustness: convert non-string/NaN paths to None to avoid os.path.exists(TypeError)
-        if not isinstance(baseline_output, str):
+        if not isinstance(baseline_output, str) or baseline_output.strip() == '':
             baseline_output = None
-        if not isinstance(finetuned_output, str):
+        if not isinstance(finetuned_output, str) or finetuned_output.strip() == '':
             finetuned_output = None
         
         # Make paths absolute
-        if not os.path.isabs(original_path):
+        if original_path and not os.path.isabs(original_path):
             original_path = os.path.join(args.original_videos, os.path.basename(original_path))
+        
+        # Ensure baseline and finetuned paths are absolute
+        if baseline_output and not os.path.isabs(baseline_output):
+            # If relative, assume it's relative to baseline_outputs directory
+            baseline_output = os.path.join(args.baseline_outputs, baseline_output)
+        
+        if finetuned_output and not os.path.isabs(finetuned_output):
+            # If relative, assume it's relative to finetuned_outputs directory
+            finetuned_output = os.path.join(args.finetuned_outputs, finetuned_output)
         
         result = {
             'video_idx': video_idx,

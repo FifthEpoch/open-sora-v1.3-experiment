@@ -213,6 +213,8 @@ def generate_continuation(
     # Save
     video_name = Path(video_path).stem
     output_path = Path(save_dir) / f"baseline_{video_idx:04d}_{video_name}.mp4"
+    # Ensure output_path is absolute
+    output_path = output_path.resolve()
     save_sample(
         samples,
         str(output_path),

@@ -331,13 +331,26 @@ def main():
                 ]
                 result = run_command(cmd, logger, check=False)
                 if result.returncode == 0:
-                    finetuned_output = result.stdout.strip()
-                    finetuned_results.append({
-                        'video_idx': video_idx,
-                        'original_path': original_path,
-                        'finetuned_output': finetuned_output,
-                        'caption': caption,
-                    })
+                    # Extract only the last line (the output path) to avoid VAE loading messages
+                    stdout_lines = result.stdout.strip().split('\n')
+                    finetuned_output = stdout_lines[-1] if stdout_lines else None
+                    # Validate it's actually a path (contains '/' and ends with '.mp4')
+                    if finetuned_output and '/' in finetuned_output and finetuned_output.endswith('.mp4'):
+                        finetuned_results.append({
+                            'video_idx': video_idx,
+                            'original_path': original_path,
+                            'finetuned_output': finetuned_output,
+                            'caption': caption,
+                        })
+                    else:
+                        logger.warning(f"  Could not parse output path from stdout. Last line: {finetuned_output}")
+                        logger.warning(f"  Full stdout: {result.stdout[:500]}...")  # First 500 chars
+                        finetuned_results.append({
+                            'video_idx': video_idx,
+                            'original_path': original_path,
+                            'finetuned_output': None,
+                            'error': f"Could not parse output path from stdout",
+                        })
                 else:
                     logger.warning(f"  Failed to generate for video {video_idx}")
                     logger.error(f"  Error output:\n{result.stderr}")

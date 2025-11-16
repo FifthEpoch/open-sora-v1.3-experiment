@@ -205,6 +205,8 @@ def generate_continuation(
     # Save
     video_name = Path(video_path).stem
     output_path = Path(save_dir) / f"finetuned_{video_idx:04d}_{video_name}.mp4"
+    # Ensure output_path is absolute
+    output_path = output_path.resolve()
     save_sample(
         samples,
         str(output_path),
@@ -244,6 +246,10 @@ def main():
     
     # Generate continuation
     try:
+        # Suppress stdout during generation to avoid polluting captured output
+        import contextlib
+        import io
+        
         output_path = generate_continuation(
             model, vae, text_encoder, scheduler, cfg,
             args.video_path, args.caption, args.condition_frames,
@@ -251,7 +257,8 @@ def main():
             save_dir, args.video_idx
         )
         logger.info(f"Generated continuation saved to: {output_path}")
-        print(output_path)  # Print for script capture
+        # Print ONLY the output path to stdout for script capture (must be last line)
+        print(output_path, flush=True)
     except Exception as e:
         logger.error(f"Error generating continuation: {e}")
         logger.error("Context: "
