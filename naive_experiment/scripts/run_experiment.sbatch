@@ -148,6 +148,10 @@ echo "✓ Using environment's Python: ${PYTHON_PATH}"
 export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
 echo "LD_LIBRARY_PATH set to: $LD_LIBRARY_PATH"
 
+# Ensure Python can import the repo modules (opensora, etc.)
+export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
+echo "PYTHONPATH set to: ${PYTHONPATH}"
+
 # Verify GPU availability
 echo "========================================"
 echo "GPU Information"
