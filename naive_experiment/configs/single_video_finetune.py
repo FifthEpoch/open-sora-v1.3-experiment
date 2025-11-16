@@ -13,7 +13,7 @@ dataset = dict(
 # During inference: uses condition_frame_length=22 (generates frames 23-45)
 bucket_config = {
     "480p": {
-        22: (1, 0),  # batch_size=1, only first 22 frames for training
+        22: (1, 1),  # batch_size=1, ensure at least one repeat so buckets yield data
     },
 }
 

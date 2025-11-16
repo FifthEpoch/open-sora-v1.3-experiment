@@ -543,9 +543,10 @@ def main():
             exp_dir,
             model=model,
             ema=ema,
-            optimizer=optimizer,
-            lr_scheduler=lr_scheduler,
-            sampler=sampler,
+            # Avoid saving optimizer/scheduler/sampler when no steps ran (can be empty under ZeRO)
+            optimizer=None,
+            lr_scheduler=None,
+            sampler=None,
             epoch=0,
             step=0,
             global_step=0,
