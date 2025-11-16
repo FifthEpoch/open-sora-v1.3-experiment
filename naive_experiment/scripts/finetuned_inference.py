@@ -169,11 +169,12 @@ def generate_continuation(
         
         # Run scheduler
         # Model kwargs for RF scheduler time sampler (expects explicit height/width keys)
+        import torch as _torch
         model_kwargs = {
             "height": int(image_size[0]),
             "width": int(image_size[1]),
-            # RF time sampler expects an indexable shape; provide 1D tuple
-            "num_frames": (int(num_frames),),
+            # RF time sampler expects a 1D tensor it can index and do arithmetic on
+            "num_frames": _torch.full((1,), int(num_frames), device=device, dtype=_torch.int64),
             "is_image": False,
         }
         samples = scheduler.sample(
