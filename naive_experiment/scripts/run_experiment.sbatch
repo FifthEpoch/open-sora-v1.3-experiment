@@ -54,11 +54,24 @@ export TENSORBOARD_LOGDIR="${SCRATCH_BASE}/tensorboard"
 echo "Environment configured to use: ${SCRATCH_BASE}"
 
 # Load conda module
+echo "Purging modules..."
 module purge
+echo "Loading anaconda3/2025.06..."
 module load anaconda3/2025.06
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to load anaconda3/2025.06 module" >&2
+    exit 1
+fi
+echo "✓ Module loaded"
 
 # Source conda initialization script
+echo "Sourcing conda initialization..."
 source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to source conda.sh" >&2
+    exit 1
+fi
+echo "✓ Conda initialized"
 
 # Deactivate any existing environment for clean activation
 conda deactivate 2>/dev/null || true
@@ -75,6 +88,12 @@ conda env list
 echo ""
 echo "Activating conda environment: ${SCRATCH_BASE}/conda-envs/opensora13"
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
+if [ $? -ne 0 ] || [ -z "$CONDA_PREFIX" ]; then
+    echo "ERROR: Failed to activate conda environment" >&2
+    echo "CONDA_PREFIX: $CONDA_PREFIX" >&2
+    exit 1
+fi
+echo "✓ Environment activated: $CONDA_PREFIX"
 
 # Fix libstdc++ compatibility for PyAV (av package)
 # PyAV from conda-forge requires GLIBCXX_3.4.30, ensure conda's libstdc++ takes priority
