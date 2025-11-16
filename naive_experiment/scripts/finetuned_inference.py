@@ -26,6 +26,7 @@ from opensora.utils.inference_utils import (
 )
 from opensora.utils.misc import create_logger, to_torch_dtype
 from opensora.utils.config_utils import parse_configs
+import traceback
 
 # Duplicate helper functions to avoid import issues
 def load_model_and_components(config_path, checkpoint_path, vae_path=None, device=None, dtype=None):
@@ -141,6 +142,7 @@ def generate_continuation(
     target_shape = (1, vae.out_channels, *latent_size)
     
     # Prepare reference and mask
+    assert isinstance(cfg.cond_type, str), f"cfg.cond_type must be str, got {type(cfg.cond_type)}"
     ref, mask_index = prep_ref_and_mask(
         cfg.cond_type,
         condition_frames,
@@ -150,6 +152,9 @@ def generate_continuation(
         device=device,
         dtype=dtype,
     )
+    # Debug info
+    import logging as _logging  # avoid shadowing
+    _logging.getLogger().info(f"Prepared ref/mask: cond_type={cfg.cond_type}, mask_len={len(mask_index)}")
     
     # Generate
     with torch.no_grad():
@@ -238,6 +243,12 @@ def main():
         print(output_path)  # Print for script capture
     except Exception as e:
         logger.error(f"Error generating continuation: {e}")
+        logger.error("Context: "
+                     f"cond_type={getattr(cfg, 'cond_type', None)}, "
+                     f"image_size={image_size}, num_frames={num_frames}, "
+                     f"condition_frames={args.condition_frames}, "
+                     f"video_path={args.video_path}")
+        logger.error("Traceback:\n" + traceback.format_exc())
         sys.exit(1)
 
 
