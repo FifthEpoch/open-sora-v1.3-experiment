@@ -121,8 +121,9 @@ def main():
         batch_size=cfg.get("batch_size", None),
         num_workers=cfg.get("num_workers", 4),
         seed=cfg.get("seed", 1024),
-        shuffle=True,
-        drop_last=True,
+        shuffle=cfg.get("shuffle", True),
+        # Important: allow keeping the last (possibly incomplete) batch for tiny datasets
+        drop_last=cfg.get("drop_last", False),
         pin_memory=True,
         process_group=get_data_parallel_group(),
         prefetch_factor=cfg.get("prefetch_factor", None),

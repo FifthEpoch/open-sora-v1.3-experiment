@@ -200,6 +200,10 @@ def main():
             from mmengine.config import Config
             train_cfg = Config.fromfile(temp_finetune_config)
             train_cfg.dataset.data_path = temp_csv
+            # Ensure single-sample training actually yields steps
+            train_cfg.batch_size = 1
+            train_cfg.drop_last = False
+            train_cfg.shuffle = False
             train_cfg.model.from_pretrained = args.checkpoint_path
             train_cfg.vae.from_pretrained = args.vae_path
             
