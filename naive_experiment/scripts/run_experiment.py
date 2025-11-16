@@ -206,7 +206,8 @@ def main():
     if not output_dir.is_absolute():
         output_dir = Path.cwd() / output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    original_videos_root = str(Path(args.data_csv).parent)
+    dataset_root_path = Path(args.data_csv).parent
+    original_videos_root = str(dataset_root_path)
     
     # Paths
     config_dir = Path(__file__).parent.parent / "configs"
@@ -230,6 +231,10 @@ def main():
         if not args.no_stratified:
             selected_df = stratified_sample_df(df_full, args.num_videos, logger)
             tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".csv")
+            selected_df = selected_df.copy()
+            selected_df["path"] = selected_df["path"].apply(
+                lambda p: p if os.path.isabs(p) else str((dataset_root_path / p).resolve())
+            )
             selected_df.drop(columns=[CLASS_COL], errors="ignore").to_csv(tmp_file.name, index=False)
             data_csv_for_run = tmp_file.name
             temp_data_csv = tmp_file.name
