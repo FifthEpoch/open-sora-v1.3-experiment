@@ -11,7 +11,6 @@ import argparse
 import json
 import os
 import random
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -324,7 +323,6 @@ def main():
             logger.info(f"  Truncated video saved to: {truncated_video_path}")
             
             # Create single-video CSV for fine-tuning (using truncated video)
-            import tempfile
             with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
                 temp_csv = f.name
                 pd.DataFrame([{
@@ -345,8 +343,6 @@ def main():
             logger.info(f"  Fine-tuning for {args.finetune_steps} steps...")
             
             # Create temporary fine-tuning config with correct paths
-            import tempfile
-            import shutil
             with open(finetune_config, 'r') as f:
                 finetune_config_content = f.read()
             
