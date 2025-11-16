@@ -168,13 +168,19 @@ def generate_continuation(
             x_cond_mask[:, :, mask_index, :, :] = 1.0
         
         # Run scheduler
+        # Model kwargs for RF scheduler time sampler
+        model_kwargs = {
+            "image_size": image_size,
+            "num_frames": num_frames,
+            "is_image": False,
+        }
         samples = scheduler.sample(
             model,
             text_encoder,
             z,
             [caption],
             device,
-            additional_args=None,
+            additional_args=model_kwargs,
             progress=False,
             mask=None,
             mask_index=mask_index,
