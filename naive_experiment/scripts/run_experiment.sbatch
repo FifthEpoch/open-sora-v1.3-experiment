@@ -74,15 +74,24 @@ fi
 echo "✓ Conda initialized"
 
 # Deactivate any existing environment for clean activation
+echo "Deactivating any existing conda environment..."
 conda deactivate 2>/dev/null || true
+echo "✓ Deactivation complete (if any)"
 
 # Configure conda to recognize custom environment location (use --prepend for priority)
+echo "Configuring conda to use scratch directories..."
 conda config --prepend envs_dirs "${SCRATCH_BASE}/conda-envs" 2>/dev/null || true
 conda config --prepend pkgs_dirs "${SCRATCH_BASE}/conda-pkgs" 2>/dev/null || true
+echo "✓ Conda configured"
 
 echo ""
-echo "Conda environments:"
+echo "Listing conda environments..."
 conda env list
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to list conda environments" >&2
+    exit 1
+fi
+echo "✓ Environment list complete"
 
 # Activate conda environment in scratch location
 echo ""
