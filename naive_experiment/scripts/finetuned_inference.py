@@ -168,14 +168,16 @@ def generate_continuation(
             x_cond_mask[:, :, mask_index, :, :] = 1.0
         
         # Run scheduler
-        # Model kwargs for RF scheduler time sampler (expects explicit height/width keys)
-        import torch as _torch
+        # Model kwargs for RF scheduler time sampler - must match prepare_multi_resolution_info() format
+        # Reference: opensora/utils/inference_utils.py:prepare_multi_resolution_info() for STDiT2
+        batch_size = 1
         model_kwargs = {
-            "height": int(image_size[0]),
-            "width": int(image_size[1]),
-            # RF time sampler expects a 1D tensor it can index and do arithmetic on
-            "num_frames": _torch.full((1,), int(num_frames), device=device, dtype=_torch.int64),
-            "is_image": False,
+            "height": torch.tensor([image_size[0]], device=device, dtype=dtype).repeat(batch_size),
+            "width": torch.tensor([image_size[1]], device=device, dtype=dtype).repeat(batch_size),
+            "num_frames": torch.tensor([num_frames], device=device, dtype=dtype).repeat(batch_size),
+            # Optional keys used by some configurations
+            "ar": torch.tensor([image_size[0] / image_size[1]], device=device, dtype=dtype).repeat(batch_size),
+            "fps": torch.tensor([cfg.fps], device=device, dtype=dtype).repeat(batch_size),
         }
         samples = scheduler.sample(
             model,
