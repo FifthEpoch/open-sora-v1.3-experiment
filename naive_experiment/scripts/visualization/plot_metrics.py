@@ -31,9 +31,10 @@ def extract_metrics(data):
     finetuned_lpips = []
     
     for video in data:
-        # Baseline metrics
-        if 'baseline_metrics' in video and video['baseline_metrics']:
-            bm = video['baseline_metrics']
+        # Baseline metrics (try both 'baseline' and 'baseline_metrics' for compatibility)
+        baseline_key = 'baseline' if 'baseline' in video else 'baseline_metrics'
+        if baseline_key in video and video[baseline_key]:
+            bm = video[baseline_key]
             if 'psnr' in bm:
                 baseline_psnr.append(bm['psnr'])
             if 'ssim' in bm:
@@ -41,9 +42,10 @@ def extract_metrics(data):
             if 'lpips' in bm:
                 baseline_lpips.append(bm['lpips'])
         
-        # Fine-tuned metrics
-        if 'finetuned_metrics' in video and video['finetuned_metrics']:
-            fm = video['finetuned_metrics']
+        # Fine-tuned metrics (try both 'finetuned' and 'finetuned_metrics' for compatibility)
+        finetuned_key = 'finetuned' if 'finetuned' in video else 'finetuned_metrics'
+        if finetuned_key in video and video[finetuned_key]:
+            fm = video[finetuned_key]
             if 'psnr' in fm:
                 finetuned_psnr.append(fm['psnr'])
             if 'ssim' in fm:
