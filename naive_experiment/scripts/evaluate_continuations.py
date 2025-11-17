@@ -114,7 +114,7 @@ def evaluate_pair(gt_frames, generated_frames):
 
 
 def main():
-    import sys
+o a    import sys
     
     parser = argparse.ArgumentParser(description="Evaluate video continuations")
     parser.add_argument("--original-videos", type=str, required=True, help="Directory containing original videos")
@@ -196,18 +196,47 @@ def main():
             'original_path': original_path,
         }
         
-        # Extract GT frames (frames 23-45 from original video)
+        # Extract GT frames - we'll determine how many based on what the generated video has
+        # First, load one of the generated videos to see how many frames it has
+        total_generated_frames = None
+        if baseline_output and os.path.exists(baseline_output):
+            try:
+                temp_frames = load_generated_video(baseline_output)
+                if temp_frames is not None:
+                    total_generated_frames = len(temp_frames)
+            except:
+                pass
+        
+        if total_generated_frames is None and finetuned_output and os.path.exists(finetuned_output):
+            try:
+                temp_frames = load_generated_video(finetuned_output)
+                if temp_frames is not None:
+                    total_generated_frames = len(temp_frames)
+            except:
+                pass
+        
+        if total_generated_frames is None:
+            result['error'] = "Could not determine generated video frame count"
+            results.append(result)
+            continue
+        
+        # Calculate expected continuation frames
+        expected_continuation_frames = total_generated_frames - args.condition_frames
+        print(f"  [GT] Detected {total_generated_frames} total frames, expecting {expected_continuation_frames} continuation frames", file=sys.stderr)
+        
+        # Extract GT frames (from condition_frames onwards)
         try:
             gt_frames = extract_frames_from_video(
                 original_path,
                 start_frame=args.condition_frames,
-                num_frames=45 - args.condition_frames
+                num_frames=expected_continuation_frames
             )
             
             if gt_frames is None or len(gt_frames) == 0:
                 result['error'] = "Could not extract GT frames"
                 results.append(result)
                 continue
+            print(f"  [GT] Extracted {len(gt_frames)} GT frames for comparison", file=sys.stderr)
         except Exception as e:
             result['error'] = f"Error extracting GT: {str(e)}"
             results.append(result)

@@ -26,7 +26,7 @@ if torch.cuda.is_available():
 
 # Check Open-Sora
 try:
-    import opensora
+import opensora
     print("\n✓ Open-Sora import OK")
 except Exception as e:
     print(f"\n✗ Open-Sora import FAILED: {e}")

@@ -13,5 +13,7 @@ else
 fi
 
 module purge || true
+module load anaconda3/2025.06
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
 conda install -y -c conda-forge "ffmpeg>=6,<7"

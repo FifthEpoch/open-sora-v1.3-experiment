@@ -103,7 +103,7 @@ pip install "$WHEEL_DIR"/flash_attn-*.whl
 
 # Install apex if it was built successfully
 if ls "$WHEEL_DIR"/apex-*.whl 1> /dev/null 2>&1; then
-    pip install "$WHEEL_DIR"/apex-*.whl
+pip install "$WHEEL_DIR"/apex-*.whl
     echo "Apex installed successfully"
 else
     echo "WARNING: Apex not available. Use enable_layernorm_kernel=False in configs"
