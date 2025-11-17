@@ -9,8 +9,8 @@
 #SBATCH --time=2:00:00
 #SBATCH --gres=gpu:1
 
-# Enable strict error handling
-set -euo pipefail
+# Enable strict error handling (excluding -u due to conda/Qt compatibility)
+set -eo pipefail
 export PYTHONNOUSERSITE=1
 
 # Define project root
@@ -32,15 +32,11 @@ source "${PROJECT_ROOT}/env_setup/00_set_scratch_env.sh"
 echo "Purging modules..."
 module purge
 echo "Loading anaconda3/2025.06..."
-set +u  # Temporarily disable unbound variable check for module load
 module load anaconda3/2025.06
-set -u  # Re-enable unbound variable check
 
 # Initialize conda
 echo "Sourcing conda initialization..."
-set +u  # Temporarily disable unbound variable check for conda initialization
 source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
-set -u  # Re-enable unbound variable check
 
 # Deactivate any existing conda environment
 if [[ -n "${CONDA_DEFAULT_ENV:-}" ]]; then
@@ -52,9 +48,7 @@ fi
 
 # Activate opensora13 environment
 echo "Activating opensora13 environment..."
-set +u  # Temporarily disable unbound variable check for conda activation
 conda activate opensora13
-set -u  # Re-enable unbound variable check
 
 # Verify environment
 echo "✓ Conda environment activated: $(conda info --envs | grep '*')"
