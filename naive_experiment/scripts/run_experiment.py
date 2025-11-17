@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import random
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -527,12 +528,11 @@ def main():
                 ]
                 result = run_command(cmd, logger, check=False)
                 if result.returncode == 0:
-                    # Extract only the last line (the output path) to avoid VAE loading messages
+                    # Extract output path and timing from stdout
                     stdout_lines = result.stdout.strip().split('\n')
-                    finetuned_output = stdout_lines[-1] if stdout_lines else None
-                    logger.info(f"  Captured stdout: {len(stdout_lines)} lines, last line: {finetuned_output}")
+                    logger.info(f"  Captured stdout: {len(stdout_lines)} lines")
                     
-                    # Extract inference time if present
+                    # Extract inference time if present (usually the last line)
                     finetuned_inference_time = None
                     for line in stdout_lines:
                         if line.startswith('INFERENCE_TIME:'):
@@ -541,6 +541,14 @@ def main():
                                 logger.info(f"  Finetuned inference took {finetuned_inference_time:.2f} seconds")
                             except (ValueError, IndexError) as e:
                                 logger.warning(f"  Could not parse inference time from: {line}")
+                            break
+                    
+                    # Find the output path (line ending with .mp4, not starting with INFERENCE_TIME)
+                    finetuned_output = None
+                    for line in reversed(stdout_lines):
+                        if line.endswith('.mp4') and '/' in line and not line.startswith('INFERENCE_TIME'):
+                            finetuned_output = line.strip()
+                            logger.info(f"  Found output path: {finetuned_output}")
                             break
                     
                     # Validate it's actually a path (contains '/' and ends with '.mp4')
