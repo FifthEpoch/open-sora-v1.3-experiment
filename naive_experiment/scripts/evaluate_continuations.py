@@ -64,6 +64,10 @@ def load_generated_video(video_path):
 
 def evaluate_pair(gt_frames, generated_frames):
     """Evaluate a pair of videos (GT vs generated continuation)."""
+    import sys
+    import torch
+    import torch.nn.functional as F
+    
     metrics = {}
     
     # Ensure same number of frames (take minimum)
@@ -72,10 +76,18 @@ def evaluate_pair(gt_frames, generated_frames):
     generated_frames = generated_frames[:min_frames]
     
     # Convert to torch tensors (N, H, W, C) -> (N, C, H, W)
-    import torch
-    
     gt_tensor = torch.from_numpy(gt_frames).permute(0, 3, 1, 2).float() / 255.0
     gen_tensor = torch.from_numpy(generated_frames).permute(0, 3, 1, 2).float() / 255.0
+    
+    # Debug: Print shapes
+    print(f"  [EVAL] GT tensor shape: {gt_tensor.shape}, Generated tensor shape: {gen_tensor.shape}", file=sys.stderr)
+    
+    # Resize generated frames to match GT resolution if needed
+    if gt_tensor.shape[2:] != gen_tensor.shape[2:]:  # Compare H, W
+        print(f"  [EVAL] Resolution mismatch: GT {gt_tensor.shape[2:]} vs Generated {gen_tensor.shape[2:]}", file=sys.stderr)
+        print(f"  [EVAL] Resizing generated frames to match GT resolution...", file=sys.stderr)
+        gen_tensor = F.interpolate(gen_tensor, size=gt_tensor.shape[2:], mode='bilinear', align_corners=False)
+        print(f"  [EVAL] After resize: Generated tensor shape: {gen_tensor.shape}", file=sys.stderr)
     
     # Calculate PSNR (per frame, then average)
     psnr_values = []
@@ -114,7 +126,7 @@ def evaluate_pair(gt_frames, generated_frames):
 
 
 def main():
-o a    import sys
+    import sys
     
     parser = argparse.ArgumentParser(description="Evaluate video continuations")
     parser.add_argument("--original-videos", type=str, required=True, help="Directory containing original videos")
