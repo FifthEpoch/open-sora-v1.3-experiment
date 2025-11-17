@@ -9,6 +9,7 @@ continuations for all videos in the dataset.
 import argparse
 import os
 import sys
+import time
 from pathlib import Path
 
 # Add parent directory to path to import Open-Sora modules
@@ -129,6 +130,9 @@ def generate_continuation(
     device, dtype, save_dir, video_idx
 ):
     """Generate continuation for a single video."""
+    # Start timing (after function entry, before actual computation)
+    start_time = time.time()
+    
     # Split video and create conditioning clip
     cond_video_path = split_video_for_conditioning(
         video_path, condition_frames=condition_frames,
@@ -222,7 +226,11 @@ def generate_continuation(
         write_video_backend="pyav",
     )
     
-    return str(output_path)
+    # End timing (after save, before return)
+    end_time = time.time()
+    inference_time = end_time - start_time
+    
+    return str(output_path), inference_time
 
 
 def main():
@@ -270,7 +278,7 @@ def main():
             video_path = os.path.join(Path(args.data_csv).parent, video_path)
         
         try:
-            output_path = generate_continuation(
+            output_path, inference_time = generate_continuation(
                 model, vae, text_encoder, scheduler, cfg,
                 video_path, caption, args.condition_frames,
                 image_size, num_frames, device, dtype,
@@ -281,6 +289,7 @@ def main():
                 'original_path': video_path,
                 'baseline_output': output_path,
                 'caption': caption,
+                'baseline_inference_time_sec': inference_time
             })
         except Exception as e:
             logger.error(f"Error processing video {idx} ({video_path}): {e}")
@@ -289,6 +298,7 @@ def main():
                 'original_path': video_path,
                 'baseline_output': None,
                 'error': str(e),
+                'baseline_inference_time_sec': 0.0
             })
     
     # Save results manifest

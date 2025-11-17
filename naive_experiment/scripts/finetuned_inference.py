@@ -8,6 +8,7 @@ Similar to baseline_inference.py but uses fine-tuned checkpoint.
 import argparse
 import os
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -117,6 +118,9 @@ def generate_continuation(
     device, dtype, save_dir, video_idx
 ):
     """Generate continuation for a single video."""
+    # Start timing (after function entry, before actual computation)
+    start_time = time.time()
+    
     # Split video and create conditioning clip
     cond_video_path = split_video_for_conditioning(
         video_path, condition_frames=condition_frames,
@@ -214,7 +218,11 @@ def generate_continuation(
         write_video_backend="pyav",
     )
     
-    return str(output_path)
+    # End timing (after save, before return)
+    end_time = time.time()
+    inference_time = end_time - start_time
+    
+    return str(output_path), inference_time
 
 
 def main():
@@ -251,15 +259,17 @@ def main():
         import contextlib
         import io
         
-        output_path = generate_continuation(
+        output_path, inference_time = generate_continuation(
             model, vae, text_encoder, scheduler, cfg,
             args.video_path, args.caption, args.condition_frames,
             image_size, num_frames, device, dtype,
             save_dir, args.video_idx
         )
         logger.info(f"Generated continuation saved to: {output_path}")
-        # Print ONLY the output path to stdout for script capture (must be last line)
+        logger.info(f"Inference time: {inference_time:.2f} seconds")
+        # Print output path and timing to stdout for script capture (must be last two lines)
         print(output_path, flush=True)
+        print(f"INFERENCE_TIME:{inference_time}", flush=True)
     except Exception as e:
         logger.error(f"Error generating continuation: {e}")
         logger.error("Context: "
