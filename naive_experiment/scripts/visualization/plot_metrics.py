@@ -140,6 +140,7 @@ def plot_comparison(metrics, output_dir):
     ax[0].set_title('PSNR', fontsize=14, fontweight='bold')
     ax[0].grid(axis='y', alpha=0.3, linestyle='--')
     ax[0].set_ylim(bottom=0)
+    ax[0].set_xlim(-0.5, 1.5)  # Tighten x-axis to reduce white space
     ax[0].set_xticks(x_positions)
     ax[0].set_xticklabels(['Baseline', 'Fine-tuned'])
     
@@ -156,6 +157,7 @@ def plot_comparison(metrics, output_dir):
     ax[1].set_title('SSIM', fontsize=14, fontweight='bold')
     ax[1].grid(axis='y', alpha=0.3, linestyle='--')
     ax[1].set_ylim(0, 1)
+    ax[1].set_xlim(-0.5, 1.5)  # Tighten x-axis to reduce white space
     ax[1].set_xticks(x_positions)
     ax[1].set_xticklabels(['Baseline', 'Fine-tuned'])
     
@@ -172,6 +174,7 @@ def plot_comparison(metrics, output_dir):
     ax[2].set_title('LPIPS', fontsize=14, fontweight='bold')
     ax[2].grid(axis='y', alpha=0.3, linestyle='--')
     ax[2].set_ylim(bottom=0)
+    ax[2].set_xlim(-0.5, 1.5)  # Tighten x-axis to reduce white space
     ax[2].set_xticks(x_positions)
     ax[2].set_xticklabels(['Baseline', 'Fine-tuned'])
     
