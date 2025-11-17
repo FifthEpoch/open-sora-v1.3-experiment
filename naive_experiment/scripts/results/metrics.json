@@ -1,102 +1,102 @@
 [
-    {
-      "video_idx": 0,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0000_v_ApplyEyeMakeup_g02_c01.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0000_v_ApplyEyeMakeup_g02_c01.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0000_v_ApplyEyeMakeup_g02_c01.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0000_v_ApplyEyeMakeup_g02_c01.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0000_v_ApplyEyeMakeup_g02_c01.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0000_v_ApplyEyeMakeup_g02_c01.mp4"
-    },
-    {
-      "video_idx": 1,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c02.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0001_v_ApplyEyeMakeup_g02_c02.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0001_v_ApplyEyeMakeup_g02_c02.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0001_v_ApplyEyeMakeup_g02_c02.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0001_v_ApplyEyeMakeup_g02_c02.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0001_v_ApplyEyeMakeup_g02_c02.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0001_v_ApplyEyeMakeup_g02_c02.mp4"
-    },
-    {
-      "video_idx": 2,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c03.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0002_v_ApplyEyeMakeup_g02_c03.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0002_v_ApplyEyeMakeup_g02_c03.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0002_v_ApplyEyeMakeup_g02_c03.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0002_v_ApplyEyeMakeup_g02_c03.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0002_v_ApplyEyeMakeup_g02_c03.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0002_v_ApplyEyeMakeup_g02_c03.mp4"
-    },
-    {
-      "video_idx": 3,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g04_c07.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0003_v_ApplyEyeMakeup_g04_c07.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0003_v_ApplyEyeMakeup_g04_c07.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0003_v_ApplyEyeMakeup_g04_c07.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0003_v_ApplyEyeMakeup_g04_c07.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0003_v_ApplyEyeMakeup_g04_c07.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0003_v_ApplyEyeMakeup_g04_c07.mp4"
-    },
-    {
-      "video_idx": 4,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g05_c01.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0004_v_ApplyEyeMakeup_g05_c01.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0004_v_ApplyEyeMakeup_g05_c01.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0004_v_ApplyEyeMakeup_g05_c01.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0004_v_ApplyEyeMakeup_g05_c01.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0004_v_ApplyEyeMakeup_g05_c01.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0004_v_ApplyEyeMakeup_g05_c01.mp4"
-    },
-    {
-      "video_idx": 5,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g05_c04.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0005_v_ApplyEyeMakeup_g05_c04.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0005_v_ApplyEyeMakeup_g05_c04.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0005_v_ApplyEyeMakeup_g05_c04.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0005_v_ApplyEyeMakeup_g05_c04.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0005_v_ApplyEyeMakeup_g05_c04.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0005_v_ApplyEyeMakeup_g05_c04.mp4"
-    },
-    {
-      "video_idx": 6,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g05_c06.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0006_v_ApplyEyeMakeup_g05_c06.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0006_v_ApplyEyeMakeup_g05_c06.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0006_v_ApplyEyeMakeup_g05_c06.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0006_v_ApplyEyeMakeup_g05_c06.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0006_v_ApplyEyeMakeup_g05_c06.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0006_v_ApplyEyeMakeup_g05_c06.mp4"
-    },
-    {
-      "video_idx": 7,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g06_c06.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0007_v_ApplyEyeMakeup_g06_c06.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0007_v_ApplyEyeMakeup_g06_c06.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0007_v_ApplyEyeMakeup_g06_c06.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0007_v_ApplyEyeMakeup_g06_c06.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0007_v_ApplyEyeMakeup_g06_c06.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0007_v_ApplyEyeMakeup_g06_c06.mp4"
-    },
-    {
-      "video_idx": 8,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g09_c02.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0008_v_ApplyEyeMakeup_g09_c02.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0008_v_ApplyEyeMakeup_g09_c02.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0008_v_ApplyEyeMakeup_g09_c02.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0008_v_ApplyEyeMakeup_g09_c02.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0008_v_ApplyEyeMakeup_g09_c02.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0008_v_ApplyEyeMakeup_g09_c02.mp4"
-    },
-    {
-      "video_idx": 9,
-      "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g09_c07.mp4",
-      "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0009_v_ApplyEyeMakeup_g09_c07.mp4",
-      "baseline_path_exists": false,
-      "baseline_error": "Baseline output not found: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0009_v_ApplyEyeMakeup_g09_c07.mp4",
-      "finetuned_path": "OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0009_v_ApplyEyeMakeup_g09_c07.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0009_v_ApplyEyeMakeup_g09_c07.mp4",
-      "finetuned_path_exists": false,
-      "finetuned_error": "Finetuned output not found: OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {\n  \"_attn_implementation_autoset\": true,\n  \"architectures\": [\n    \"OpenSoraVAE_V1_3_Pipline\"\n  ],\n  \"decoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"temporal_up_layers\": [\n      2,\n      3\n    ],\n    \"type\": \"VideoDecoder\",\n    \"z_channels\": 16\n  },\n  \"encoder\": {\n    \"ch\": 128,\n    \"ch_mult\": [\n      1,\n      2,\n      4,\n      4\n    ],\n    \"double_z\": true,\n    \"down_sampling_layer\": [\n      1,\n      2\n    ],\n    \"in_channels\": 3,\n    \"micro_batch_size_2d\": 4,\n    \"num_res_blocks\": 2,\n    \"out_ch\": 3,\n    \"type\": \"VideoEncoder\",\n    \"z_channels\": 16\n  },\n  \"model_type\": \"OpenSoraVAE_V1_3_Pipline\",\n  \"torch_dtype\": \"float32\",\n  \"transformers_version\": \"4.51.3\"\n}\n\nhuggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3\nSaved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0009_v_ApplyEyeMakeup_g09_c07.mp4\n/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0009_v_ApplyEyeMakeup_g09_c07.mp4"
-    }
-  
+  {
+    "video_idx": 0,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g04_c07.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0000_v_ApplyEyeMakeup_g04_c07.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0000_v_ApplyEyeMakeup_g04_c07.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 1,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyLipstick/v_ApplyLipstick_g23_c03.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0001_v_ApplyLipstick_g23_c03.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0001_v_ApplyLipstick_g23_c03.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 2,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/Archery/v_Archery_g04_c02.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0002_v_Archery_g04_c02.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0002_v_Archery_g04_c02.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 3,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/BabyCrawling/v_BabyCrawling_g04_c01.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0003_v_BabyCrawling_g04_c01.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0003_v_BabyCrawling_g04_c01.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 4,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/BalanceBeam/v_BalanceBeam_g08_c03.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0004_v_BalanceBeam_g08_c03.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0004_v_BalanceBeam_g08_c03.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 5,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/BandMarching/v_BandMarching_g07_c05.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0005_v_BandMarching_g07_c05.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0005_v_BandMarching_g07_c05.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 6,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/BaseballPitch/v_BaseballPitch_g07_c05.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0006_v_BaseballPitch_g07_c05.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0006_v_BaseballPitch_g07_c05.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 7,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/Basketball/v_Basketball_g24_c02.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0007_v_Basketball_g24_c02.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0007_v_Basketball_g24_c02.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 8,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/BasketballDunk/v_BasketballDunk_g10_c05.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0008_v_BasketballDunk_g10_c05.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0008_v_BasketballDunk_g10_c05.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  },
+  {
+    "video_idx": 9,
+    "original_path": "/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/BenchPress/v_BenchPress_g03_c03.mp4",
+    "baseline_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/baselines/baseline_0009_v_BenchPress_g03_c03.mp4",
+    "baseline_path_exists": true,
+    "baseline_error": "calculate_lpips() missing 1 required positional argument: 'device'",
+    "finetuned_path": "/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/finetuned/finetuned_0009_v_BenchPress_g03_c03.mp4",
+    "finetuned_path_exists": true,
+    "finetuned_error": "calculate_lpips() missing 1 required positional argument: 'device'"
+  }
+]

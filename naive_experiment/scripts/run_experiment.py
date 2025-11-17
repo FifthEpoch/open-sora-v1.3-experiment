@@ -583,8 +583,13 @@ def main():
                 os.unlink(temp_finetune_config)
                 os.unlink(temp_csv)
             
-            # Do NOT clean up checkpoints/logs; keep for debugging and evaluation
-            logger.info("  Keeping fine-tuned checkpoint directory for inspection.")
+            # Clean up checkpoint directory after evaluation to save storage
+            logger.info(f"  Cleaning up checkpoint directory: {video_ckpt_dir}")
+            try:
+                shutil.rmtree(video_ckpt_dir, ignore_errors=True)
+                logger.info(f"  Successfully deleted checkpoint directory")
+            except Exception as e:
+                logger.warning(f"  Failed to clean up checkpoint directory: {e}")
         
         # Save fine-tuned manifest
         finetuned_output_dir.mkdir(parents=True, exist_ok=True)

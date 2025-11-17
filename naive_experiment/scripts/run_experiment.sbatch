@@ -192,7 +192,7 @@ echo "Working directory: $(pwd)"
 python "${SCRIPT_DIR}/run_experiment.py" \
     --data-csv "${PROJECT_ROOT}/env_setup/download_ucf101/ucf101_metadata.csv" \
     --output-dir results \
-    --num-videos 10
+    --num-videos 100
 
 EXIT_CODE=$?
 
