@@ -92,33 +92,51 @@ def evaluate_pair(gt_frames, generated_frames):
     # Calculate PSNR (per frame, then average)
     psnr_values = []
     for i in range(min_frames):
-        psnr = calculate_psnr(
+        psnr_result = calculate_psnr(
             gt_tensor[i:i+1].unsqueeze(0),
             gen_tensor[i:i+1].unsqueeze(0)
         )
-        psnr_values.append(psnr.item() if torch.is_tensor(psnr) else psnr)
+        # calculate_psnr returns a dict with 'value' key containing per-frame PSNRs
+        if isinstance(psnr_result, dict) and 'value' in psnr_result:
+            # Extract the PSNR value for frame 0 (we're passing one frame at a time)
+            psnr_val = psnr_result['value'][0] if isinstance(psnr_result['value'], dict) else list(psnr_result['value'].values())[0]
+        else:
+            psnr_val = psnr_result
+        psnr_values.append(float(psnr_val))
     metrics['psnr'] = np.mean(psnr_values)
     metrics['psnr_per_frame'] = psnr_values
     
     # Calculate SSIM (per frame, then average)
     ssim_values = []
     for i in range(min_frames):
-        ssim = calculate_ssim(
+        ssim_result = calculate_ssim(
             gt_tensor[i:i+1].unsqueeze(0),
             gen_tensor[i:i+1].unsqueeze(0)
         )
-        ssim_values.append(ssim.item() if torch.is_tensor(ssim) else ssim)
+        # calculate_ssim returns a dict with 'value' key containing per-frame SSIMs
+        if isinstance(ssim_result, dict) and 'value' in ssim_result:
+            # Extract the SSIM value for frame 0 (we're passing one frame at a time)
+            ssim_val = ssim_result['value'][0] if isinstance(ssim_result['value'], dict) else list(ssim_result['value'].values())[0]
+        else:
+            ssim_val = ssim_result
+        ssim_values.append(float(ssim_val))
     metrics['ssim'] = np.mean(ssim_values)
     metrics['ssim_per_frame'] = ssim_values
     
     # Calculate LPIPS (per frame, then average)
     lpips_values = []
     for i in range(min_frames):
-        lpips = calculate_lpips(
+        lpips_result = calculate_lpips(
             gt_tensor[i:i+1].unsqueeze(0),
             gen_tensor[i:i+1].unsqueeze(0)
         )
-        lpips_values.append(lpips.item() if torch.is_tensor(lpips) else lpips)
+        # calculate_lpips returns a dict with 'value' key containing per-frame LPIPS
+        if isinstance(lpips_result, dict) and 'value' in lpips_result:
+            # Extract the LPIPS value for frame 0 (we're passing one frame at a time)
+            lpips_val = lpips_result['value'][0] if isinstance(lpips_result['value'], dict) else list(lpips_result['value'].values())[0]
+        else:
+            lpips_val = lpips_result
+        lpips_values.append(float(lpips_val))
     metrics['lpips'] = np.mean(lpips_values)
     metrics['lpips_per_frame'] = lpips_values
     
