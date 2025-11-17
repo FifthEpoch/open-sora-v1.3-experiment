@@ -2,7 +2,7 @@
 # Environment setup script to redirect all installations and caches to /scratch
 # This prevents hitting /home directory quotas on clusters
 
-set -euo pipefail
+set -eo pipefail
 
 # Base scratch directory
 SCRATCH_BASE="/scratch/wc3013"
