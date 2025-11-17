@@ -79,6 +79,9 @@ def evaluate_pair(gt_frames, generated_frames):
     gt_tensor = torch.from_numpy(gt_frames).permute(0, 3, 1, 2).float() / 255.0
     gen_tensor = torch.from_numpy(generated_frames).permute(0, 3, 1, 2).float() / 255.0
     
+    # Determine device (use GPU if available)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     # Debug: Print shapes
     print(f"  [EVAL] GT tensor shape: {gt_tensor.shape}, Generated tensor shape: {gen_tensor.shape}", file=sys.stderr)
     
@@ -128,7 +131,8 @@ def evaluate_pair(gt_frames, generated_frames):
     for i in range(min_frames):
         lpips_result = calculate_lpips(
             gt_tensor[i:i+1].unsqueeze(0),
-            gen_tensor[i:i+1].unsqueeze(0)
+            gen_tensor[i:i+1].unsqueeze(0),
+            device
         )
         # calculate_lpips returns a dict with 'value' key containing per-frame LPIPS
         if isinstance(lpips_result, dict) and 'value' in lpips_result:
