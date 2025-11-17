@@ -230,6 +230,14 @@ def main():
             'original_path': original_path,
         }
         
+        # Add timing information if present in the manifest
+        if 'baseline_inference_time_sec' in row and pd.notna(row['baseline_inference_time_sec']):
+            result['baseline_inference_time_sec'] = float(row['baseline_inference_time_sec'])
+        if 'finetune_time_sec' in row and pd.notna(row['finetune_time_sec']):
+            result['finetune_time_sec'] = float(row['finetune_time_sec'])
+        if 'finetuned_inference_time_sec' in row and pd.notna(row['finetuned_inference_time_sec']):
+            result['finetuned_inference_time_sec'] = float(row['finetuned_inference_time_sec'])
+        
         # Extract GT frames - we'll determine how many based on what the generated video has
         # First, load one of the generated videos to see how many frames it has
         total_generated_frames = None

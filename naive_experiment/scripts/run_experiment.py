@@ -115,6 +115,9 @@ def evaluate_single_video(
     condition_frames,
     original_videos_root,
     logger,
+    baseline_inference_time=None,
+    finetune_time=None,
+    finetuned_inference_time=None,
 ):
     """Run evaluation for a single video and append results to metrics file."""
     if not baseline_path and not finetuned_path:
@@ -131,6 +134,14 @@ def evaluate_single_video(
             "baseline_output": baseline_path or "",
             "finetuned_output": finetuned_path or "",
         }
+        # Add timing information if available
+        if baseline_inference_time is not None:
+            row["baseline_inference_time_sec"] = baseline_inference_time
+        if finetune_time is not None:
+            row["finetune_time_sec"] = finetune_time
+        if finetuned_inference_time is not None:
+            row["finetuned_inference_time_sec"] = finetuned_inference_time
+            
         pd.DataFrame([row]).to_csv(tmp_manifest, index=False)
 
         cmd = [
@@ -315,6 +326,11 @@ def main():
             if not isinstance(baseline_path, str) or not baseline_path.strip():
                 baseline_path = None
             
+            # Extract baseline timing if available
+            baseline_inference_time = row.get('baseline_inference_time_sec')
+            if pd.isna(baseline_inference_time):
+                baseline_inference_time = None
+            
             # Make path absolute
             if not os.path.isabs(original_path):
                 original_path = os.path.join(Path(args.data_csv).parent, original_path)
@@ -405,8 +421,12 @@ def main():
             # Capture fine-tune stdout/stderr to files for debugging
             finetune_stdout_path = video_ckpt_dir / "finetune_stdout.log"
             finetune_stderr_path = video_ckpt_dir / "finetune_stderr.log"
+            import time
+            finetune_start_time = time.time()
             with open(finetune_stdout_path, "w") as f_out, open(finetune_stderr_path, "w") as f_err:
                 finetune_result = subprocess.run(finetune_cmd, stdout=f_out, stderr=f_err, text=True)
+            finetune_time = time.time() - finetune_start_time
+            logger.info(f"  Fine-tuning took {finetune_time:.2f} seconds")
             # Log directory contents after training attempt
             try:
                 logger.info(f"  Contents of checkpoint dir ({video_ckpt_dir}):")
@@ -511,6 +531,18 @@ def main():
                     stdout_lines = result.stdout.strip().split('\n')
                     finetuned_output = stdout_lines[-1] if stdout_lines else None
                     logger.info(f"  Captured stdout: {len(stdout_lines)} lines, last line: {finetuned_output}")
+                    
+                    # Extract inference time if present
+                    finetuned_inference_time = None
+                    for line in stdout_lines:
+                        if line.startswith('INFERENCE_TIME:'):
+                            try:
+                                finetuned_inference_time = float(line.split(':', 1)[1].strip())
+                                logger.info(f"  Finetuned inference took {finetuned_inference_time:.2f} seconds")
+                            except (ValueError, IndexError) as e:
+                                logger.warning(f"  Could not parse inference time from: {line}")
+                            break
+                    
                     # Validate it's actually a path (contains '/' and ends with '.mp4')
                     if finetuned_output and '/' in finetuned_output and finetuned_output.endswith('.mp4'):
                         logger.info(f"  ✓ Valid output path extracted: {finetuned_output}")
@@ -532,6 +564,9 @@ def main():
                             args.condition_frames,
                             original_videos_root,
                             logger,
+                            baseline_inference_time=baseline_inference_time,
+                            finetune_time=finetune_time,
+                            finetuned_inference_time=finetuned_inference_time,
                         )
                     else:
                         logger.warning(f"  ✗ Could not parse output path from stdout. Last line: {finetuned_output}")
@@ -555,6 +590,9 @@ def main():
                             args.condition_frames,
                             original_videos_root,
                             logger,
+                            baseline_inference_time=baseline_inference_time,
+                            finetune_time=finetune_time,
+                            finetuned_inference_time=None,
                         )
                 else:
                     logger.warning(f"  Failed to generate for video {video_idx}")
@@ -577,6 +615,9 @@ def main():
                         args.condition_frames,
                         original_videos_root,
                         logger,
+                        baseline_inference_time=baseline_inference_time,
+                        finetune_time=finetune_time,
+                        finetuned_inference_time=None,
                     )
             finally:
                 os.unlink(temp_inference_config)
