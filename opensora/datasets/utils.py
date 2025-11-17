@@ -2,6 +2,7 @@ import os
 import random
 import re
 
+import av
 import cv2
 import numpy as np
 import pandas as pd
@@ -192,6 +193,32 @@ def write_video_cv2(
     output.release()
 
 
+def write_video_pyav(
+    filename: str,
+    video: torch.Tensor,
+    fps: float,
+):
+    os.makedirs(os.path.dirname(filename) or ".", exist_ok=True)
+    container = av.open(str(filename), mode="w")
+    try:
+        stream = container.add_stream("libx264", rate=fps)
+        stream.width = video.size(2)
+        stream.height = video.size(1)
+        stream.pix_fmt = "yuv420p"
+        stream.options = {"crf": "18", "preset": "medium"}
+
+        for frame_idx in range(video.size(0)):
+            frame = np.array(video[frame_idx])
+            av_frame = av.VideoFrame.from_ndarray(frame, format="rgb24")
+            for packet in stream.encode(av_frame):
+                container.mux(packet)
+
+        for packet in stream.encode():
+            container.mux(packet)
+    finally:
+        container.close()
+
+
 def save_sample(
     x,
     save_path=None,
@@ -236,6 +263,8 @@ def save_sample(
         x = x.mul(255).add_(0.5).clamp_(0, 255).permute(1, 2, 3, 0).to("cpu", torch.uint8)
         if write_video_backend == "cv2":
             write_video_cv2(save_path, x, fps=fps)
+        elif write_video_backend == "pyav":
+            write_video_pyav(save_path, x, fps=fps)
         else:
             write_video(save_path, x, fps=fps, video_codec="h264")
     if verbose:
