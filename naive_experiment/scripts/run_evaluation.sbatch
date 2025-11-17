@@ -32,11 +32,15 @@ source "${PROJECT_ROOT}/env_setup/00_set_scratch_env.sh"
 echo "Purging modules..."
 module purge
 echo "Loading anaconda3/2025.06..."
+set +u  # Temporarily disable unbound variable check for module load
 module load anaconda3/2025.06
+set -u  # Re-enable unbound variable check
 
 # Initialize conda
 echo "Sourcing conda initialization..."
+set +u  # Temporarily disable unbound variable check for conda initialization
 source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
+set -u  # Re-enable unbound variable check
 
 # Deactivate any existing conda environment
 if [[ -n "${CONDA_DEFAULT_ENV:-}" ]]; then
