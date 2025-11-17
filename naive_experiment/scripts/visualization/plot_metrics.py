@@ -134,21 +134,14 @@ def plot_comparison(metrics, output_dir):
                        capsize=5,
                        width=bar_width,
                        color=['#3498db', '#e74c3c'],
-                       alpha=0.8)
+                       alpha=0.8,
+                       error_kw={'ecolor': '#555555', 'linewidth': 2})
     ax[0].set_ylabel('PSNR (dB)', fontsize=12)
     ax[0].set_title('PSNR', fontsize=14, fontweight='bold')
     ax[0].grid(axis='y', alpha=0.3, linestyle='--')
     ax[0].set_ylim(bottom=0)
     ax[0].set_xticks(x_positions)
     ax[0].set_xticklabels(['Baseline', 'Fine-tuned'])
-    
-    # Add value labels on bars (offset to the right to avoid overlap with error bars)
-    for i, bar in enumerate(bars1):
-        height = bar.get_height()
-        error = [se_baseline_psnr, se_finetuned_psnr][i]
-        ax[0].text(bar.get_x() + bar.get_width() + 0.05, height,
-                  f'{height:.2f}',
-                  ha='left', va='center', fontsize=10, fontweight='bold')
     
     # SSIM
     bars2 = ax[1].bar(x_positions,
@@ -157,21 +150,14 @@ def plot_comparison(metrics, output_dir):
                        capsize=5,
                        width=bar_width,
                        color=['#3498db', '#e74c3c'],
-                       alpha=0.8)
+                       alpha=0.8,
+                       error_kw={'ecolor': '#555555', 'linewidth': 2})
     ax[1].set_ylabel('SSIM', fontsize=12)
     ax[1].set_title('SSIM', fontsize=14, fontweight='bold')
     ax[1].grid(axis='y', alpha=0.3, linestyle='--')
     ax[1].set_ylim(0, 1)
     ax[1].set_xticks(x_positions)
     ax[1].set_xticklabels(['Baseline', 'Fine-tuned'])
-    
-    # Add value labels on bars (offset to the right to avoid overlap with error bars)
-    for i, bar in enumerate(bars2):
-        height = bar.get_height()
-        error = [se_baseline_ssim, se_finetuned_ssim][i]
-        ax[1].text(bar.get_x() + bar.get_width() + 0.05, height,
-                  f'{height:.3f}',
-                  ha='left', va='center', fontsize=10, fontweight='bold')
     
     # LPIPS
     bars3 = ax[2].bar(x_positions,
@@ -180,21 +166,14 @@ def plot_comparison(metrics, output_dir):
                        capsize=5,
                        width=bar_width,
                        color=['#3498db', '#e74c3c'],
-                       alpha=0.8)
+                       alpha=0.8,
+                       error_kw={'ecolor': '#555555', 'linewidth': 2})
     ax[2].set_ylabel('LPIPS', fontsize=12)
     ax[2].set_title('LPIPS', fontsize=14, fontweight='bold')
     ax[2].grid(axis='y', alpha=0.3, linestyle='--')
     ax[2].set_ylim(bottom=0)
     ax[2].set_xticks(x_positions)
     ax[2].set_xticklabels(['Baseline', 'Fine-tuned'])
-    
-    # Add value labels on bars (offset to the right to avoid overlap with error bars)
-    for i, bar in enumerate(bars3):
-        height = bar.get_height()
-        error = [se_baseline_lpips, se_finetuned_lpips][i]
-        ax[2].text(bar.get_x() + bar.get_width() + 0.05, height,
-                  f'{height:.3f}',
-                  ha='left', va='center', fontsize=10, fontweight='bold')
     
     plt.tight_layout()
     plt.savefig(output_dir / 'metrics_comparison.png', dpi=300, bbox_inches='tight')
