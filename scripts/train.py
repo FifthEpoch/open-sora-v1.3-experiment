@@ -186,13 +186,13 @@ def main():
     # == setup optimizer ==
     # Fallback to torch.optim.AdamW if ColossalAI CPUAdam/HybridAdam extensions are incompatible
     try:
-    optimizer = HybridAdam(
-        filter(lambda p: p.requires_grad, model.parameters()),
-        adamw_mode=True,
-        lr=cfg.get("lr", 1e-4),
-        weight_decay=cfg.get("weight_decay", 0),
-        eps=cfg.get("adam_eps", 1e-8),
-    )
+        optimizer = HybridAdam(
+            filter(lambda p: p.requires_grad, model.parameters()),
+            adamw_mode=True,
+            lr=cfg.get("lr", 1e-4),
+            weight_decay=cfg.get("weight_decay", 0),
+            eps=cfg.get("adam_eps", 1e-8),
+        )
     except Exception as opt_err:
         logger.warning("HybridAdam initialization failed (%s). Falling back to torch.optim.AdamW.", opt_err)
         from torch.optim import AdamW
