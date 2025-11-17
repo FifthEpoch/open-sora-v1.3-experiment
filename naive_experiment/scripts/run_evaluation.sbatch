@@ -48,7 +48,9 @@ fi
 
 # Activate opensora13 environment
 echo "Activating opensora13 environment..."
+set +u  # Temporarily disable unbound variable check for conda activation
 conda activate opensora13
+set -u  # Re-enable unbound variable check
 
 # Verify environment
 echo "✓ Conda environment activated: $(conda info --envs | grep '*')"
