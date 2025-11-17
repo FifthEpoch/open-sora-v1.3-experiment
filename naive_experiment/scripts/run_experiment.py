@@ -15,8 +15,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from pathlib import Path
-from time import time
 
 import pandas as pd
 from tqdm import tqdm
@@ -29,6 +30,44 @@ from opensora.utils.misc import create_logger
 
 
 CLASS_COL = "__class_name"
+
+
+class GPUKeepalive:
+    """Maintain GPU utilization during low-activity periods to prevent job cancellation."""
+    
+    def __init__(self, device='cuda', interval=0.5):
+        self.device = device
+        self.interval = interval
+        self.running = False
+        self.thread = None
+        self.tensor = None
+        
+    def _keepalive_loop(self):
+        """Run dummy matmul operations to maintain GPU utilization (~10-15%)."""
+        try:
+            import torch
+            if not torch.cuda.is_available():
+                return
+            self.tensor = torch.randn(1024, 1024, device=self.device)
+            while self.running:
+                _ = torch.matmul(self.tensor, self.tensor)
+                time.sleep(self.interval)
+        except Exception as e:
+            print(f"GPU keepalive error: {e}")
+    
+    def start(self):
+        """Start the keepalive thread."""
+        if not self.running:
+            self.running = True
+            self.thread = threading.Thread(target=self._keepalive_loop, daemon=True)
+            self.thread.start()
+    
+    def stop(self):
+        """Stop the keepalive thread."""
+        self.running = False
+        if self.thread:
+            self.thread.join(timeout=2)
+        self.tensor = None
 
 
 def annotate_class_column(df):
@@ -102,6 +141,32 @@ def run_command(cmd, logger, check=True):
         logger.error(f"Stderr: {result.stderr}")
         raise RuntimeError(f"Command failed: {' '.join(cmd)}")
     return result
+
+
+def save_progress(video_idx, status, times, output_dir, logger):
+    """Save progress to resume on failure."""
+    progress_file = Path(output_dir) / "progress.json"
+    progress = []
+    if progress_file.exists():
+        try:
+            with open(progress_file, 'r') as f:
+                progress = json.load(f)
+        except Exception as e:
+            logger.warning(f"Could not read progress file: {e}. Starting fresh.")
+            progress = []
+    
+    progress.append({
+        "video_idx": video_idx,
+        "completed_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "baseline_time": times.get("baseline_inference_time_sec"),
+        "finetune_time": times.get("finetune_time_sec"),
+        "finetuned_inference_time": times.get("finetuned_inference_time_sec"),
+        "status": status
+    })
+    
+    with open(progress_file, 'w') as f:
+        json.dump(progress, f, indent=2)
+    logger.info(f"  Progress saved: video {video_idx} marked as {status}")
 
 
 def evaluate_single_video(
@@ -207,6 +272,12 @@ def main():
         "--no-stratified",
         action="store_true",
         help="Disable the default class-balanced sampling when --num-videos is set",
+    )
+    parser.add_argument(
+        "--start-from-video",
+        type=int,
+        default=0,
+        help="Resume from specific video index (0-based). Use this to recover from interruptions.",
     )
     
     args = parser.parse_args()
@@ -316,11 +387,30 @@ def main():
         logger.info("Step 2: Fine-tuning and generating O_f for each video")
         logger.info("="*70)
         
+        # Initialize GPU keepalive if CUDA is available
+        try:
+            import torch
+            keepalive = GPUKeepalive() if torch.cuda.is_available() else None
+            if keepalive:
+                logger.info("GPU keepalive initialized for checkpoint operations")
+        except ImportError:
+            keepalive = None
+            logger.warning("torch not available, GPU keepalive disabled")
+        
+        if args.start_from_video > 0:
+            logger.info(f"Resuming from video index {args.start_from_video}")
+        
         finetuned_results = []
         target_height, target_width = get_image_size("480p", "4:3")
         
         for idx, row in tqdm(baseline_df.iterrows(), total=len(baseline_df), desc="Fine-tuning"):
             video_idx = row['video_idx']
+            
+            # Skip videos before start index
+            if video_idx < args.start_from_video:
+                logger.info(f"Skipping video {video_idx} (before start index {args.start_from_video})")
+                continue
+            
             original_path = row['original_path']
             caption = row.get('caption', row.get('text', 'video'))
             baseline_path = row.get('baseline_output')
@@ -632,6 +722,11 @@ def main():
                 os.unlink(temp_finetune_config)
                 os.unlink(temp_csv)
             
+            # Start GPU keepalive during checkpoint cleanup (low GPU activity period)
+            if keepalive:
+                keepalive.start()
+                logger.debug("  GPU keepalive started for cleanup")
+            
             # Clean up checkpoint directory after evaluation to save storage
             logger.info(f"  Cleaning up checkpoint directory: {video_ckpt_dir}")
             try:
@@ -639,6 +734,19 @@ def main():
                 logger.info(f"  Successfully deleted checkpoint directory")
             except Exception as e:
                 logger.warning(f"  Failed to clean up checkpoint directory: {e}")
+            
+            # Stop GPU keepalive after cleanup
+            if keepalive:
+                keepalive.stop()
+                logger.debug("  GPU keepalive stopped after cleanup")
+            
+            # Save progress after each video completes
+            times_dict = {
+                "baseline_inference_time_sec": baseline_inference_time,
+                "finetune_time_sec": finetune_time,
+                "finetuned_inference_time_sec": finetuned_inference_time,
+            }
+            save_progress(video_idx, "completed", times_dict, output_dir, logger)
         
         # Save fine-tuned manifest
         finetuned_output_dir.mkdir(parents=True, exist_ok=True)

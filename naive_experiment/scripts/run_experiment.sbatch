@@ -9,6 +9,29 @@
 #SBATCH --output=slurm_run_experiment.out
 #SBATCH --error=slurm_run_experiment.err
 
+# ===================================================================
+# CHECKPOINT RECOVERY INSTRUCTIONS
+# ===================================================================
+# If your job is interrupted (e.g., due to low GPU utilization), you can resume:
+#
+# 1. Check results/progress.json to find the last completed video:
+#    cat results/progress.json | grep video_idx | tail -1
+#
+# 2. Re-submit with --skip-baseline and --start-from-video:
+#    sbatch naive_experiment/scripts/run_experiment.sbatch \
+#      --skip-baseline \
+#      --start-from-video <last_completed_idx + 1>
+#
+# Example: If video 11 was the last completed, resume from video 12:
+#    # Edit this script to change the python command to:
+#    python "${SCRIPT_DIR}/run_experiment.py" \
+#        --data-csv "${PROJECT_ROOT}/env_setup/download_ucf101/ucf101_metadata.csv" \
+#        --output-dir results \
+#        --num-videos 100 \
+#        --skip-baseline \
+#        --start-from-video 12
+# ===================================================================
+
 set -euo pipefail
 
 # Prevent user site-packages from interfering with conda environment
