@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=eval_continuations
-#SBATCH --output=slurm_log/slurm_evaluation.out
-#SBATCH --error=slurm_log/slurm_evaluation.err
+#SBATCH --output=slurm_evaluation.out
+#SBATCH --error=slurm_evaluation.err
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
