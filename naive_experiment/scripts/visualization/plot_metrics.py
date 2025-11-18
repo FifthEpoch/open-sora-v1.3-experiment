@@ -30,7 +30,20 @@ def extract_metrics(data):
     finetuned_ssim = []
     finetuned_lpips = []
     
+    # Timing information
+    baseline_inference_times = []
+    finetune_times = []
+    finetuned_inference_times = []
+    
     for video in data:
+        # Extract timing information
+        if 'baseline_inference_time_sec' in video and video['baseline_inference_time_sec']:
+            baseline_inference_times.append(video['baseline_inference_time_sec'])
+        if 'finetune_time_sec' in video and video['finetune_time_sec']:
+            finetune_times.append(video['finetune_time_sec'])
+        if 'finetuned_inference_time_sec' in video and video['finetuned_inference_time_sec']:
+            finetuned_inference_times.append(video['finetuned_inference_time_sec'])
+        
         # Baseline metrics (try both 'baseline' and 'baseline_metrics' for compatibility)
         baseline_key = 'baseline' if 'baseline' in video else 'baseline_metrics'
         if baseline_key in video and video[baseline_key]:
@@ -63,6 +76,11 @@ def extract_metrics(data):
             'psnr': finetuned_psnr,
             'ssim': finetuned_ssim,
             'lpips': finetuned_lpips
+        },
+        'timing': {
+            'baseline_inference': baseline_inference_times,
+            'finetune': finetune_times,
+            'finetuned_inference': finetuned_inference_times
         }
     }
 
@@ -93,6 +111,20 @@ def plot_comparison(metrics, output_dir):
     se_finetuned_ssim = np.std(finetuned['ssim']) / np.sqrt(len(finetuned['ssim'])) if finetuned['ssim'] else 0
     se_finetuned_lpips = np.std(finetuned['lpips']) / np.sqrt(len(finetuned['lpips'])) if finetuned['lpips'] else 0
     
+    # Calculate timing statistics
+    timing = metrics.get('timing', {})
+    baseline_inf_times = timing.get('baseline_inference', [])
+    finetune_times = timing.get('finetune', [])
+    finetuned_inf_times = timing.get('finetuned_inference', [])
+    
+    avg_baseline_inf_time = np.mean(baseline_inf_times) if baseline_inf_times else 0
+    avg_finetune_time = np.mean(finetune_times) if finetune_times else 0
+    avg_finetuned_inf_time = np.mean(finetuned_inf_times) if finetuned_inf_times else 0
+    
+    std_baseline_inf_time = np.std(baseline_inf_times) if baseline_inf_times else 0
+    std_finetune_time = np.std(finetune_times) if finetune_times else 0
+    std_finetuned_inf_time = np.std(finetuned_inf_times) if finetuned_inf_times else 0
+    
     # Print summary statistics
     print("\n" + "="*60)
     print("EVALUATION SUMMARY")
@@ -118,6 +150,40 @@ def plot_comparison(metrics, output_dir):
     if avg_baseline_lpips > 0:
         lpips_improvement = ((avg_baseline_lpips - avg_finetuned_lpips) / avg_baseline_lpips) * 100
         print(f"  LPIPS: {lpips_improvement:+.2f}% (lower is better)")
+    
+    # Print timing statistics
+    if baseline_inf_times or finetune_times or finetuned_inf_times:
+        print("\n" + "-"*60)
+        print("TIMING STATISTICS")
+        print("-"*60)
+        print(f"\nNumber of videos with timing data: {len(baseline_inf_times)}")
+        
+        if baseline_inf_times:
+            print(f"\nBaseline Inference:")
+            print(f"  Average time: {avg_baseline_inf_time:.2f}s ± {std_baseline_inf_time:.2f}s")
+            print(f"  Min: {min(baseline_inf_times):.2f}s, Max: {max(baseline_inf_times):.2f}s")
+            print(f"  Total for {len(baseline_inf_times)} videos: {sum(baseline_inf_times)/60:.2f} minutes")
+        
+        if finetune_times:
+            print(f"\nFine-tuning (20 steps per video):")
+            print(f"  Average time: {avg_finetune_time:.2f}s ± {std_finetune_time:.2f}s")
+            print(f"  Min: {min(finetune_times):.2f}s, Max: {max(finetune_times):.2f}s")
+            print(f"  Total for {len(finetune_times)} videos: {sum(finetune_times)/60:.2f} minutes ({sum(finetune_times)/3600:.2f} hours)")
+        
+        if finetuned_inf_times:
+            print(f"\nFine-tuned Inference:")
+            print(f"  Average time: {avg_finetuned_inf_time:.2f}s ± {std_finetuned_inf_time:.2f}s")
+            print(f"  Min: {min(finetuned_inf_times):.2f}s, Max: {max(finetuned_inf_times):.2f}s")
+            print(f"  Total for {len(finetuned_inf_times)} videos: {sum(finetuned_inf_times)/60:.2f} minutes")
+        
+        # Total time per video
+        if baseline_inf_times and finetune_times and finetuned_inf_times:
+            total_per_video = avg_baseline_inf_time + avg_finetune_time + avg_finetuned_inf_time
+            print(f"\nTotal average time per video (all stages):")
+            print(f"  {total_per_video:.2f}s ({total_per_video/60:.2f} minutes)")
+            print(f"\nProjected time for 100 videos:")
+            print(f"  {total_per_video * 100 / 3600:.2f} hours")
+    
     print("="*60 + "\n")
     
     # Create bar plot
