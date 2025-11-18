@@ -35,23 +35,37 @@ CLASS_COL = "__class_name"
 class GPUKeepalive:
     """Maintain GPU utilization during low-activity periods to prevent job cancellation."""
     
-    def __init__(self, device='cuda', interval=0.5):
+    def __init__(self, device='cuda', target_utilization=0.35):
         self.device = device
-        self.interval = interval
+        self.target_utilization = target_utilization
         self.running = False
         self.thread = None
-        self.tensor = None
+        self.tensors = []
         
     def _keepalive_loop(self):
-        """Run dummy matmul operations to maintain GPU utilization (~10-15%)."""
+        """Run dummy matmul operations to maintain GPU utilization (~30-40%)."""
         try:
             import torch
             if not torch.cuda.is_available():
                 return
-            self.tensor = torch.randn(1024, 1024, device=self.device)
+            
+            # Create multiple larger tensors for more aggressive GPU usage
+            # For H200 with 141GB memory, we can afford larger operations
+            # Using 4096x4096 matrices * 4 = ~256MB total, plenty of headroom
+            logger_msg = f"GPU keepalive starting (target: {self.target_utilization*100:.0f}% utilization)"
+            print(logger_msg)
+            
+            self.tensors = [
+                torch.randn(4096, 4096, device=self.device) for _ in range(4)
+            ]
+            
             while self.running:
-                _ = torch.matmul(self.tensor, self.tensor)
-                time.sleep(self.interval)
+                # Continuous matmul operations without sleep for higher utilization
+                for i in range(len(self.tensors)):
+                    _ = torch.matmul(self.tensors[i], self.tensors[(i+1) % len(self.tensors)])
+                # Very short sleep to prevent 100% utilization
+                time.sleep(0.01)
+                
         except Exception as e:
             print(f"GPU keepalive error: {e}")
     
@@ -67,7 +81,14 @@ class GPUKeepalive:
         self.running = False
         if self.thread:
             self.thread.join(timeout=2)
-        self.tensor = None
+        # Clean up GPU memory
+        self.tensors = []
+        try:
+            import torch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except:
+            pass
 
 
 def annotate_class_column(df):
