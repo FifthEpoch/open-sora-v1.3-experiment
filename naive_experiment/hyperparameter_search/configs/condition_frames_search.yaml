@@ -1,0 +1,57 @@
+# Conditioning Frame Count Hyperparameter Search Configuration
+# 
+# Fixed parameters:
+#   - lr: 1e-5
+#   - finetune_steps: 20
+#   - num_videos: 20
+#
+# Varied parameter: condition_frames
+
+search_name: "condition_frames_search"
+search_param: "condition_frames"
+
+# Fixed hyperparameters
+fixed_params:
+  lr: 1.0e-5
+  finetune_steps: 20
+  num_videos: 20
+  random_seed: 42
+
+# Conditioning frame count values to test
+condition_frames_values:
+  - name: "cf_5"
+    value: 5
+    description: "Minimal conditioning - 5 frames (~0.2s at 24fps)"
+    eval_frames: 40  # Frames 6-45 for evaluation (40 frames)
+  
+  - name: "cf_11"
+    value: 11
+    description: "Low conditioning - 11 frames (~0.45s at 24fps)"
+    eval_frames: 34  # Frames 12-45 for evaluation (34 frames)
+  
+  - name: "cf_17"
+    value: 17
+    description: "Medium conditioning - 17 frames (~0.7s at 24fps)"
+    eval_frames: 28  # Frames 18-45 for evaluation (28 frames)
+  
+  - name: "cf_22"
+    value: 22
+    description: "Baseline conditioning - 22 frames (~0.9s at 24fps)"
+    eval_frames: 23  # Frames 23-45 for evaluation (23 frames)
+  
+  - name: "cf_28"
+    value: 28
+    description: "High conditioning - 28 frames (~1.15s at 24fps)"
+    eval_frames: 17  # Frames 29-45 for evaluation (17 frames)
+
+# Important notes:
+# - Total video is 45 frames
+# - More conditioning frames = less frames available for evaluation
+# - Training uses first (condition_frames) for context, next ~14-22 frames for loss
+# - Evaluation uses all remaining frames after conditioning
+#
+# Expected results:
+# - Too few: Model lacks context, poor predictions
+# - Optimal: Good balance of context and evaluation length
+# - Too many: Less evaluation data, but potentially better context
+
