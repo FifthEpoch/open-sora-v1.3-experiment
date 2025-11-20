@@ -229,6 +229,9 @@ def generate_continuation(
     # Stack conditioning frames: list of [C,H,W] -> [C,T,H,W]
     cond_frames_tensor = torch.stack(cond_frames_list, dim=1)  # [C, T_cond, H, W]
     
+    # Move conditioning frames to the same device as generated frames
+    cond_frames_tensor = cond_frames_tensor.to(generated_frames.device)
+    
     # Resize conditioning frames to match generated frames resolution if needed
     if cond_frames_tensor.shape[2:] != generated_frames.shape[2:]:
         import torch.nn.functional as F
