@@ -6,8 +6,12 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --output=slurm_download_prep_ucf101.out
+#SBATCH --error=slurm_download_prep_ucf101.err
 
 set -euo pipefail
+
+# Print all commands for debugging
+set -x
 
 # Prevent user site-packages from interfering with conda environment
 export PYTHONNOUSERSITE=1
@@ -58,13 +62,33 @@ mkdir -p "${TMPDIR}"
 echo "Environment configured to use scratch base: ${SCRATCH_BASE}"
 
 # Load anaconda module
+echo "Loading anaconda module..."
 module purge
 module load anaconda3/2025.06
+if [ $? -ne 0 ]; then
+    echo "✗ ERROR: Failed to load anaconda3/2025.06 module"
+    exit 1
+fi
+echo "✓ Anaconda module loaded"
 
 # Source conda for shell
+echo "Sourcing conda.sh..."
 source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
+if [ $? -ne 0 ]; then
+    echo "✗ ERROR: Failed to source conda.sh"
+    exit 1
+fi
+echo "✓ conda.sh sourced"
+
+# Verify conda is available
+if ! command -v conda &> /dev/null; then
+    echo "✗ ERROR: conda command not found after sourcing conda.sh"
+    exit 1
+fi
+echo "✓ conda command available"
 
 # Deactivate any existing environment for clean activation
+echo "Deactivating any existing conda environment..."
 conda deactivate 2>/dev/null || true
 
 # Configure conda to recognize custom environment location (use --prepend for priority)
@@ -84,9 +108,21 @@ conda env list
 echo ""
 echo "Activating conda environment: ${CONDA_ENVS_PATH}/opensora13"
 conda activate "${CONDA_ENVS_PATH}/opensora13"
+if [ $? -ne 0 ]; then
+    echo "✗ ERROR: Failed to activate opensora13 environment"
+    echo "Available environments:"
+    conda env list
+    exit 1
+fi
+echo "✓ Environment activated"
 
+echo ""
 echo "Python version:"
 python --version
+if [ $? -ne 0 ]; then
+    echo "✗ ERROR: Python not available after environment activation"
+    exit 1
+fi
 
 echo ""
 echo "Checking required packages..."
