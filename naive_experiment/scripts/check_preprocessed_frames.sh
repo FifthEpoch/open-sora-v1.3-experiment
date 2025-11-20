@@ -44,72 +44,40 @@ for video_path in sample_videos[:10]:
     except Exception as e:
         print(f"{video_path.name}: ERROR - {e}")
 
-print("\n=== Frame count distribution ===")
-# Count all preprocessed videos
-frame_counts = {}
-total_videos = 0
-
-for category_dir in PROCESSED_DIR.iterdir():
-    if category_dir.is_dir():
-        for video_path in category_dir.glob("*.mp4"):
-            try:
-                container = av.open(str(video_path))
-                frame_count = 0
-                for frame in container.decode(video=0):
-                    frame_count += 1
-                container.close()
-                
-                frame_counts[frame_count] = frame_counts.get(frame_count, 0) + 1
-                total_videos += 1
-            except:
-                pass
-
-# Print distribution sorted by count (descending)
-for frame_count in sorted(frame_counts.keys(), key=lambda x: frame_counts[x], reverse=True):
-    print(f"{frame_counts[frame_count]:4d} videos with {frame_count} frames")
-
-print(f"\n=== Total preprocessed videos ===")
-print(f"{total_videos}")
-
-print("\n=== Checking conditioning videos (should be 22 frames) ===")
+print("\n=== Checking 5 sample conditioning videos (should be 22 frames) ===")
 # Check truncated_for_training subdirectories
-cond_count = 0
-sample_cond_checked = 0
+sample_cond = []
 for category_dir in PROCESSED_DIR.iterdir():
     if category_dir.is_dir():
         trunc_dir = category_dir / "truncated_for_training"
         if trunc_dir.exists():
-            for video_path in trunc_dir.glob("*.mp4"):
-                cond_count += 1
-                if sample_cond_checked < 5:
-                    try:
-                        container = av.open(str(video_path))
-                        frame_count = 0
-                        for frame in container.decode(video=0):
-                            frame_count += 1
-                        
-                        video_stream = container.streams.video[0]
-                        width = video_stream.width
-                        height = video_stream.height
-                        container.close()
-                        
-                        print(f"{video_path.name}: {frame_count} frames, {width}x{height}")
-                        sample_cond_checked += 1
-                    except Exception as e:
-                        print(f"{video_path.name}: ERROR - {e}")
+            sample_cond.extend(list(trunc_dir.glob("*.mp4"))[:2])
+            if len(sample_cond) >= 5:
+                break
 
-print(f"\nTotal conditioning videos: {cond_count}")
+for video_path in sample_cond[:5]:
+    try:
+        container = av.open(str(video_path))
+        frame_count = 0
+        for frame in container.decode(video=0):
+            frame_count += 1
+        
+        video_stream = container.streams.video[0]
+        width = video_stream.width
+        height = video_stream.height
+        container.close()
+        
+        print(f"{video_path.name}: {frame_count} frames, {width}x{height}")
+    except Exception as e:
+        print(f"{video_path.name}: ERROR - {e}")
 
 print("\n" + "="*60)
 print("RESULT:")
-if 45 in frame_counts and frame_counts[45] > 0:
-    print("❌ Videos have 45 frames - NEED TO RE-PREPROCESS")
-    print("   Run: cd env_setup/download_ucf101 && sbatch preprocess_ucf101.sbatch")
-elif any(fc >= 49 for fc in frame_counts.keys()):
-    print("✅ Videos have 49+ frames - READY TO RUN EXPERIMENT!")
-    print("   Run: cd naive_experiment/scripts && sbatch run_experiment.sbatch")
-else:
-    print("⚠️  Unexpected frame counts detected - please review output above")
+print("Check the frame counts above:")
+print("  - If sample shows 45 frames: ❌ NEED TO RE-PREPROCESS")
+print("    Run: cd env_setup/download_ucf101 && sbatch preprocess_ucf101.sbatch")
+print("  - If sample shows 49+ frames: ✅ READY TO RUN EXPERIMENT!")
+print("    Run: cd naive_experiment/scripts && sbatch run_experiment.sbatch")
 print("="*60)
 
 PYTHON_SCRIPT
