@@ -6,41 +6,43 @@ This experiment tests whether fine-tuning Open-Sora v1.3 with a single input vid
 
 ### Overview
 
-For each UCF-101 video V of length 45 frames:
+For each UCF-101 video V of length 49 frames:
 1. **Split**: V = [V_train | V_test]
    - V_train = first 22 frames (frames 1-22, ~0.92s)
-   - V_test = remaining 23 frames (frames 23-45, ~0.96s for evaluation)
+   - V_test = remaining 27 frames (frames 23-49, ~1.13s for evaluation)
 
 2. **Baseline (O_b)**: 
-   - Generate 45 frames with first 22 conditioned (using masks)
-   - Extract frames 23-45 as continuation
+   - Generate 49 frames with first 22 conditioned (using masks)
+   - Extract frames 23-49 as continuation (27 frames)
    - Compare continuation to V_test
 
 3. **Fine-tuned (O_f)**: 
    - Fine-tune Open-Sora v1.3 on **only first 22 frames** (frames 1-22)
      - Training uses frames 1-8 as conditioning, frames 9-22 as ground truth (14 frames)
-     - Model **never sees frames 23-45** during training
-   - Generate 45 frames with first 22 conditioned (using masks)
-   - Extract frames 23-45 as continuation
+     - Model **never sees frames 23-49** during training
+   - Generate 49 frames with first 22 conditioned (using masks)
+   - Extract frames 23-49 as continuation (27 frames)
    - Compare continuation to V_test
 
-4. **Evaluate**: Compare O_b and O_f continuations (frames 23-45) against V_test using PSNR, SSIM, LPIPS
+4. **Evaluate**: Compare O_b and O_f continuations (frames 23-49) against V_test using PSNR, SSIM, LPIPS
 
 **Why This Design Ensures Fair Comparison**:
-- Fine-tuning only uses frames 1-22, never seeing the evaluation target (frames 23-45)
-- Both baseline and fine-tuned models generate the same frames (23-45) at inference time
+- Fine-tuning only uses frames 1-22, never seeing the evaluation target (frames 23-49)
+- Both baseline and fine-tuned models generate the same frames (23-49) at inference time
 - Eliminates the unfair advantage of fine-tuned model having seen partial ground truth
+
+**Note on Frame Count**: 49 frames is used because Open-Sora was trained on specific bucket sizes (1, 49, 65, 81, 97, 113 frames). Using 49 ensures stable generation matching the model's training distribution.
 
 ### Key Considerations
 
 **Video Splitting**: 
-- We feed the **full 45-frame video** to the model during inference
-- The model uses **masking** to condition on first 22 frames, generate remaining 23 frames (~0.96s)
-- During inference: `num_frames=45`, `condition_frame_length=22`, `cond_type="v2v_head"`
-- The mask ensures first 22 frames match the conditioning input, last 23 are generated
-- **Rationale**: ~49% conditioning / 51% generation provides substantial context while leaving meaningful continuation for evaluation
+- We feed the **full 49-frame video** to the model during inference
+- The model uses **masking** to condition on first 22 frames, generate remaining 27 frames (~1.13s)
+- During inference: `num_frames=49`, `condition_frame_length=22`, `cond_type="v2v_head"`
+- The mask ensures first 22 frames match the conditioning input, last 27 are generated
+- **Rationale**: ~45% conditioning / 55% generation provides substantial context while leaving meaningful continuation for evaluation
 
-**Dataset Size**: Our fine-tuning dataset contains exactly **one video sample** (22 frames only - frames 23-45 withheld).
+**Dataset Size**: Our fine-tuning dataset contains exactly **one video sample** (22 frames only - frames 23-49 withheld).
 
 **Batch Size Strategy**: 
 - Batch size must be ≤ 1 since we only have one training sample

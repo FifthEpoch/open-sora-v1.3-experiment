@@ -29,8 +29,8 @@ except ImportError:
     print("Make sure you're running from the Open-Sora root directory")
 
 
-def extract_frames_from_video(video_path, start_frame=22, num_frames=23):
-    """Extract frames from video starting at start_frame (frames 23-45)."""
+def extract_frames_from_video(video_path, start_frame=22, num_frames=27):
+    """Extract frames from video starting at start_frame (frames 23-49)."""
     import av
     
     container = av.open(str(video_path))

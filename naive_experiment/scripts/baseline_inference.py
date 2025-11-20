@@ -210,17 +210,45 @@ def generate_continuation(
             use_oscillation_guidance_for_image=cfg.get("use_oscillation_guidance_for_image", False),
         )
     
-    # Decode
+    # Decode generated frames
     with torch.no_grad():
-        samples = vae.decode(samples.to(dtype)).squeeze(0)  # [B,C,T,H,W] -> [C,T,H,W]
+        generated_frames = vae.decode(samples.to(dtype)).squeeze(0)  # [B,C,T,H,W] -> [C,T,H,W]
     
-    # Save
+    # Load conditioning frames and concatenate with generated frames
+    # Read conditioning frames from the conditioning video
+    import av
+    cond_container = av.open(str(cond_video_path))
+    cond_frames_list = []
+    for frame in cond_container.decode(video=0):
+        # Convert to RGB numpy array, then to torch tensor
+        frame_np = frame.to_ndarray(format='rgb24')  # H,W,C
+        frame_tensor = torch.from_numpy(frame_np).permute(2, 0, 1).float() / 255.0  # C,H,W
+        cond_frames_list.append(frame_tensor)
+    cond_container.close()
+    
+    # Stack conditioning frames: list of [C,H,W] -> [C,T,H,W]
+    cond_frames_tensor = torch.stack(cond_frames_list, dim=1)  # [C, T_cond, H, W]
+    
+    # Resize conditioning frames to match generated frames resolution if needed
+    if cond_frames_tensor.shape[2:] != generated_frames.shape[2:]:
+        import torch.nn.functional as F
+        cond_frames_tensor = F.interpolate(
+            cond_frames_tensor,  # [C, T_cond, H, W]
+            size=generated_frames.shape[2:],  # (H, W)
+            mode='bilinear',
+            align_corners=False
+        )
+    
+    # Concatenate: conditioning + generated along time dimension
+    full_video = torch.cat([cond_frames_tensor, generated_frames], dim=1)  # [C, T_total, H, W]
+    
+    # Save complete video (conditioning + generated)
     video_name = Path(video_path).stem
     output_path = Path(save_dir) / f"baseline_{video_idx:04d}_{video_name}.mp4"
     # Ensure output_path is absolute
     output_path = output_path.resolve()
     save_sample(
-        samples,
+        full_video,
         str(output_path),
         fps=cfg.fps,
         write_video_backend="pyav",

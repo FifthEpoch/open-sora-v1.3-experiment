@@ -122,7 +122,7 @@ def resample_video(frames, original_fps, target_fps=24):
     return resampled_frames
 
 
-def crop_to_n_frames(frames, n=45):
+def crop_to_n_frames(frames, n=49):
     """
     Uniformly crop video to exactly n frames.
     Uses uniform sampling across the video length.
@@ -231,7 +231,7 @@ def parse_ucf101_filename(filename):
     return class_name
 
 
-def process_video(video_path, output_base, target_fps=24, target_frames=45, target_height=480, target_width=640):
+def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=480, target_width=640):
     """
     Process a single video:
     1. Read video
