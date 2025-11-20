@@ -232,12 +232,14 @@ def generate_continuation(
     # Move conditioning frames to the same device as generated frames
     cond_frames_tensor = cond_frames_tensor.to(generated_frames.device)
     
-    # Resize conditioning frames to match generated frames resolution if needed
-    if cond_frames_tensor.shape[2:] != generated_frames.shape[2:]:
+    # Resize GENERATED frames to match CONDITIONING frames resolution if needed
+    # (Conditioning frames are the ground truth resolution: 640x480)
+    if generated_frames.shape[2:] != cond_frames_tensor.shape[2:]:
         import torch.nn.functional as F
-        cond_frames_tensor = F.interpolate(
-            cond_frames_tensor,  # [C, T_cond, H, W]
-            size=generated_frames.shape[2:],  # (H, W)
+        print(f"  Resizing generated frames from {generated_frames.shape[2:]} to {cond_frames_tensor.shape[2:]}")
+        generated_frames = F.interpolate(
+            generated_frames,  # [C, T_gen, H, W]
+            size=cond_frames_tensor.shape[2:],  # (H, W) - match conditioning
             mode='bilinear',
             align_corners=False
         )
