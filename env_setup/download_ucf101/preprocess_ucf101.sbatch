@@ -89,7 +89,9 @@ echo "✓ conda command available"
 
 # Deactivate any existing environment for clean activation
 echo "Deactivating any existing conda environment..."
+set +u  # Temporarily disable unbound variable check for conda operations
 conda deactivate 2>/dev/null || true
+set -u  # Re-enable unbound variable check
 
 # Configure conda to recognize custom environment location (use --prepend for priority)
 conda config --prepend envs_dirs "${CONDA_ENVS_PATH}" 2>/dev/null || true
@@ -107,8 +109,11 @@ conda env list
 # Activate conda environment using full path
 echo ""
 echo "Activating conda environment: ${CONDA_ENVS_PATH}/opensora13"
+set +u  # Temporarily disable unbound variable check for conda activation
 conda activate "${CONDA_ENVS_PATH}/opensora13"
-if [ $? -ne 0 ]; then
+ACTIVATE_EXIT_CODE=$?
+set -u  # Re-enable unbound variable check
+if [ $ACTIVATE_EXIT_CODE -ne 0 ]; then
     echo "✗ ERROR: Failed to activate opensora13 environment"
     echo "Available environments:"
     conda env list
