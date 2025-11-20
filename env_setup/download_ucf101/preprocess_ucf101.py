@@ -308,7 +308,7 @@ def main():
                        help="Output directory for preprocessed videos")
     parser.add_argument("--fps", type=int, default=24,
                        help="Target frame rate")
-    parser.add_argument("--frames", type=int, default=45,
+    parser.add_argument("--frames", type=int, default=49,
                        help="Target number of frames")
     parser.add_argument("--height", type=int, default=480,
                        help="Target height")
