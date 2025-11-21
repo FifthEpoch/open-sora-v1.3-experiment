@@ -35,7 +35,7 @@ CLASS_COL = "__class_name"
 class GPUKeepalive:
     """Maintain GPU utilization during low-activity periods to prevent job cancellation."""
     
-    def __init__(self, device='cuda', target_utilization=0.35):
+    def __init__(self, device='cuda', target_utilization=0.50):
         self.device = device
         self.target_utilization = target_utilization
         self.running = False
@@ -50,21 +50,26 @@ class GPUKeepalive:
                 return
             
             # Create multiple larger tensors for more aggressive GPU usage
-            # For H200 with 141GB memory, we can afford larger operations
-            # Using 4096x4096 matrices * 4 = ~256MB total, plenty of headroom
+            # For H200 with 141GB memory, we can afford much larger operations
+            # Using 8192x8192 matrices * 6 = ~1.5GB total, still safe headroom
             logger_msg = f"GPU keepalive starting (target: {self.target_utilization*100:.0f}% utilization)"
             print(logger_msg)
             
+            # Larger matrices and more of them for higher GPU utilization
             self.tensors = [
-                torch.randn(4096, 4096, device=self.device) for _ in range(4)
+                torch.randn(8192, 8192, device=self.device, dtype=torch.float32) for _ in range(6)
             ]
             
             while self.running:
-                # Continuous matmul operations without sleep for higher utilization
-                for i in range(len(self.tensors)):
-                    _ = torch.matmul(self.tensors[i], self.tensors[(i+1) % len(self.tensors)])
-                # Very short sleep to prevent 100% utilization
-                time.sleep(0.01)
+                # Continuous matmul operations with minimal sleep
+                # Do multiple rounds per iteration for sustained utilization
+                for _ in range(3):  # Triple the workload
+                    for i in range(len(self.tensors)):
+                        # Chain multiple operations for more compute
+                        result = torch.matmul(self.tensors[i], self.tensors[(i+1) % len(self.tensors)])
+                        _ = torch.matmul(result, self.tensors[(i+2) % len(self.tensors)])
+                # Minimal sleep - just enough to not max out at 100%
+                time.sleep(0.005)
                 
         except Exception as e:
             print(f"GPU keepalive error: {e}")
