@@ -122,6 +122,18 @@ Based on UCF-101 preprocessing (from `env_setup/download_ucf101/README.md`):
 - Batch size: `1` (single video)
 - Accumulation steps: `1-4` (depending on memory)
 
+**Inference Quality Improvements (Option B)**:
+
+Both baseline and fine-tuned inference now use enhanced quality settings:
+- **Sampling steps**: 50 (increased from 30) for better denoising quality
+- **CFG scale**: 8.5 (increased from 7.5) for stronger prompt adherence
+- **SDEdit**: Enabled for smoother temporal transitions between frames
+- **Oscillation guidance**: Enabled for both text and image conditioning
+- **Image CFG scale**: 5.0 for better conditioning frame adherence
+- **Aesthetic score**: 7.0 for improved visual quality
+- **Expected compute impact**: ~60-70% longer inference time per video
+- **Quality benefits**: Significant improvement in temporal coherence, conditioning frame consistency, and overall visual fidelity
+
 **Masking Strategy**:
 - **During fine-tuning**: Use `v2v_head` masking on truncated 22-frame video
   - First 8 frames are conditioned (masked to stay as input, via `latent_t // 2` approximation)

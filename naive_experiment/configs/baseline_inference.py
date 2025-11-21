@@ -15,9 +15,9 @@ batch_size = 1
 dtype = "bf16"
 
 cond_type = "v2v_head"  # Video-to-video continuation from head
-use_sdedit = False  # Disable SDEdit for cleaner baseline
-use_oscillation_guidance_for_text = False
-use_oscillation_guidance_for_image = False
+use_sdedit = True  # Enable SDEdit for smoother temporal transitions (Option B)
+use_oscillation_guidance_for_text = True  # Better text alignment (Option B)
+use_oscillation_guidance_for_image = True  # Better conditioning frame adherence (Option B)
 
 model = dict(
     type="STDiT3-XL/2",
@@ -51,9 +51,14 @@ text_encoder = dict(
 scheduler = dict(
     type="rflow",
     use_timestep_transform=True,
-    num_sampling_steps=30,
-    cfg_scale=7.5,
+    num_sampling_steps=50,  # Increased from 30 for better quality (Option B)
+    cfg_scale=8.5,  # Increased from 7.5 for stronger prompt adherence (Option B)
     scale_image_weight=True,
     initial_image_scale=1.0,
 )
+
+# Quality improvements (Option B)
+image_cfg_scale = 5.0  # Image guidance scale for conditioning frames
+aes = 7.0  # Aesthetic score conditioning
+flow = None  # Motion score (optional)
 
