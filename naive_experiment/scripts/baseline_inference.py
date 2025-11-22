@@ -201,7 +201,7 @@ def generate_continuation(
             progress=False,
             mask=None,  # Not using mask_strategy
             mask_index=mask_index,
-            image_cfg_scale=None,
+            image_cfg_scale=cfg.get("image_cfg_scale", 5.0),  # Use config value for conditioning strength
             neg_prompts=None,
             z_cond=ref,
             z_cond_mask=x_cond_mask,
@@ -210,42 +210,21 @@ def generate_continuation(
             use_oscillation_guidance_for_image=cfg.get("use_oscillation_guidance_for_image", False),
         )
     
-    # Decode generated frames
+    # Decode ALL frames (model generates all 49 frames, with first 22 conditioned)
     with torch.no_grad():
-        generated_frames = vae.decode(samples.to(dtype)).squeeze(0)  # [B,C,T,H,W] -> [C,T,H,W]
+        full_video = vae.decode(samples.to(dtype)).squeeze(0)  # [B,C,T,H,W] -> [C,T,H,W]
     
-    # Load conditioning frames and concatenate with generated frames
-    # Read conditioning frames from the conditioning video
-    import av
-    cond_container = av.open(str(cond_video_path))
-    cond_frames_list = []
-    for frame in cond_container.decode(video=0):
-        # Convert to RGB numpy array, then to torch tensor
-        frame_np = frame.to_ndarray(format='rgb24')  # H,W,C
-        frame_tensor = torch.from_numpy(frame_np).permute(2, 0, 1).float() / 255.0  # C,H,W
-        cond_frames_list.append(frame_tensor)
-    cond_container.close()
-    
-    # Stack conditioning frames: list of [C,H,W] -> [C,T,H,W]
-    cond_frames_tensor = torch.stack(cond_frames_list, dim=1)  # [C, T_cond, H, W]
-    
-    # Move conditioning frames to the same device as generated frames
-    cond_frames_tensor = cond_frames_tensor.to(generated_frames.device)
-    
-    # Resize GENERATED frames to match CONDITIONING frames resolution if needed
-    # (Conditioning frames are the ground truth resolution: 640x480)
-    if generated_frames.shape[2:] != cond_frames_tensor.shape[2:]:
+    # Resize to target resolution (640x480) if needed
+    target_h, target_w = 480, 640
+    if full_video.shape[2:] != (target_h, target_w):
         import torch.nn.functional as F
-        print(f"  Resizing generated frames from {generated_frames.shape[2:]} to {cond_frames_tensor.shape[2:]}")
-        generated_frames = F.interpolate(
-            generated_frames,  # [C, T_gen, H, W]
-            size=cond_frames_tensor.shape[2:],  # (H, W) - match conditioning
+        print(f"  Resizing video from {full_video.shape[2:]} to ({target_h}, {target_w})")
+        full_video = F.interpolate(
+            full_video,  # [C, T, H, W]
+            size=(target_h, target_w),
             mode='bilinear',
             align_corners=False
         )
-    
-    # Concatenate: conditioning + generated along time dimension
-    full_video = torch.cat([cond_frames_tensor, generated_frames], dim=1)  # [C, T_total, H, W]
     
     # Save complete video (conditioning + generated)
     video_name = Path(video_path).stem
