@@ -139,8 +139,11 @@ def generate_continuation(
         output_dir=Path(save_dir) / "conditioning"
     )
     
-    # Prepare prompt with reference
-    prompt = f'{caption}.{{"reference_path": "{cond_video_path}"}}'
+    # Prepare prompt with reference and mask_strategy for v2v_head conditioning
+    # mask_strategy format: "loop_id,ref_id,ref_start,target_start,length,edit_ratio"
+    # For continuation: use first 22 frames (ref_start=0, target_start=0, length=22, edit_ratio=0.0)
+    mask_strategy = f"0,0,0,0,{condition_frames},0.0"
+    prompt = f'{caption}.{{"reference_path": "{cond_video_path}", "mask_strategy": "{mask_strategy}"}}'
     
     # Extract reference path from prompt
     import re
