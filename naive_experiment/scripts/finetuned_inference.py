@@ -212,17 +212,8 @@ def generate_continuation(
     with torch.no_grad():
         full_video = vae.decode(samples.to(dtype)).squeeze(0)  # [B,C,T,H,W] -> [C,T,H,W]
     
-    # Resize to target resolution (640x480) if needed
-    target_h, target_w = 480, 640
-    if full_video.shape[2:] != (target_h, target_w):
-        import torch.nn.functional as F
-        print(f"  Resizing video from {full_video.shape[2:]} to ({target_h}, {target_w})")
-        full_video = F.interpolate(
-            full_video,  # [C, T, H, W]
-            size=(target_h, target_w),
-            mode='bilinear',
-            align_corners=False
-        )
+    # Keep native resolution from model to avoid distortion from aspect ratio mismatches
+    print(f"  Decoded video shape: {full_video.shape}")
     
     # Save complete video (conditioning + generated)
     video_name = Path(video_path).stem

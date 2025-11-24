@@ -214,18 +214,7 @@ def main():
     with torch.no_grad():
         full_video = vae.decode(samples.to(dtype)).squeeze(0)
     logger.info(f"decoded video shape: {full_video.shape}")
-    
-    # Resize if needed
-    target_h, target_w = 480, 640
-    if full_video.shape[2:] != (target_h, target_w):
-        import torch.nn.functional as F
-        logger.info(f"Resizing from {full_video.shape[2:]} to ({target_h}, {target_w})")
-        full_video = F.interpolate(
-            full_video,
-            size=(target_h, target_w),
-            mode='bilinear',
-            align_corners=False
-        )
+    logger.info(f"Keeping native resolution to avoid distortion")
     
     # Save
     logger.info(f"\n=== SAVING ===")
