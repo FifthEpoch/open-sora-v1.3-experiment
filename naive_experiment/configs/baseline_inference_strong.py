@@ -4,7 +4,7 @@
 num_frames = 49  # Total frames (22 conditioning + 27 continuation) - Open-Sora bucket size
 condition_frame_length = 7  # INCREASED: More latent frames (7 ≈ 22 pixel frames)
 resolution = "480p"
-aspect_ratio = "4:3"  # 640x480
+aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) to match UCF-101's 640x480 landscape format
 fps = 24
 frame_interval = 1
 
