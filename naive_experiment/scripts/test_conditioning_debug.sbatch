@@ -6,7 +6,7 @@
 #SBATCH --mem=64GB
 #SBATCH --time=00:30:00
 #SBATCH --gres=gpu:1
-#SBATCH --partition=g40,gpu
+#SBATCH --partition=gpu
 #SBATCH --output=naive_experiment/results/debug/test_conditioning_%j.out
 #SBATCH --error=naive_experiment/results/debug/test_conditioning_%j.err
 
