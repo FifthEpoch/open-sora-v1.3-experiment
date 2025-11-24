@@ -1,6 +1,6 @@
 # Re-run Tests with Fixed Code
 
-## Two Critical Bugs Fixed
+## Three Critical Bugs Fixed
 
 ### Bug 1: Hardcoded 640×480 Resize (FIXED ✅)
 **Problem**: All scripts hardcoded output to 640×480, causing:
@@ -23,6 +23,17 @@
 **Fix**: Changed `use_sdedit=False` → `use_sdedit=True`
 
 **Result**: Conditioning frames now stay **pixel-perfect** via SDEdit re-noising
+
+### Bug 3: Wrong Aspect Ratio - Portrait Instead of Landscape (FIXED ✅)
+**Problem**: All configs used `aspect_ratio = "4:3"`, but videos came out **portrait** (560×744) instead of **landscape** like UCF-101!
+- Open-Sora uses **H:W notation** (inverted from traditional W:H)
+- `"4:3"` means H:W = 4/3 = 1.33 > 1 → **PORTRAIT** (taller than wide)
+- UCF-101 is **640×480 landscape** (wider than tall)
+
+**Fix**: Changed `aspect_ratio = "4:3"` → `aspect_ratio = "3:4"` in all configs
+- `"3:4"` means H:W = 3/4 = 0.75 < 1 → **LANDSCAPE** (wider than tall)
+
+**Result**: Videos now output at **744×560 landscape**, matching UCF-101's aspect ratio
 
 ## How to Re-run Tests
 
@@ -57,35 +68,37 @@ sbatch --account=torch_pr_36_mren test_official_settings.sbatch
 
 ### Comparing the Three Tests
 
-| Test | Config | Resolution | Conditioning | Purpose |
-|------|--------|------------|--------------|---------|
-| `test_conditioning_debug` | baseline (4:3) | 740×555 | 5 latent (22 pixel) | Default settings |
-| `test_strong_conditioning` | strong (4:3) | 740×555 | 7 latent (~27 pixel) | High guidance (10.0) |
-| `test_official_settings` | official (9:16) | 480×854 | 5 latent (22 pixel) | Portrait format |
+| Test | Config | Resolution (H×W) | Video (W×H) | Conditioning | Purpose |
+|------|--------|------------------|-------------|--------------|---------|
+| `test_conditioning_debug` | baseline (3:4) | 554×738 | 744×560 | 5 latent (22 pixel) | Default settings |
+| `test_strong_conditioning` | strong (3:4) | 554×738 | 744×560 | 7 latent (~27 pixel) | High guidance (10.0) |
+| `test_official_settings` | official (9:16) | 480×854 | 854×480 | 5 latent (22 pixel) | Landscape widescreen |
 
 ## Expected Improvements
 
 ### Before Fixes:
-- ❌ Conditioning frames stretched in portrait mode
-- ❌ Conditioning frames distorted in strong mode
-- ❌ Aspect ratio mismatches everywhere
+- ❌ Videos hardcoded to 640×480 (stretching/letterboxing)
+- ❌ Conditioning frames distorted in strong mode (no SDEdit)
+- ❌ Portrait orientation instead of landscape (wrong aspect ratio)
 
 ### After Fixes:
-- ✅ Conditioning frames pixel-perfect in all modes
-- ✅ Correct aspect ratios (no stretching)
-- ✅ Native resolutions from model
+- ✅ Native resolutions from model (no forced resize)
+- ✅ Conditioning frames pixel-perfect (SDEdit enabled)
+- ✅ Landscape orientation matching UCF-101 (3:4 aspect ratio)
 
 ## Notes
 
 - Videos will now have **different resolutions** depending on config
 - Evaluation script may need updating to handle variable resolutions
-- For UCF-101 (4:3 landscape), use `aspect_ratio = "4:3"` for best match
-- For portrait videos, use `aspect_ratio = "9:16"`
+- **For UCF-101 (landscape)**: Use `aspect_ratio = "3:4"` (H:W notation!)
+- **For portrait videos**: Use `aspect_ratio = "4:3"` or `"16:9"` (H:W notation!)
+- **Remember**: Open-Sora uses H:W notation, which is inverted from traditional W:H
 
 ## Documentation
 
 - `VIDEO_DISTORTION_FIX.md` - Details on Bug 1 (resize issue)
 - `SDEDIT_EXPLAINED.md` - Details on Bug 2 (conditioning distortion)
+- `ASPECT_RATIO_CONFUSION.md` - Details on Bug 3 (portrait vs landscape)
 - `CONDITIONING_TUNING_GUIDE.md` - Parameter tuning guide
 
 ## Next Steps After Re-running
