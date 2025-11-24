@@ -6,7 +6,11 @@ Tests the model's baseline capability to generate videos from text prompts only
 
 import argparse
 import logging
+import sys
 from pathlib import Path
+
+# Add repository root to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import torch
 from mmengine.config import Config
