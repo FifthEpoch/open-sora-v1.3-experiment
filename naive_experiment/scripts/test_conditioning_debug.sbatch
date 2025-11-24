@@ -65,8 +65,13 @@ conda deactivate 2>/dev/null || true
 conda activate opensora13
 set -u  # Re-enable unbound variable check
 
+# Fix library path conflicts - prioritize conda environment libraries over system anaconda
+# This fixes PyAV/libstdc++ version conflicts
+export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}"
+
 echo "Python: $(which python)"
 echo "Python version: $(python --version)"
+echo "LD_LIBRARY_PATH: ${LD_LIBRARY_PATH}"
 
 # Check GPU
 echo "=========================================="
