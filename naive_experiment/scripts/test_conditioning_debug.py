@@ -79,10 +79,13 @@ def main():
     logger.info(f"num_frames: {num_frames}")
     logger.info(f"latent_size: {latent_size}")
     
-    # Create conditioning video (first 22 frames)
-    condition_frames = cfg.get('condition_frame_length', 22)
+    # Create conditioning video (first 22 frames IN PIXEL SPACE)
+    # Note: condition_frame_length in config is LATENT space (5), but we extract PIXEL frames (22)
+    condition_frames_pixel = 22  # Extract 22 pixel frames
+    condition_frames_latent = cfg.get('condition_frame_length', 5)  # 5 latent frames expected
     logger.info(f"\n=== CONDITIONING SETUP ===")
-    logger.info(f"Extracting first {condition_frames} frames from {args.video_path}")
+    logger.info(f"Extracting first {condition_frames_pixel} PIXEL frames from {args.video_path}")
+    logger.info(f"Config condition_frame_length (latent): {condition_frames_latent}")
     
     import av
     container = av.open(str(args.video_path))
@@ -99,7 +102,7 @@ def main():
     
     frame_count = 0
     for frame in container.decode(video=0):
-        if frame_count >= condition_frames:
+        if frame_count >= condition_frames_pixel:
             break
         for packet in output_stream.encode(frame):
             output_container.mux(packet)
@@ -113,8 +116,8 @@ def main():
     logger.info(f"Conditioning video saved: {cond_video_path}")
     logger.info(f"Conditioning frames extracted: {frame_count}")
     
-    # Prepare prompt with mask_strategy
-    mask_strategy = f"0,0,0,0,{condition_frames},0.0"
+    # Prepare prompt with mask_strategy (uses PIXEL frames for mask_strategy)
+    mask_strategy = f"0,0,0,0,{condition_frames_pixel},0.0"
     prompt = f'{args.caption}.{{"reference_path": "{cond_video_path}", "mask_strategy": "{mask_strategy}"}}'
     logger.info(f"\n=== PROMPT ===")
     logger.info(f"Full prompt: {prompt}")
@@ -139,7 +142,7 @@ def main():
     
     ref, mask_index = prep_ref_and_mask(
         cfg.cond_type,
-        condition_frames,
+        condition_frames_latent,  # Use LATENT space frame count (5)
         refs,
         target_shape,
         loop=1,
@@ -150,13 +153,14 @@ def main():
     logger.info(f"ref shape: {ref.shape}")
     logger.info(f"mask_index: {mask_index}")
     logger.info(f"mask_index length: {len(mask_index)}")
-    logger.info(f"Expected mask_index length: {condition_frames}")
-    logger.info(f"Mask index matches expected: {len(mask_index) == condition_frames}")
+    logger.info(f"Expected mask_index length (latent): {condition_frames_latent}")
+    logger.info(f"Mask index matches expected: {len(mask_index) == condition_frames_latent}")
     
     # Check if ref actually contains the conditioning frames
     ref_nonzero = (ref != 0).any(dim=(0, 1, 3, 4))  # Check which temporal indices have non-zero values
     logger.info(f"ref non-zero temporal indices: {torch.where(ref_nonzero)[0].tolist()}")
     logger.info(f"ref non-zero count: {ref_nonzero.sum().item()} / {latent_size[0]}")
+    logger.info(f"Expected non-zero count: {condition_frames_latent}")
     
     # Create conditioning mask
     x_cond_mask = torch.zeros(target_shape, device=device).to(dtype)
@@ -236,8 +240,8 @@ def main():
     
     logger.info("\n=== VERIFICATION CHECKS ===")
     logger.info(f"✓ Config has cond_type='v2v_head': {cfg.cond_type == 'v2v_head'}")
-    logger.info(f"✓ mask_index is correct length: {len(mask_index) == condition_frames}")
-    logger.info(f"✓ ref contains conditioning frames: {ref_nonzero.sum().item() >= condition_frames}")
+    logger.info(f"✓ mask_index is correct length: {len(mask_index) == condition_frames_latent}")
+    logger.info(f"✓ ref contains conditioning frames: {ref_nonzero.sum().item() >= condition_frames_latent}")
     logger.info(f"✓ x_cond_mask is set: {(x_cond_mask.sum() > 0).item()}")
     logger.info(f"✓ use_sdedit is enabled: {cfg.get('use_sdedit', False)}")
     logger.info(f"✓ image_cfg_scale is set: {cfg.get('image_cfg_scale', 'NOT SET') != 'NOT SET'}")
