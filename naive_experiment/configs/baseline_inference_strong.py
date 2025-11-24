@@ -15,7 +15,7 @@ batch_size = 1
 dtype = "bf16"
 
 cond_type = "v2v_head"  # Video-to-video continuation from head
-use_sdedit = False  # CHANGED: Disable SDEdit to avoid adding noise to conditioning frames
+use_sdedit = True  # CRITICAL: SDEdit preserves conditioning frames by re-noising them at each step
 use_oscillation_guidance_for_text = True  # Better text alignment
 use_oscillation_guidance_for_image = True  # Better conditioning frame adherence
 
