@@ -2,7 +2,7 @@
 # This generates O_f outputs using the video-specific fine-tuned weights
 
 num_frames = 49  # Total frames (22 conditioning + 27 continuation) - Open-Sora bucket size
-condition_frame_length = 22  # Number of conditioning frames
+condition_frame_length = 5  # Number of conditioning frames IN LATENT SPACE (5 latent ≈ 16 pixel frames)
 resolution = "480p"
 aspect_ratio = "4:3"  # 640x480
 fps = 24

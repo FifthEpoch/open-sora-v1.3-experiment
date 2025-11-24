@@ -161,9 +161,12 @@ def generate_continuation(
     target_shape = (1, vae.out_channels, *latent_size)
     
     # Prepare reference and mask
+    # NOTE: condition_frames is in pixel space (22 frames), but prep_ref_and_mask expects latent space
+    # Use the config's condition_frame_length which is in latent space (5 latent frames)
+    condition_frames_latent = cfg.get('condition_frame_length', 5)
     ref, mask_index = prep_ref_and_mask(
         cfg.cond_type,
-        condition_frames,
+        condition_frames_latent,
         refs,
         target_shape,
         loop=1,
