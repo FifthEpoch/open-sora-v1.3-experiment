@@ -6,11 +6,12 @@
 #SBATCH --mem=64GB
 #SBATCH --time=00:30:00
 #SBATCH --gres=gpu:1
-#SBATCH --output=naive_experiment/results/debug/test_conditioning_%j.out
-#SBATCH --error=naive_experiment/results/debug/test_conditioning_%j.err
+#SBATCH --output=../results/debug/test_conditioning_%j.out
+#SBATCH --error=../results/debug/test_conditioning_%j.err
 
 # USAGE:
-#   sbatch naive_experiment/scripts/test_conditioning_debug.sbatch
+#   cd naive_experiment/scripts
+#   sbatch test_conditioning_debug.sbatch
 #
 # This will test ONE video and output extensive debug information to verify
 # that conditioning frames are being used correctly.
@@ -23,7 +24,11 @@ echo "=========================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $SLURMD_NODENAME"
 echo "Start time: $(date)"
+echo "Working directory: $(pwd)"
 echo "=========================================="
+
+# Change to repo root (2 levels up from scripts/)
+cd ../..
 
 # Setup environment
 SCRATCH_BASE=/scratch/${USER}
@@ -70,7 +75,7 @@ nvidia-smi
 echo "=========================================="
 
 # Get a test video from UCF-101
-TEST_VIDEO="/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4"
+TEST_VIDEO="env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4"
 TEST_CAPTION="A person applying eye makeup"
 OUTPUT_VIDEO="naive_experiment/results/debug/test_conditioning_output.mp4"
 
