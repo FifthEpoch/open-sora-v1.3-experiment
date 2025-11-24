@@ -6,6 +6,7 @@
 #SBATCH --mem=64GB
 #SBATCH --time=00:30:00
 #SBATCH --gres=gpu:1
+#SBATCH --constraint=h200
 #SBATCH --output=../results/debug/test_conditioning_%j.out
 #SBATCH --error=../results/debug/test_conditioning_%j.err
 
