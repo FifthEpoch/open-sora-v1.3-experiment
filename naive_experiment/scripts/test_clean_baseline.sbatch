@@ -27,6 +27,27 @@ echo ""
 cd ../..
 
 # Setup environment
+SCRATCH_BASE=/scratch/${USER}
+export CONDA_ENVS_PATH=${SCRATCH_BASE}/conda-envs
+export CONDA_PKGS_DIRS=${SCRATCH_BASE}/conda-pkgs
+export PIP_CACHE_DIR=${SCRATCH_BASE}/py-cache/pip
+export TORCH_HOME=${SCRATCH_BASE}/py-cache/torch
+export TORCH_EXTENSIONS_DIR=${SCRATCH_BASE}/py-cache/torch/extensions
+export PYTORCH_KERNEL_CACHE_PATH=${SCRATCH_BASE}/py-cache/models
+export TRITON_CACHE_DIR=${SCRATCH_BASE}/py-cache/triton
+export TORCHINDUCTOR_CACHE_DIR=${SCRATCH_BASE}/py-cache/torch-inductor
+export COLOSSALAI_CACHE_DIR=${SCRATCH_BASE}/py-cache/colossalai-jit
+export HF_HOME=${SCRATCH_BASE}/hf-cache
+export HF_HUB_CACHE=${SCRATCH_BASE}/hf-cache/hub
+export HF_DATASETS_CACHE=${SCRATCH_BASE}/hf-cache/datasets
+export TRANSFORMERS_CACHE=${SCRATCH_BASE}/hf-cache/transformers
+export TMPDIR=${SCRATCH_BASE}/tmp
+
+# Create necessary directories
+mkdir -p ${CONDA_ENVS_PATH} ${CONDA_PKGS_DIRS} ${PIP_CACHE_DIR}
+mkdir -p ${TORCH_HOME} ${TORCH_EXTENSIONS_DIR} ${TRITON_CACHE_DIR}
+mkdir -p ${HF_HOME} ${HF_HUB_CACHE} ${HF_DATASETS_CACHE} ${TMPDIR}
+
 module purge
 module load anaconda3/2025.06
 
@@ -35,10 +56,6 @@ source activate opensora13
 
 # Prioritize conda environment libraries to avoid GLIBCXX errors
 export LD_LIBRARY_PATH=$CONDA_ENVS_PATH/opensora13/lib:$LD_LIBRARY_PATH
-
-# Set cache directory
-export HF_HOME=/scratch/$USER/.cache/huggingface
-export TRANSFORMERS_CACHE=/scratch/$USER/.cache/huggingface/transformers
 
 # Print environment info
 echo "Environment Info:"
