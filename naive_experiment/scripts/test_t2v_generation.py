@@ -89,40 +89,37 @@ def main():
     logger.info(f"Latent size: {latent_size}")
     logger.info("")
     
-    # Encode text prompt
-    logger.info("Encoding text prompt...")
-    with torch.no_grad():
-        model_args = text_encoder.encode([args.prompt])
-        model_args = {k: v.to(device, dtype) for k, v in model_args.items()}
-    
-    # Prepare multi-resolution info
-    model_args.update(
-        prepare_multi_resolution_info(
-            cfg.multi_resolution,
-            1,  # batch_size
-            image_size,
-            num_frames,
-            cfg.fps,
-            device,
-            dtype,
-        )
+    # Prepare multi-resolution info (additional model args)
+    model_kwargs = prepare_multi_resolution_info(
+        cfg.multi_resolution,
+        1,  # batch_size
+        image_size,
+        num_frames,
+        cfg.fps,
+        device,
+        dtype,
     )
     
     # Generate from pure noise (no conditioning)
     logger.info("Generating video from text prompt...")
+    logger.info(f"Prompt: {args.prompt}")
     logger.info(f"CFG scale: {cfg.scheduler.cfg_scale}")
     
     with torch.no_grad():
+        # Set seed for reproducibility
+        torch.manual_seed(args.seed)
+        
         # Start from random noise
         z = torch.randn(1, vae.out_channels, *latent_size, device=device, dtype=dtype)
         
-        # Run diffusion sampling
+        # Run diffusion sampling (scheduler will encode text internally)
         samples = scheduler.sample(
             model,
-            z=z,
-            prompts=[args.prompt],
-            device=device,
-            additional_args=model_args,
+            text_encoder,  # Pass text_encoder, not pre-encoded text
+            z,
+            [args.prompt],  # Prompts as list of strings
+            device,
+            additional_args=model_kwargs,
         )
         samples = samples[0]  # [1, C, T, H, W]
     
