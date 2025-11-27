@@ -62,3 +62,5 @@ image_cfg_scale = None  # Not applicable (no image conditioning)
 aes = 7.0  # Aesthetic score conditioning
 flow = None  # Motion score (optional)
 
+
+
