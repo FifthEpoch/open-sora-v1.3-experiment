@@ -145,6 +145,7 @@ def main():
         fps=cfg.fps,
         normalize=True,
         value_range=(-1, 1),
+        write_video_backend="pyav",  # Use PyAV instead of OpenCV for better codec support
     )
     
     logger.info("=" * 50)
