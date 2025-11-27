@@ -1,10 +1,12 @@
 #!/bin/bash
 #SBATCH -J build_kernels
-#SBATCH -p gpu
 #SBATCH --gres=gpu:h200:1
-#SBATCH -t 01:00:00
+#SBATCH --constraint=h200
+#SBATCH -t 02:00:00
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --mem=64G
+#SBATCH --output=/scratch/wc3013/open-sora-v1.3-experiment/env_setup/slurm_build_kernels_%j.out
+#SBATCH --error=/scratch/wc3013/open-sora-v1.3-experiment/env_setup/slurm_build_kernels_%j.err
 
 set -euo pipefail
 
@@ -29,7 +31,13 @@ module purge
 module load anaconda3/2025.06
 
 # Activate conda environment in scratch location
+echo "Activating conda environment..."
+set +u  # Temporarily disable unbound variable check for conda
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
+conda deactivate 2>/dev/null || true
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
+set -u  # Re-enable unbound variable check
+echo "✓ Conda environment activated"
 
 python -c "import torch;print('Torch:', torch.__version__,'CUDA:', torch.version.cuda)"
 
@@ -81,7 +89,7 @@ export TEMP=/scratch/wc3013/tmp
 unset PIP_NO_CACHE_DIR  # Use PIP_CACHE_DIR instead which is on scratch
 
 pip wheel -v --no-build-isolation --no-deps -w "$WHEEL_DIR" .
-cd "$SCRIPT_DIR"
+cd "$PROJECT_ROOT"
 
 # ---- APEX ----
 # Build both C++ and CUDA extensions (fused layernorm, FusedAdam, etc.)
