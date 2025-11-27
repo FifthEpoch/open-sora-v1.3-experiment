@@ -59,15 +59,16 @@ echo "=================================================="
 echo "DECIDING CONFIGURATION"
 echo "=================================================="
 
-if python -c "import flash_attn, apex; from apex.normalization import FusedLayerNorm" 2>/dev/null; then
+if python -c "import flash_attn" 2>/dev/null; then
     CONFIG="naive_experiment/configs/t2v_generation_official.py"
-    echo "✓ Using OFFICIAL config (flash-attn + apex available)"
-elif python -c "import flash_attn" 2>/dev/null; then
-    CONFIG="naive_experiment/configs/t2v_generation_noopt.py"
-    echo "⚠ Using NO-OPT config (only flash-attn available, but safer to disable both)"
+    if python -c "import apex; from apex.normalization import FusedLayerNorm" 2>/dev/null; then
+        echo "✓ Using OFFICIAL config (flash-attn + apex both available)"
+    else
+        echo "✓ Using OFFICIAL config (flash-attn available, apex not needed)"
+    fi
 else
     CONFIG="naive_experiment/configs/t2v_generation_noopt.py"
-    echo "⚠ Using NO-OPT config (optimizations not available)"
+    echo "⚠ Using NO-OPT config (flash-attn not available)"
 fi
 
 echo "Config file: $CONFIG"
