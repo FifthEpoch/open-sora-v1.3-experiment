@@ -58,8 +58,9 @@ scheduler = dict(
     use_flaw_fix=True,  # CRITICAL - Official uses this for quality
 )
 
-# Note: Official config doesn't explicitly set these, so they use defaults
-# But we set them for clarity
-aes = None  # Not in official config
-flow = None  # Not in official config
+# Conditioning scores (not in official config, but commonly used)
+# aes: aesthetic score (4.0-7.0 scale, higher = better quality)
+# flow: motion strength (0.0-10.0 scale, higher = more motion)
+aes = 6.5  # "very good" aesthetic quality
+flow = None  # Let model decide motion naturally
 
