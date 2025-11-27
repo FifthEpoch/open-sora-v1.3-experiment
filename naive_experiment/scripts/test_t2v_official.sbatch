@@ -5,8 +5,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=128GB
 #SBATCH --time=02:00:00
-#SBATCH --output=naive_experiment/scripts/results/debug/test_t2v_official_%j.out
-#SBATCH --error=naive_experiment/scripts/results/debug/test_t2v_official_%j.err
+#SBATCH --output=/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/debug/test_t2v_official_%j.out
+#SBATCH --error=/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/scripts/results/debug/test_t2v_official_%j.err
 
 set -euo pipefail
 
@@ -26,12 +26,26 @@ PROJECT_ROOT="${SCRATCH_BASE}/open-sora-v1.3-experiment"
 cd "$PROJECT_ROOT"
 
 # Load environment
+echo "Loading modules..."
 module purge
 module load anaconda3/2025.06
+
+# Source conda properly (fix for "Run 'conda init' before 'conda activate'" error)
+echo "Sourcing conda.sh..."
+set +u  # Temporarily disable unbound variable check for conda
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
+conda deactivate 2>/dev/null || true
 conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
+set -u  # Re-enable unbound variable check
+
+echo "✓ Conda environment activated"
 
 # Set library path to prioritize conda environment
-export LD_LIBRARY_PATH="${SCRATCH_BASE}/conda-envs/opensora13/lib:${LD_LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
+
+echo "Python: $(which python)"
+echo "Python version: $(python --version)"
+echo ""
 
 # Check optimizations availability
 echo "=================================================="
@@ -59,8 +73,9 @@ fi
 echo "Config file: $CONFIG"
 echo ""
 
-# Create output directory
-mkdir -p naive_experiment/results/debug/t2v_official
+# Create output directory (using absolute path)
+OUTPUT_DIR="${PROJECT_ROOT}/naive_experiment/results/debug/t2v_official"
+mkdir -p "$OUTPUT_DIR"
 
 echo "=================================================="
 echo "GENERATING VIDEOS"
@@ -88,7 +103,7 @@ for i in ${!PROMPTS[@]}; do
     python naive_experiment/scripts/test_t2v_generation.py \
         --config "$CONFIG" \
         --prompt "$PROMPT" \
-        --output-path "naive_experiment/results/debug/t2v_official/${NAME}.mp4" \
+        --output-path "${OUTPUT_DIR}/${NAME}.mp4" \
         --seed $((42 + $i))
     
     echo ""
@@ -99,7 +114,7 @@ done
 echo "=================================================="
 echo "GENERATION COMPLETE"
 echo "=================================================="
-echo "Videos saved to: naive_experiment/results/debug/t2v_official/"
+echo "Videos saved to: ${OUTPUT_DIR}/"
 echo "End time: $(date)"
 echo "=================================================="
 
