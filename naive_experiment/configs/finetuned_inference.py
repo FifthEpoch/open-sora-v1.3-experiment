@@ -3,8 +3,8 @@
 
 num_frames = 49  # Total frames (22 conditioning + 27 continuation) - Open-Sora bucket size
 condition_frame_length = 5  # Number of conditioning frames IN LATENT SPACE (5 latent ≈ 16 pixel frames)
-resolution = "480p"
-aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) to match UCF-101's 640x480 landscape format
+resolution = "720p"
+aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) to match UCF-101's 960x1280 landscape format
 fps = 24
 frame_interval = 1
 
@@ -39,7 +39,7 @@ vae = dict(
     micro_batch_size_2d=4,
     micro_frame_size=17,
     use_tiled_conv3d=True,
-    tile_size=4,
+    tile_size=16,  # Larger tile for 720p - minimal artifacts based on testing
     normalization="video",
     temporal_overlap=True,
     force_huggingface=True,

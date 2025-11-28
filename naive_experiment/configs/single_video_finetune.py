@@ -7,12 +7,12 @@ dataset = dict(
     transform_name="resize_crop",
 )
 
-# Single video bucket: 480p, only first 22 frames used for training
+# Single video bucket: 720p, only first 22 frames used for training
 # Training uses frames 1-22: first 8 as conditioning, frames 9-22 as ground truth (14 frames)
-# Model never sees frames 23-45 during training - these are reserved for fair evaluation
-# During inference: uses condition_frame_length=22 (generates frames 23-45)
+# Model never sees frames 23-49 during training - these are reserved for fair evaluation
+# During inference: uses condition_frame_length=22 (generates frames 23-49)
 bucket_config = {
-    "480p": {
+    "720p": {
         22: (1, 1),  # batch_size=1, ensure at least one repeat so buckets yield data
     },
 }
@@ -59,7 +59,7 @@ vae = dict(
     micro_batch_size_2d=4,
     micro_frame_size=17,
     use_tiled_conv3d=True,
-    tile_size=4,
+    tile_size=16,  # Larger tile for 720p - minimal artifacts based on testing
     normalization="video",
     temporal_overlap=True,
     force_huggingface=True,

@@ -96,8 +96,8 @@ We use **UCF-101** (University of Central Florida - 101 action classes) as our e
 - Total videos: 2,000 (sampled from 13,320 via stratified sampling)
 - Action classes: 101 (sports, music, daily activities)
 - Sampling strategy: ~20 videos per class for balanced representation
-- Native resolution: 320×240 (upscaled to 640×480 during preprocessing)
-- Preprocessed: 640×480, 24 fps, 45 frames per video
+- Native resolution: 320×240 (upscaled to 720p during preprocessing)
+- Preprocessed: 720p (960×1280), 24 fps, 49 frames per video
 
 See `env_setup/download_ucf101/README.md` for dataset details and download instructions.
 

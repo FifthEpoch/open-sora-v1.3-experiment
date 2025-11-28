@@ -3,10 +3,10 @@
 Preprocess UCF-101 videos for Open-Sora v1.3 training.
 
 This script:
-1. Center-crops videos to 640×480 (upscales from 320×240)
+1. Center-crops videos to 720p (960×1280, upscales from 320×240)
 2. Resamples to 24 fps
-3. Crops to uniform 45 frames
-4. Skips videos shorter than 45 frames after resampling
+3. Crops to uniform 49 frames
+4. Skips videos shorter than 49 frames after resampling
 5. Generates metadata CSV for training
 """
 
@@ -21,10 +21,10 @@ from tqdm import tqdm
 import cv2
 
 
-def center_crop_resize(frame, target_height=480, target_width=640):
+def center_crop_resize(frame, target_height=960, target_width=1280):
     """
     Center crop and resize frame to target dimensions.
-    UCF-101 is 320×240, we upscale to 640×480.
+    UCF-101 is 320×240, we upscale to 720p (960×1280).
     """
     # Safety check: ensure frame is a numpy array
     if not isinstance(frame, np.ndarray):
@@ -231,7 +231,7 @@ def parse_ucf101_filename(filename):
     return class_name
 
 
-def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=480, target_width=640):
+def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=960, target_width=1280):
     """
     Process a single video:
     1. Read video
@@ -310,10 +310,10 @@ def main():
                        help="Target frame rate")
     parser.add_argument("--frames", type=int, default=49,
                        help="Target number of frames")
-    parser.add_argument("--height", type=int, default=480,
-                       help="Target height")
-    parser.add_argument("--width", type=int, default=640,
-                       help="Target width")
+    parser.add_argument("--height", type=int, default=960,
+                       help="Target height (default 960 for 720p)")
+    parser.add_argument("--width", type=int, default=1280,
+                       help="Target width (default 1280 for 720p)")
     parser.add_argument("--conditioning-frames", type=int, default=22,
                        help="Number of conditioning frames for metadata")
     parser.add_argument("--skip-cleanup", action="store_true",
