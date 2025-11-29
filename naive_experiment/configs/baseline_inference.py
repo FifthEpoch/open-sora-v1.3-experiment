@@ -51,14 +51,16 @@ text_encoder = dict(
 scheduler = dict(
     type="rflow",
     use_timestep_transform=True,
-    num_sampling_steps=50,  # Increased from 30 for better quality (Option B)
-    cfg_scale=8.5,  # Increased from 7.5 for stronger prompt adherence (Option B)
+    num_sampling_steps=60,  # Enhanced quality - more denoising steps
+    cfg_scale=10.0,  # Enhanced quality - stronger prompt adherence
+    use_oscillation_guidance=True,  # Dynamic guidance for better quality
+    use_flaw_fix=True,  # Post-processing artifact removal
     scale_image_weight=True,
     initial_image_scale=1.0,
 )
 
-# Quality improvements (Option B)
+# Enhanced quality conditioning parameters
 image_cfg_scale = 5.0  # Image guidance scale for conditioning frames
-aes = 7.0  # Aesthetic score conditioning
-flow = None  # Motion score (optional)
+aes = 7.0  # "excellent" aesthetic quality
+flow = 6.0  # Higher motion strength
 
