@@ -21,10 +21,11 @@ from tqdm import tqdm
 import cv2
 
 
-def center_crop_resize(frame, target_height=960, target_width=1280):
+def center_crop_resize(frame, target_height=832, target_width=1110):
     """
     Center crop and resize frame to target dimensions.
-    UCF-101 is 320×240, we upscale to 720p (960×1280).
+    UCF-101 is 320×240, we upscale to 720p Open-Sora native (832×1110).
+    This matches Open-Sora's 720p aspect ratio 0.75 (3:4 landscape).
     """
     # Safety check: ensure frame is a numpy array
     if not isinstance(frame, np.ndarray):
@@ -310,10 +311,10 @@ def main():
                        help="Target frame rate")
     parser.add_argument("--frames", type=int, default=49,
                        help="Target number of frames")
-    parser.add_argument("--height", type=int, default=960,
-                       help="Target height (default 960 for 720p)")
-    parser.add_argument("--width", type=int, default=1280,
-                       help="Target width (default 1280 for 720p)")
+    parser.add_argument("--height", type=int, default=832,
+                       help="Target height (default 832 for Open-Sora 720p native)")
+    parser.add_argument("--width", type=int, default=1110,
+                       help="Target width (default 1110 for Open-Sora 720p native)")
     parser.add_argument("--conditioning-frames", type=int, default=22,
                        help="Number of conditioning frames for metadata")
     parser.add_argument("--skip-cleanup", action="store_true",

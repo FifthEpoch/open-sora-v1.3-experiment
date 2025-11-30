@@ -630,6 +630,9 @@ def main():
                 temp_inference_config = f.name
                 f.write(inference_config)
             
+            # Initialize timing variable (will be None if generation fails)
+            finetuned_inference_time = None
+            
             try:
                 cmd = [
                     sys.executable,
@@ -649,7 +652,6 @@ def main():
                     logger.info(f"  Captured stdout: {len(stdout_lines)} lines")
                     
                     # Extract inference time if present (usually the last line)
-                    finetuned_inference_time = None
                     for line in stdout_lines:
                         if line.startswith('INFERENCE_TIME:'):
                             try:
