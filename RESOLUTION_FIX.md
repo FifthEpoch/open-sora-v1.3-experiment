@@ -103,16 +103,20 @@ try:
 After running the updated preprocessing, verify with:
 
 ```bash
-ffprobe ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4 2>&1 | grep "Stream"
+cd /scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101
+ffprobe ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4 2>&1 | grep -E "Stream.*Video"
 ```
 
 **Expected output:**
 ```
-Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 1110x832, ... fps, 24 tbr, ...
+Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(progressive), 1110x832, 3572 kb/s, 24 fps, 24 tbr, ...
 ```
 
-Note: FFprobe shows `WIDTHxHEIGHT` → `1110x832` (W×H)
-Open-Sora uses `(HEIGHT, WIDTH)` → `(832, 1110)` (H×W)
+**Critical check:** The dimensions should show **1110x832**
+
+Note: FFprobe displays `WIDTHxHEIGHT` → `1110x832` (W×H)  
+Open-Sora uses `(HEIGHT, WIDTH)` → `(832, 1110)` (H×W)  
+So 1110x832 in ffprobe = 832x1110 in Open-Sora ✓
 
 ## Action Required
 
@@ -139,10 +143,11 @@ tail -f /scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/slur
 ### 3. Verify Resolution
 
 ```bash
-ffprobe ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4 2>&1 | grep "1110x832"
+cd /scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101
+ffprobe ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4 2>&1 | grep -E "Stream.*Video"
 ```
 
-Should return the video stream line.
+**Expected:** Should show `1110x832` in the output (W×H format in ffprobe = 832×1110 in Open-Sora H×W format)
 
 ### 4. Pull Latest Code and Rerun Experiment
 
