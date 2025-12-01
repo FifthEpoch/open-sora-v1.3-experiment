@@ -79,14 +79,25 @@ flow = None  # Saves memory
 
 #### VAE
 ```python
-# Before
+# Before (Enhanced - OOM)
 vae = dict(
+    micro_batch_size_2d=4,
+    micro_frame_size=17,
     tile_size=16,  # Large tiles
 )
 
-# After
+# After First Fix (Still OOM at 137 GB)
 vae = dict(
-    tile_size=8,  # Smaller tiles, safer memory usage
+    micro_batch_size_2d=4,
+    micro_frame_size=17,
+    tile_size=8,  # Reduced
+)
+
+# After Critical Fix (Fits in memory)
+vae = dict(
+    micro_batch_size_2d=2,  # Reduced from 4 - processes fewer 2D slices
+    micro_frame_size=9,  # Reduced from 17 - processes fewer frames at once
+    tile_size=4,  # Smallest tile - maximum memory efficiency
 )
 ```
 
