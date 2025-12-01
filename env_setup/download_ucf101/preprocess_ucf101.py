@@ -240,11 +240,11 @@ def parse_ucf101_filename(filename):
     return class_name
 
 
-def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=960, target_width=1280):
+def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=416, target_width=544):
     """
     Process a single video:
     1. Read video
-    2. Center crop and resize each frame
+    2. Center crop and resize each frame to 360p_16d (416×544)
     3. Resample to target fps
     4. Crop to target frames
     5. Write to output
