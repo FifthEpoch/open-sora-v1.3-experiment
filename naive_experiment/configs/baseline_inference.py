@@ -3,8 +3,8 @@
 
 num_frames = 49  # Total frames (22 conditioning + 27 continuation) - Open-Sora bucket size
 condition_frame_length = 5  # Number of conditioning frames IN LATENT SPACE (5 latent ≈ 16 pixel frames)
-resolution = "720p"
-aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) to match UCF-101's 960x1280 landscape format
+resolution = "480p"  # Using 480p instead of 720p for memory efficiency (720p causes OOM)
+aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) → 480p: (554, 738), 720p: (832, 1110)
 fps = 24
 frame_interval = 1
 
@@ -34,11 +34,11 @@ vae = dict(
     type="OpenSoraVAE_V1_3",
     from_pretrained="hpcai-tech/OpenSora-VAE-v1.3",
     z_channels=16,
-    micro_batch_size=1,  # Already minimal
-    micro_batch_size_2d=2,  # Reduced from 4 for critical memory savings
-    micro_frame_size=9,  # Reduced from 17 to process fewer frames at once
+    micro_batch_size=1,
+    micro_batch_size_2d=4,  # Normal for 480p (44% of 720p pixels)
+    micro_frame_size=17,  # Normal for 480p
     use_tiled_conv3d=True,
-    tile_size=4,  # Reduced from 8 - smallest tile for maximum memory efficiency
+    tile_size=4,  # Conservative tiling for safety
     normalization="video",
     temporal_overlap=True,
     force_huggingface=True,
