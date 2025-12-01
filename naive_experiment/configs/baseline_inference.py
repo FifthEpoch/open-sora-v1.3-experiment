@@ -3,8 +3,8 @@
 
 num_frames = 49  # Total frames (22 conditioning + 27 continuation) - Open-Sora bucket size
 condition_frame_length = 5  # Number of conditioning frames IN LATENT SPACE (5 latent ≈ 16 pixel frames)
-resolution = "360p"  # OFFICIALLY SUPPORTED by v1.3 (only 360p & 720p per docs/report_04.md)
-aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) → 360p: (416, 554), 720p: (832, 1110)
+resolution = "360p_16d"  # Use 16-aligned variant for VAE compatibility (VAE requires div by 8)
+aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) → 360p_16d: (416, 544), 720p: (832, 1110)
 fps = 24
 frame_interval = 1
 
