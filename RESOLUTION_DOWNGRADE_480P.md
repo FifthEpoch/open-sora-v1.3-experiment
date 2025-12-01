@@ -1,10 +1,15 @@
-# Resolution Downgrade to 480p for Memory Efficiency
+# Resolution Change to 360p for Official Support
 
-## Decision: 720p → 480p
+## Decision: 720p → 360p (NOT 480p!)
 
 After extensive testing and multiple OOM failures, we've determined that **720p (832×1110) is too memory-intensive** for the H200 GPU (140 GB VRAM) when running video continuation experiments with fine-tuning.
 
-**Solution:** Downgrade to **480p (554×738)** which uses only **44% of the pixels** and fits comfortably in memory.
+**CRITICAL:** According to **docs/report_04.md**, Open-Sora v1.3 **ONLY officially supports 360p and 720p**. The model was NOT trained on 480p!
+
+**Solution:** Use **360p (416×554)** which:
+1. Is **officially supported** (part of v1.3 training data)
+2. Uses only **25% of 720p pixels** (vs 44% for unsupported 480p)
+3. Fits comfortably in memory with large headroom
 
 ## Memory Analysis
 
@@ -12,9 +17,9 @@ After extensive testing and multiple OOM failures, we've determined that **720p 
 
 | Resolution | Dimensions (H×W) | Total Pixels | % of 720p | Memory Estimate (49 frames) |
 |------------|------------------|--------------|-----------|------------------------------|
-| **360p** | **(416, 554)** | **230,400** | **25%** | **~55-65 GB** |
-| **480p** ✅ | **(554, 738)** | **409,920** | **44%** | **~70-80 GB** |
-| **720p** ❌ | (832, 1110) | 921,600 | 100% | ~137 GB (OOM) |
+| **360p** ✅ **OFFICIAL** | **(416, 554)** | **230,400** | **25%** | **~55-65 GB** |
+| **480p** ❌ **NOT SUPPORTED** | (554, 738) | 409,920 | 44% | ~70-80 GB |
+| **720p** ❌ **OOM** | (832, 1110) | 921,600 | 100% | ~137 GB (OOM) |
 | **1080p** | (1248, 1664) | 2,076,672 | 225% | ~280 GB (impossible) |
 
 ### Why 720p Failed
@@ -35,11 +40,16 @@ This process has 137.25 GiB memory in use.
 
 ### Why 480p Will Work
 
-**Memory breakdown at 480p (554×738, 49 frames):**
+**Memory breakdown at 360p (416×554, 49 frames):**
 - Model weights: ~40 GB (same)
-- Model activations (30 steps): ~20 GB (44% of 720p)
-- VAE decode intermediate: ~15 GB (44% of 720p)
-- **Total:** ~75-80 GB with **60 GB headroom** ✅
+- Model activations (30 steps): ~11 GB (25% of 720p)
+- VAE decode intermediate: ~8 GB (25% of 720p)
+- **Total:** ~59-65 GB with **75 GB headroom** ✅
+
+**Why NOT 480p?**
+- 480p is **NOT in v1.3's training distribution** (only 360p & 720p)
+- Using untrained resolutions leads to poor quality
+- This explains why initial 480p experiments had terrible quality!
 
 ## Changes Made
 

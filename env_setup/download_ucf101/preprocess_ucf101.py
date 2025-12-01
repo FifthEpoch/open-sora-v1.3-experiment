@@ -21,12 +21,15 @@ from tqdm import tqdm
 import cv2
 
 
-def center_crop_resize(frame, target_height=554, target_width=738):
+def center_crop_resize(frame, target_height=416, target_width=554):
     """
     Center crop and resize frame to target dimensions.
-    UCF-101 is 320×240, we upscale to 480p Open-Sora native (554×738).
-    This matches Open-Sora's 480p aspect ratio 0.75 (3:4 landscape).
-    Chosen for memory efficiency - 720p (832×1110) causes OOM on H200.
+    UCF-101 is 320×240, we upscale to 360p Open-Sora native (416×554).
+    This matches Open-Sora's 360p aspect ratio 0.75 (3:4 landscape).
+    
+    IMPORTANT: Open-Sora v1.3 ONLY supports 360p and 720p (per docs/report_04.md).
+    Using 360p for memory efficiency - 720p (832×1110) causes OOM on H200.
+    360p uses only 25% of 720p pixels while being officially supported.
     """
     # Safety check: ensure frame is a numpy array
     if not isinstance(frame, np.ndarray):
@@ -312,10 +315,10 @@ def main():
                        help="Target frame rate")
     parser.add_argument("--frames", type=int, default=49,
                        help="Target number of frames")
-    parser.add_argument("--height", type=int, default=554,
-                       help="Target height (default 554 for Open-Sora 480p native)")
-    parser.add_argument("--width", type=int, default=738,
-                       help="Target width (default 738 for Open-Sora 480p native)")
+    parser.add_argument("--height", type=int, default=416,
+                       help="Target height (default 416 for Open-Sora 360p native)")
+    parser.add_argument("--width", type=int, default=554,
+                       help="Target width (default 554 for Open-Sora 360p native)")
     parser.add_argument("--conditioning-frames", type=int, default=22,
                        help="Number of conditioning frames for metadata")
     parser.add_argument("--skip-cleanup", action="store_true",
