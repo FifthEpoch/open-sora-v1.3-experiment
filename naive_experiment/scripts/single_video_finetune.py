@@ -79,9 +79,10 @@ def create_truncated_video(video_path, num_frames=22, output_dir=None):
     return str(truncated_path)
 
 
-def create_single_video_csv(video_path, caption, output_csv):
+def create_single_video_csv(video_path, caption, output_csv, resolution="360p_16d", aspect_ratio="3:4"):
     """Create a CSV file with a single video entry for training (using truncated video)."""
-    target_height, target_width = get_image_size("480p", "4:3")
+    target_height, target_width = get_image_size(resolution, aspect_ratio)
+    actual_aspect_ratio = target_height / target_width
 
     df = pd.DataFrame([{
         'path': video_path,
@@ -90,7 +91,7 @@ def create_single_video_csv(video_path, caption, output_csv):
         'height': int(target_height),
         'width': int(target_width),
         'fps': 24,
-        'aspect_ratio': 1.33,  # 4:3
+        'aspect_ratio': actual_aspect_ratio,  # Computed from actual dimensions
     }])
     df.to_csv(output_csv, index=False)
     return output_csv

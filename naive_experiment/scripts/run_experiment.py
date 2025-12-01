@@ -439,7 +439,10 @@ def main():
             logger.info(f"Resuming from video index {args.start_from_video}")
         
         finetuned_results = []
-        target_height, target_width = get_image_size("480p", "4:3")
+        # Load resolution and aspect ratio from finetuned inference config (matches baseline)
+        from mmengine.config import Config
+        ft_cfg = Config.fromfile(finetuned_inference_config)
+        target_height, target_width = get_image_size(ft_cfg.resolution, ft_cfg.aspect_ratio)
         
         for idx, row in tqdm(baseline_df.iterrows(), total=len(baseline_df), desc="Fine-tuning"):
             video_idx = row['video_idx']
@@ -477,6 +480,8 @@ def main():
             # Create single-video CSV for fine-tuning (using truncated video)
             with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
                 temp_csv = f.name
+                # Calculate actual aspect ratio from dimensions
+                actual_aspect_ratio = target_height / target_width
                 pd.DataFrame([{
                     'path': truncated_video_path,
                     'text': caption,
@@ -484,7 +489,7 @@ def main():
                     'height': int(target_height),
                     'width': int(target_width),
                     'fps': 24,
-                    'aspect_ratio': 1.33,  # 4:3
+                    'aspect_ratio': actual_aspect_ratio,  # Computed from actual dimensions
                 }]).to_csv(temp_csv, index=False)
             
             # Fine-tune checkpoint directory for this video
