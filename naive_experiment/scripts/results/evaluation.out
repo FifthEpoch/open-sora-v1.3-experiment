@@ -1,0 +1,223 @@
+(base) [wc3013@torch-login-1 scripts]$ cat results/debug/test_t2v_official_26804.out
+==================================================
+Text-to-Video Generation Test (Official Settings)
+==================================================
+Job ID: 26804
+Node: gh109
+Start time: Thu Nov 27 22:31:19 EST 2025
+==================================================
+
+Loading modules...
+Sourcing conda.sh...
+✓ Conda environment activated
+Python: /scratch/wc3013/conda-envs/opensora13/bin/python
+Python version: Python 3.10.19
+
+==================================================
+CHECKING OPTIMIZATION AVAILABILITY
+==================================================
+============================================================
+OPTIMIZATION AVAILABILITY CHECK
+============================================================
+✓ flash-attn: 2.5.8
+✗ apex: NOT AVAILABLE
+  Error: No module named 'apex'
+✓ xformers: 0.0.25.post1
+
+============================================================
+PYTORCH INFO
+============================================================
+PyTorch: 2.2.2+cu121
+CUDA available: True
+CUDA version: 12.1
+GPU: NVIDIA H200
+GPU compute capability: (9, 0)
+
+============================================================
+RECOMMENDATIONS
+============================================================
+⚠ flash-attn available but apex missing
+  Use: enable_flash_attn=True, enable_layernorm_kernel=False
+============================================================
+
+==================================================
+DECIDING CONFIGURATION
+==================================================
+✓ Using OFFICIAL config (flash-attn available, apex not needed)
+Config file: naive_experiment/configs/t2v_generation_official.py
+
+==================================================
+GENERATING VIDEOS
+==================================================
+
+1/3: Generating 'A person applying eye makeup'...
+OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {
+  "_attn_implementation_autoset": true,
+  "architectures": [
+    "OpenSoraVAE_V1_3_Pipline"
+  ],
+  "decoder": {
+    "ch": 128,
+    "ch_mult": [
+      1,
+      2,
+      4,
+      4
+    ],
+    "in_channels": 3,
+    "micro_batch_size_2d": 4,
+    "num_res_blocks": 2,
+    "out_ch": 3,
+    "temporal_up_layers": [
+      2,
+      3
+    ],
+    "type": "VideoDecoder",
+    "z_channels": 16
+  },
+  "encoder": {
+    "ch": 128,
+    "ch_mult": [
+      1,
+      2,
+      4,
+      4
+    ],
+    "double_z": true,
+    "down_sampling_layer": [
+      1,
+      2
+    ],
+    "in_channels": 3,
+    "micro_batch_size_2d": 4,
+    "num_res_blocks": 2,
+    "out_ch": 3,
+    "type": "VideoEncoder",
+    "z_channels": 16
+  },
+  "model_type": "OpenSoraVAE_V1_3_Pipline",
+  "torch_dtype": "float32",
+  "transformers_version": "4.51.3"
+}
+
+huggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3
+Saved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/results/debug/t2v_official/apply_eye_makeup.mp4
+
+---
+
+2/3: Generating 'A person playing basketball, dribbling and shooting a ball'...
+OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {
+  "_attn_implementation_autoset": true,
+  "architectures": [
+    "OpenSoraVAE_V1_3_Pipline"
+  ],
+  "decoder": {
+    "ch": 128,
+    "ch_mult": [
+      1,
+      2,
+      4,
+      4
+    ],
+    "in_channels": 3,
+    "micro_batch_size_2d": 4,
+    "num_res_blocks": 2,
+    "out_ch": 3,
+    "temporal_up_layers": [
+      2,
+      3
+    ],
+    "type": "VideoDecoder",
+    "z_channels": 16
+  },
+  "encoder": {
+    "ch": 128,
+    "ch_mult": [
+      1,
+      2,
+      4,
+      4
+    ],
+    "double_z": true,
+    "down_sampling_layer": [
+      1,
+      2
+    ],
+    "in_channels": 3,
+    "micro_batch_size_2d": 4,
+    "num_res_blocks": 2,
+    "out_ch": 3,
+    "type": "VideoEncoder",
+    "z_channels": 16
+  },
+  "model_type": "OpenSoraVAE_V1_3_Pipline",
+  "torch_dtype": "float32",
+  "transformers_version": "4.51.3"
+}
+
+huggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3
+Saved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/results/debug/t2v_official/basketball.mp4
+
+---
+
+3/3: Generating 'A person cycling on a bicycle down a road'...
+OpenSoraVAE_V1_3_Pipline config OpenSoraVAE_V1_3_PiplineConfig {
+  "_attn_implementation_autoset": true,
+  "architectures": [
+    "OpenSoraVAE_V1_3_Pipline"
+  ],
+  "decoder": {
+    "ch": 128,
+    "ch_mult": [
+      1,
+      2,
+      4,
+      4
+    ],
+    "in_channels": 3,
+    "micro_batch_size_2d": 4,
+    "num_res_blocks": 2,
+    "out_ch": 3,
+    "temporal_up_layers": [
+      2,
+      3
+    ],
+    "type": "VideoDecoder",
+    "z_channels": 16
+  },
+  "encoder": {
+    "ch": 128,
+    "ch_mult": [
+      1,
+      2,
+      4,
+      4
+    ],
+    "double_z": true,
+    "down_sampling_layer": [
+      1,
+      2
+    ],
+    "in_channels": 3,
+    "micro_batch_size_2d": 4,
+    "num_res_blocks": 2,
+    "out_ch": 3,
+    "type": "VideoEncoder",
+    "z_channels": 16
+  },
+  "model_type": "OpenSoraVAE_V1_3_Pipline",
+  "torch_dtype": "float32",
+  "transformers_version": "4.51.3"
+}
+
+huggingface model loaded: hpcai-tech/OpenSora-VAE-v1.3
+Saved to /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/results/debug/t2v_official/cycling.mp4
+
+---
+
+==================================================
+GENERATION COMPLETE
+==================================================
+Videos saved to: /scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/results/debug/t2v_official/
+End time: Thu Nov 27 22:38:26 EST 2025
+==================================================

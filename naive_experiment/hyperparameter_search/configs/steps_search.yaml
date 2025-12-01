@@ -1,0 +1,63 @@
+# Fine-tuning Steps Hyperparameter Search Configuration
+# 
+# Fixed parameters:
+#   - lr: 1e-5
+#   - condition_frames: 22
+#   - num_videos: 20
+#
+# Varied parameter: finetune_steps
+
+search_name: "steps_search"
+search_param: "finetune_steps"
+
+# Fixed hyperparameters
+fixed_params:
+  lr: 1.0e-5
+  condition_frames: 22
+  num_videos: 20
+  random_seed: 42
+
+# Fine-tuning steps values to test
+finetune_steps_values:
+  - name: "steps_5"
+    value: 5
+    description: "Very few steps - quick adaptation"
+    expected_time_per_video: "~2 minutes"
+  
+  - name: "steps_10"
+    value: 10
+    description: "Few steps - minimal fine-tuning"
+    expected_time_per_video: "~2.5 minutes"
+  
+  - name: "steps_20"
+    value: 20
+    description: "Baseline steps from naive experiment"
+    expected_time_per_video: "~5 minutes"
+  
+  - name: "steps_40"
+    value: 40
+    description: "Many steps - extended fine-tuning"
+    expected_time_per_video: "~8 minutes"
+  
+  - name: "steps_80"
+    value: 80
+    description: "Very many steps - thorough fine-tuning"
+    expected_time_per_video: "~14 minutes"
+
+# Important notes:
+# - Each step is one forward+backward pass through the single video
+# - Training uses 22 conditioning frames + following frames for loss
+# - More steps = more GPU time but potentially better quality
+#
+# Expected results:
+# - Too few: Under-fitting, model doesn't adapt enough
+# - Optimal: Good balance of quality and compute time
+# - Too many: Diminishing returns, potential over-fitting to single sample
+#
+# Cost analysis (20 videos):
+# - steps_5:  ~40 minutes
+# - steps_10: ~50 minutes
+# - steps_20: ~100 minutes (baseline)
+# - steps_40: ~160 minutes
+# - steps_80: ~280 minutes
+

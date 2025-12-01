@@ -1,0 +1,46 @@
+# Learning Rate Hyperparameter Search Configuration
+# 
+# Fixed parameters:
+#   - condition_frames: 22
+#   - finetune_steps: 20
+#   - num_videos: 20
+#
+# Varied parameter: learning rate (lr)
+
+search_name: "lr_search"
+search_param: "lr"
+
+# Fixed hyperparameters
+fixed_params:
+  condition_frames: 22
+  finetune_steps: 20
+  num_videos: 20
+  random_seed: 42
+
+# Learning rate values to test
+lr_values:
+  - name: "lr_1e-6"
+    value: 1.0e-6
+    description: "Very low learning rate - may need more steps"
+  
+  - name: "lr_5e-6"
+    value: 5.0e-6
+    description: "Low learning rate - conservative updates"
+  
+  - name: "lr_1e-5"
+    value: 1.0e-5
+    description: "Baseline learning rate from naive experiment"
+  
+  - name: "lr_5e-5"
+    value: 5.0e-5
+    description: "High learning rate - faster convergence or instability"
+  
+  - name: "lr_1e-4"
+    value: 1.0e-4
+    description: "Very high learning rate - may be unstable"
+
+# Expected results:
+# - Too low: Slow convergence, may not improve much in 20 steps
+# - Optimal: Good balance of speed and stability
+# - Too high: Unstable training, potential degradation
+
