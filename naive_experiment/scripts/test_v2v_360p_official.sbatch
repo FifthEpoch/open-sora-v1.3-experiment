@@ -9,31 +9,77 @@
 #SBATCH --output=naive_experiment/scripts/slurm_log/test_v2v_360p_official_%j.out
 #SBATCH --error=naive_experiment/scripts/slurm_log/test_v2v_360p_official_%j.err
 
+# ===================================================================
 # Test V2V at 360p using EXACT official config
-# This is to diagnose the RGB blocks issue
+# This is to diagnose the RGB blocks issue.
+# ===================================================================
 
-cd /scratch/wc3013/open-sora-v1.3-experiment
+set -euo pipefail
+
+# Prevent user site-packages from interfering
+export PYTHONNOUSERSITE=1
+
+PROJECT_ROOT="/scratch/wc3013/open-sora-v1.3-experiment"
+SCRATCH_BASE="/scratch/wc3013"
+
+cd "${PROJECT_ROOT}"
+
+echo "========================================"
+echo "Test V2V at 360p with EXACT Official Config"
+echo "========================================"
+echo "Node: $(hostname)"
+echo "Job ID: $SLURM_JOB_ID"
+echo "Start time: $(date)"
+echo "========================================"
 
 # --- Environment Setup ---
 module purge
 module load anaconda3/2025.06
+
+# Source conda initialization
 source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
 
+# Configure conda directories
+export CONDA_ENVS_DIRS="${SCRATCH_BASE}/conda-envs"
+export CONDA_PKGS_DIRS="${SCRATCH_BASE}/conda-pkgs"
+conda config --prepend envs_dirs "${SCRATCH_BASE}/conda-envs" 2>/dev/null || true
+
 # Activate conda environment
-conda activate /scratch/wc3013/conda-envs/opensora13
+echo "Activating conda environment..."
+conda activate "${SCRATCH_BASE}/conda-envs/opensora13"
+if [ $? -ne 0 ] || [ -z "$CONDA_PREFIX" ]; then
+    echo "ERROR: Failed to activate conda environment" >&2
+    exit 1
+fi
+echo "✓ Environment activated: $CONDA_PREFIX"
+
+# Ensure conda env's bin is first in PATH
+export PATH="${CONDA_PREFIX}/bin:${PATH}"
+
+# Verify Python
+PYTHON_PATH=$(which python)
+echo "Using Python: ${PYTHON_PATH}"
+python --version
 
 # Set environment variables
-export HF_HOME=/scratch/wc3013/.cache/huggingface
-export TRANSFORMERS_CACHE=/scratch/wc3013/.cache/huggingface
+export HF_HOME="${SCRATCH_BASE}/.cache/huggingface"
+export TRANSFORMERS_CACHE="${SCRATCH_BASE}/.cache/huggingface"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
+export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}"
 
+# Verify PyTorch
+echo ""
+echo "Verifying PyTorch..."
+python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"N/A\"}')"
+
+echo ""
 echo "=== Testing V2V at 360p with EXACT Official Config ==="
 echo "This uses the EXACT parameters from configs/opensora-v1-3/inference/v2v.py"
 echo ""
 
 # First, we need a conditioning video at 360p 9:16 (360x640)
-# Let's create one from an existing UCF-101 video
-COND_VIDEO="/scratch/wc3013/open-sora-v1.3-experiment/naive_experiment/results/test_cond_360p.mp4"
+COND_VIDEO="${PROJECT_ROOT}/naive_experiment/results/test_cond_360p.mp4"
 
 # Create conditioning video at 360p 9:16 from UCF-101
 echo "Creating conditioning video at 360p 9:16..."
@@ -42,7 +88,7 @@ import cv2
 import numpy as np
 
 # Read original video
-cap = cv2.VideoCapture('/scratch/wc3013/open-sora-v1.3-experiment/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4')
+cap = cv2.VideoCapture('${PROJECT_ROOT}/env_setup/download_ucf101/ucf101_processed/ApplyEyeMakeup/v_ApplyEyeMakeup_g02_c01.mp4')
 
 # Target: 360p 9:16 = (360, 640) in H,W = 640x360 in W,H for cv2
 target_h, target_w = 360, 640
@@ -90,7 +136,7 @@ print(f'Created conditioning video with {frame_count} frames at {target_w}x{targ
 # Verify the conditioning video
 echo ""
 echo "Verifying conditioning video..."
-ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames -of csv=p=0 "${COND_VIDEO}"
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames -of csv=p=0 "${COND_VIDEO}" || echo "ffprobe not available, skipping verification"
 
 # Run V2V test
 echo ""
@@ -107,4 +153,3 @@ echo ""
 echo "INTERPRETATION:"
 echo "- If video looks good: 360p V2V works with official config!"
 echo "- If video has RGB blocks: Issue is fundamental to 360p or environment."
-
