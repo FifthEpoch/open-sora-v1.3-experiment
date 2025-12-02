@@ -10,9 +10,22 @@
 #SBATCH --error=slurm_run_experiment.err
 
 # ===================================================================
+# NAIVE FINE-TUNING EXPERIMENT AT 360p
+# ===================================================================
+# Using 360p 9:16 (360×640) - EXACT official v2v.py config
+# This resolution is officially supported and uses much less memory than 720p.
+#
+# Key settings from official v2v.py:
+# - resolution = "360p", aspect_ratio = "9:16" → (360, 640)
+# - tile_size = 4 (official default)
+# - scale_image_weight = True, initial_image_scale = 1.0
+# - image_cfg_scale = 5.0
+# ===================================================================
+
+# ===================================================================
 # CHECKPOINT RECOVERY INSTRUCTIONS
 # ===================================================================
-# If your job is interrupted (e.g., due to low GPU utilization), you can resume:
+# If your job is interrupted, you can resume:
 #
 # 1. Check results/progress.json to find the last completed video:
 #    cat results/progress.json | grep video_idx | tail -1
@@ -21,15 +34,6 @@
 #    sbatch naive_experiment/scripts/run_experiment.sbatch \
 #      --skip-baseline \
 #      --start-from-video <last_completed_idx + 1>
-#
-# Example: If video 11 was the last completed, resume from video 12:
-#    # Edit this script to change the python command to:
-#    python "${SCRIPT_DIR}/run_experiment.py" \
-#        --data-csv "${PROJECT_ROOT}/env_setup/download_ucf101/ucf101_metadata.csv" \
-#        --output-dir results \
-#        --num-videos 100 \
-#        --skip-baseline \
-#        --start-from-video 12
 # ===================================================================
 
 set -euo pipefail
@@ -38,7 +42,7 @@ set -euo pipefail
 export PYTHONNOUSERSITE=1
 
 echo "========================================"
-echo "Naive Fine-tuning Experiment"
+echo "Naive Fine-tuning Experiment (360p)"
 echo "========================================"
 echo "Node: $(hostname)"
 echo "Job ID: $SLURM_JOB_ID"
@@ -202,6 +206,65 @@ python -c "import bitsandbytes; print(f'bitsandbytes version: {bitsandbytes.__ve
 echo "Note: Compatible version for PyTorch 2.2.2 is bitsandbytes 0.43.x"
 echo "========================================"
 
+# --- Preprocess Data at 360p ---
+echo "========================================"
+echo "Preprocessing UCF-101 videos at 360p 9:16"
+echo "========================================"
+
+DATA_DIR="${PROJECT_ROOT}/env_setup/download_ucf101"
+PROCESSED_DIR="${DATA_DIR}/ucf101_processed"
+METADATA_CSV="${DATA_DIR}/ucf101_metadata.csv"
+
+# Check if preprocessing is needed
+if [ -f "${METADATA_CSV}" ]; then
+    # Check if existing data is at 360p
+    EXISTING_HEIGHT=$(head -2 "${METADATA_CSV}" | tail -1 | cut -d',' -f4)
+    if [ "${EXISTING_HEIGHT}" = "360" ]; then
+        echo "✓ Data already preprocessed at 360p"
+    else
+        echo "Existing data is at height=${EXISTING_HEIGHT}, need to reprocess at 360p"
+        echo "Removing old processed data..."
+        rm -rf "${PROCESSED_DIR}"
+        rm -f "${METADATA_CSV}"
+        
+        echo "Running preprocessing..."
+        python "${DATA_DIR}/preprocess_ucf101.py" \
+            --input-dir ucf101_org \
+            --output-dir ucf101_processed \
+            --height 360 \
+            --width 640 \
+            --frames 49 \
+            --conditioning-frames 22 \
+            --skip-cleanup
+        echo "✓ Preprocessing complete"
+    fi
+else
+    echo "No existing metadata found, running preprocessing..."
+    python "${DATA_DIR}/preprocess_ucf101.py" \
+        --input-dir ucf101_org \
+        --output-dir ucf101_processed \
+        --height 360 \
+        --width 640 \
+        --frames 49 \
+        --conditioning-frames 22 \
+        --skip-cleanup
+    echo "✓ Preprocessing complete"
+fi
+
+# Verify preprocessing results
+echo ""
+echo "Verifying preprocessed data..."
+if [ -f "${METADATA_CSV}" ]; then
+    NUM_VIDEOS=$(wc -l < "${METADATA_CSV}")
+    NUM_VIDEOS=$((NUM_VIDEOS - 1))  # Subtract header
+    echo "✓ Found ${NUM_VIDEOS} preprocessed videos"
+    echo "Sample metadata:"
+    head -3 "${METADATA_CSV}"
+else
+    echo "ERROR: Metadata CSV not found after preprocessing!" >&2
+    exit 1
+fi
+
 # --- Run Experiment ---
 echo "========================================"
 echo "Starting experiment..."
@@ -213,9 +276,10 @@ echo "Working directory: $(pwd)"
 
 # Run experiment with absolute path to script
 python "${SCRIPT_DIR}/run_experiment.py" \
-    --data-csv "${PROJECT_ROOT}/env_setup/download_ucf101/ucf101_metadata.csv" \
+    --data-csv "${METADATA_CSV}" \
     --output-dir results \
-    --num-videos 100
+    --num-videos 100 \
+    --condition-frames 22
 
 EXIT_CODE=$?
 
@@ -226,4 +290,3 @@ echo "End time: $(date)"
 echo "========================================"
 
 exit $EXIT_CODE
-

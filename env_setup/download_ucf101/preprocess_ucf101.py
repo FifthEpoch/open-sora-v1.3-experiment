@@ -3,11 +3,14 @@
 Preprocess UCF-101 videos for Open-Sora v1.3 training.
 
 This script:
-1. Center-crops videos to 720p (960×1280, upscales from 320×240)
+1. Center-crops videos to 360p 9:16 (360×640) - official resolution
 2. Resamples to 24 fps
 3. Crops to uniform 49 frames
 4. Skips videos shorter than 49 frames after resampling
 5. Generates metadata CSV for training
+
+360p 9:16 (360×640) is the OFFICIAL resolution from v2v.py config.
+Both dimensions are divisible by 8 ✓
 """
 
 import argparse
@@ -21,22 +24,16 @@ from tqdm import tqdm
 import cv2
 
 
-def center_crop_resize(frame, target_height=720, target_width=1280):
+def center_crop_resize(frame, target_height=360, target_width=640):
     """
     Center crop and resize frame to target dimensions.
-    UCF-101 is 320×240, we upscale to 720p Open-Sora (720×1280).
-    This matches Open-Sora's 720p aspect ratio 0.56 (9:16 portrait).
+    UCF-101 is 320×240, we resize to 360p Open-Sora (360×640).
+    This matches Open-Sora's 360p aspect ratio 0.56 (9:16 portrait).
     
-    CRITICAL: Must use 720p - 360p has RGB flashing blocks bug!
-    Tested extensively: 360p with various tile_size, aspect ratios all fail.
-    Only 720p produces clean video output.
-    
-    720p 9:16 dimensions (720, 1280):
-    - 720 % 8 = 0 ✓
-    - 1280 % 8 = 0 ✓
+    360p 9:16 dimensions (360, 640):
+    - 360 % 8 = 0 ✓
+    - 640 % 8 = 0 ✓
     - Both perfectly divisible by 8!
-    
-    Memory: Using 33 frames instead of 49 to fit in H200 (140GB).
     """
     # Safety check: ensure frame is a numpy array
     if not isinstance(frame, np.ndarray):
@@ -243,11 +240,11 @@ def parse_ucf101_filename(filename):
     return class_name
 
 
-def process_video(video_path, output_base, target_fps=24, target_frames=25, target_height=720, target_width=1280):
+def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=360, target_width=640):
     """
     Process a single video:
     1. Read video
-    2. Center crop and resize each frame to 360p_16d (416×544)
+    2. Center crop and resize each frame to 360p 9:16 (360×640)
     3. Resample to target fps
     4. Crop to target frames
     5. Write to output
@@ -320,14 +317,14 @@ def main():
                        help="Output directory for preprocessed videos")
     parser.add_argument("--fps", type=int, default=24,
                        help="Target frame rate")
-    parser.add_argument("--frames", type=int, default=25,
-                       help="Target number of frames (8 cond + 17 gen)")
-    parser.add_argument("--height", type=int, default=720,
-                       help="Target height (default 720 for Open-Sora 720p 9:16)")
-    parser.add_argument("--width", type=int, default=1280,
-                       help="Target width (default 1280 for Open-Sora 720p 9:16)")
-    parser.add_argument("--conditioning-frames", type=int, default=8,
-                       help="Number of conditioning frames (reduced for memory)")
+    parser.add_argument("--frames", type=int, default=49,
+                       help="Target number of frames (official uses 49-113)")
+    parser.add_argument("--height", type=int, default=360,
+                       help="Target height (default 360 for Open-Sora 360p 9:16)")
+    parser.add_argument("--width", type=int, default=640,
+                       help="Target width (default 640 for Open-Sora 360p 9:16)")
+    parser.add_argument("--conditioning-frames", type=int, default=22,
+                       help="Number of conditioning frames (5 latent = 22 pixel)")
     parser.add_argument("--skip-cleanup", action="store_true",
                        help="Skip cleanup prompt (for non-interactive execution)")
     
@@ -348,7 +345,7 @@ def main():
     print("=" * 70)
     print(f"Input directory: {input_dir}")
     print(f"Output directory: {output_dir}")
-    print(f"Target resolution: {args.width}×{args.height}")
+    print(f"Target resolution: {args.width}×{args.height} (360p 9:16)")
     print(f"Target FPS: {args.fps}")
     print(f"Target frames: {args.frames}")
     print(f"Conditioning frames: {args.conditioning_frames}")
@@ -422,4 +419,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

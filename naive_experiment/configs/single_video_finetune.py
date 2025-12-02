@@ -1,5 +1,8 @@
 # Configuration for fine-tuning on a single video sample
-# This trains the model on just one 45-frame video for a small number of steps
+# This trains the model on just one video for a small number of steps
+#
+# Using 360p 9:16 (360×640) - EXACT official v2v.py config
+# This resolution is officially supported and uses much less memory than 720p.
 
 # Dataset settings
 dataset = dict(
@@ -7,12 +10,12 @@ dataset = dict(
     transform_name="resize_crop",
 )
 
-# Single video bucket: 720p, only first 22 frames used for training
-# Training uses frames 1-22: first 8 as conditioning, frames 9-22 as ground truth (14 frames)
-# Model never sees frames 23-49 during training - these are reserved for fair evaluation
-# During inference: uses condition_frame_length=22 (generates frames 23-49)
+# Single video bucket: 360p, only first 22 frames used for training
+# Training uses frames 1-22: first 8 as conditioning, frames 9-22 as ground truth
+# Model never sees frames 23-49 during training - reserved for fair evaluation
+# During inference: uses condition_frame_length=5 (latent frames)
 bucket_config = {
-    "720p": {
+    "360p": {
         22: (1, 1),  # batch_size=1, ensure at least one repeat so buckets yield data
     },
 }
@@ -38,28 +41,29 @@ num_bucket_build_workers = 1
 dtype = "bf16"
 plugin = "zero2"  # Use ZeRO-2 for memory efficiency
 
-# Model settings
+# Model settings - EXACT from official v2v.py
 model = dict(
     type="STDiT3-XL/2",
     from_pretrained="hpcai-tech/OpenSora-STDiT-v4",
     qk_norm=True,
-    enable_flash_attn=True,  # ✓ ENABLED - flash-attn 2.5.8 installed successfully
-    enable_layernorm_kernel=False,  # ✗ DISABLED - apex not available (expected)
+    enable_flash_attn=True,
+    enable_layernorm_kernel=False,  # Would be True with apex
     kernel_size=(8, 8, -1),  # H W T
     use_spatial_rope=True,
     class_dropout_prob=0.0,
     force_huggingface=True,
 )
 
+# VAE - EXACT from official v2v.py
 vae = dict(
     type="OpenSoraVAE_V1_3",
     from_pretrained="hpcai-tech/OpenSora-VAE-v1.3",
     z_channels=16,
     micro_batch_size=1,
-    micro_batch_size_2d=4,
-    micro_frame_size=17,
+    micro_batch_size_2d=4,  # Official default
+    micro_frame_size=17,  # Official default
     use_tiled_conv3d=True,
-    tile_size=16,  # Larger tile for 720p - minimal artifacts based on testing
+    tile_size=4,  # Official default (NOT 16!)
     normalization="video",
     temporal_overlap=True,
     force_huggingface=True,
@@ -97,4 +101,3 @@ accumulation_steps = 1  # No accumulation needed with batch_size=1
 
 # Training will run for a small number of steps (e.g., 10-50)
 # This is controlled by the script, not the config
-
