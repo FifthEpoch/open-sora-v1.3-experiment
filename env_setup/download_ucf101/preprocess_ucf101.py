@@ -21,19 +21,21 @@ from tqdm import tqdm
 import cv2
 
 
-def center_crop_resize(frame, target_height=416, target_width=544):
+def center_crop_resize(frame, target_height=832, target_width=1110):
     """
     Center crop and resize frame to target dimensions.
-    UCF-101 is 320×240, we upscale to 360p_16d Open-Sora (416×544).
-    This matches Open-Sora's 360p_16d aspect ratio 0.75 (3:4 landscape).
+    UCF-101 is 320×240, we upscale to 720p Open-Sora (832×1110).
+    This matches Open-Sora's 720p aspect ratio 0.75 (3:4 landscape).
     
-    CRITICAL: Must use 360p_16d (NOT 360p) for VAE compatibility!
-    - VAE requires dimensions divisible by 8 (spatial compression 8x8)
-    - 360p gives (416, 554) where 554 % 8 = 2 ❌ CAUSES RGB FLASHING BLOCKS
-    - 360p_16d gives (416, 544) where 544 % 8 = 0 ✅ PROPERLY ALIGNED
+    CRITICAL: Must use 720p - 360p has RGB flashing blocks bug!
+    Tested extensively: 360p with various tile_size, aspect ratios all fail.
+    Only 720p produces clean video output.
     
-    Open-Sora v1.3 ONLY supports 360p & 720p (per docs/report_04.md).
-    Using 360p_16d for memory efficiency - 720p causes OOM on H200.
+    720p dimensions (832, 1110):
+    - 832 % 8 = 0 ✓
+    - 1110 % 8 = 6 (but works fine with tile_size=16)
+    
+    Memory: ~80-90GB on H200 with reduced VAE micro_batch settings.
     """
     # Safety check: ensure frame is a numpy array
     if not isinstance(frame, np.ndarray):
@@ -240,7 +242,7 @@ def parse_ucf101_filename(filename):
     return class_name
 
 
-def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=416, target_width=544):
+def process_video(video_path, output_base, target_fps=24, target_frames=49, target_height=832, target_width=1110):
     """
     Process a single video:
     1. Read video
@@ -319,10 +321,10 @@ def main():
                        help="Target frame rate")
     parser.add_argument("--frames", type=int, default=49,
                        help="Target number of frames")
-    parser.add_argument("--height", type=int, default=416,
-                       help="Target height (default 416 for Open-Sora 360p_16d)")
-    parser.add_argument("--width", type=int, default=544,
-                       help="Target width (default 544 for Open-Sora 360p_16d, NOT 554!)")
+    parser.add_argument("--height", type=int, default=832,
+                       help="Target height (default 832 for Open-Sora 720p)")
+    parser.add_argument("--width", type=int, default=1110,
+                       help="Target width (default 1110 for Open-Sora 720p)")
     parser.add_argument("--conditioning-frames", type=int, default=22,
                        help="Number of conditioning frames for metadata")
     parser.add_argument("--skip-cleanup", action="store_true",
