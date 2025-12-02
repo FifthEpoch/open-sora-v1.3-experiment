@@ -243,7 +243,7 @@ def parse_ucf101_filename(filename):
     return class_name
 
 
-def process_video(video_path, output_base, target_fps=24, target_frames=33, target_height=720, target_width=1280):
+def process_video(video_path, output_base, target_fps=24, target_frames=25, target_height=720, target_width=1280):
     """
     Process a single video:
     1. Read video
@@ -320,14 +320,14 @@ def main():
                        help="Output directory for preprocessed videos")
     parser.add_argument("--fps", type=int, default=24,
                        help="Target frame rate")
-    parser.add_argument("--frames", type=int, default=33,
-                       help="Target number of frames (reduced from 49 for memory)")
+    parser.add_argument("--frames", type=int, default=25,
+                       help="Target number of frames (8 cond + 17 gen)")
     parser.add_argument("--height", type=int, default=720,
                        help="Target height (default 720 for Open-Sora 720p 9:16)")
     parser.add_argument("--width", type=int, default=1280,
                        help="Target width (default 1280 for Open-Sora 720p 9:16)")
-    parser.add_argument("--conditioning-frames", type=int, default=22,
-                       help="Number of conditioning frames for metadata")
+    parser.add_argument("--conditioning-frames", type=int, default=8,
+                       help="Number of conditioning frames (reduced for memory)")
     parser.add_argument("--skip-cleanup", action="store_true",
                        help="Skip cleanup prompt (for non-interactive execution)")
     

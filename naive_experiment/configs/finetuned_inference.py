@@ -6,14 +6,13 @@
 # Only 720p produces clean output.
 #
 # MEMORY OPTIMIZATION:
-# - 720p 3:4 at 49 frames: ~138GB → OOM on H200 (140GB)
-# - 720p 9:16 at 33 frames: Still OOM (~139GB) during VAE encode
-# - Using 9:16 (720, 1280) instead of 3:4 (832, 1110)
-# - Both dimensions divisible by 8: 720%8=0, 1280%8=0 ✓
-# - Reduced VAE micro_batch settings to minimize peak memory
+# - T2V at 720p works (no conditioning frames to encode)
+# - V2V at 720p OOMs due to VAE encode of conditioning frames
+# - Solution: Reduce conditioning frames from 22 to 8 (2 latent frames)
+# - Using 9:16 (720, 1280) - both divisible by 8 ✓
 
-num_frames = 33  # 22 conditioning + 11 generated (pixel space)
-condition_frame_length = 5  # 5 latent frames ≈ 22 pixel frames
+num_frames = 25  # 8 conditioning + 17 generated (pixel space)
+condition_frame_length = 2  # 2 latent frames ≈ 8 pixel frames (REDUCED!)
 resolution = "720p"  # MUST use 720p - 360p has RGB blocks bug
 aspect_ratio = "9:16"  # PORTRAIT - uses (720, 1280), both div by 8 ✓
 fps = 24
@@ -47,10 +46,10 @@ vae = dict(
     from_pretrained="hpcai-tech/OpenSora-VAE-v1.3",
     z_channels=16,
     micro_batch_size=1,
-    micro_batch_size_2d=1,  # AGGRESSIVE: Process 1 frame at a time
-    micro_frame_size=5,  # AGGRESSIVE: Smallest temporal chunk
+    micro_batch_size_2d=4,  # Same as working T2V config
+    micro_frame_size=17,  # Same as working T2V config
     use_tiled_conv3d=True,
-    tile_size=8,  # SMALLER tiles for less peak memory
+    tile_size=16,  # Same as working T2V config
     normalization="video",
     temporal_overlap=True,
     force_huggingface=True,
