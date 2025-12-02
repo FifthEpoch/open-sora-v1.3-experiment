@@ -561,6 +561,21 @@ def main():
                 finetune_result = subprocess.run(finetune_cmd, stdout=f_out, stderr=f_err, text=True)
             finetune_time = time.time() - finetune_start_time
             logger.info(f"  Fine-tuning took {finetune_time:.2f} seconds")
+            
+            # CRITICAL: Clear GPU memory after fine-tuning before inference
+            # The fine-tuning subprocess should release memory when it exits,
+            # but we force garbage collection to ensure memory is actually freed
+            import gc
+            gc.collect()
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                    torch.cuda.synchronize()
+                    logger.info("  GPU memory cleared after fine-tuning")
+            except Exception as e:
+                logger.warning(f"  Could not clear GPU memory: {e}")
+            
             # Log directory contents after training attempt
             try:
                 logger.info(f"  Contents of checkpoint dir ({video_ckpt_dir}):")
