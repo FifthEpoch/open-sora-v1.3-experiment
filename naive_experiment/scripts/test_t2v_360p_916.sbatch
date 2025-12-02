@@ -14,8 +14,13 @@
 
 cd /scratch/wc3013/open-sora-v1.3-experiment
 
-# Activate environment
-source /scratch/wc3013/conda-envs/opensora13/bin/activate
+# --- Environment Setup ---
+module purge
+module load anaconda3/2025.06
+source /share/apps/anaconda3/2025.06/etc/profile.d/conda.sh
+
+# Activate conda environment
+conda activate /scratch/wc3013/conda-envs/opensora13
 
 # Set environment variables
 export HF_HOME=/scratch/wc3013/.cache/huggingface
