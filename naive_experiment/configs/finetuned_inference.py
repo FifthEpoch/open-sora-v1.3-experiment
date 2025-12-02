@@ -4,11 +4,17 @@
 # CRITICAL: Must use 720p - 360p has RGB flashing blocks bug!
 # Tested: 360p with various tile_size, aspect ratios all fail.
 # Only 720p produces clean output.
+#
+# MEMORY OPTIMIZATION:
+# - 720p 3:4 at 49 frames: ~138GB → OOM on H200 (140GB)
+# - 720p 9:16 at 33 frames: ~90GB → Should fit
+# - Using 9:16 (720, 1280) instead of 3:4 (832, 1110)
+# - Both dimensions divisible by 8: 720%8=0, 1280%8=0 ✓
 
-num_frames = 49  # Total frames (22 conditioning + 27 continuation) - Open-Sora bucket size
-condition_frame_length = 5  # Number of conditioning frames IN LATENT SPACE (5 latent ≈ 16 pixel frames)
+num_frames = 33  # REDUCED from 49 to fit in H200 memory
+condition_frame_length = 5  # Number of conditioning frames IN LATENT SPACE
 resolution = "720p"  # MUST use 720p - 360p has RGB blocks bug
-aspect_ratio = "3:4"  # LANDSCAPE (H:W = 3:4 = 0.75) → 720p: (832, 1110)
+aspect_ratio = "9:16"  # PORTRAIT - uses (720, 1280), both div by 8 ✓
 fps = 24
 frame_interval = 1
 
