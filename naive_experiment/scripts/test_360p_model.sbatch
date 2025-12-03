@@ -1,17 +1,22 @@
 #!/bin/bash
-#SBATCH --job-name=test_no_tile
+#SBATCH --job-name=test_360p_model
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:1
 #SBATCH --time=00:30:00
 #SBATCH --mem=128G
-#SBATCH --output=naive_experiment/scripts/slurm_log/test_t2v_360p_no_tiling_%j.out
-#SBATCH --error=naive_experiment/scripts/slurm_log/test_t2v_360p_no_tiling_%j.err
+#SBATCH --output=naive_experiment/scripts/slurm_log/test_360p_model_%j.out
+#SBATCH --error=naive_experiment/scripts/slurm_log/test_360p_model_%j.err
 
 # ===================================================================
-# Test T2V at 360p with VAE TILING DISABLED
-# This is to diagnose if RGB blocks are caused by tiled conv3d.
+# Test T2V at 360p using the CORRECT 360p-specific model
+#
+# CRITICAL DISCOVERY:
+# - 720p uses: hpcai-tech/OpenSora-STDiT-v4
+# - 360p uses: hpcai-tech/OpenSora-STDiT-v4-360p  <-- Different model!
+#
+# Previous tests failed because we used the wrong model!
 # ===================================================================
 
 set -euo pipefail
@@ -23,7 +28,7 @@ SCRATCH_BASE="/scratch/wc3013"
 cd "${PROJECT_ROOT}"
 
 echo "========================================"
-echo "Test T2V at 360p - TILING DISABLED"
+echo "Test 360p with CORRECT 360p-specific Model"
 echo "========================================"
 echo "Node: $(hostname)"
 echo "Job ID: $SLURM_JOB_ID"
@@ -58,21 +63,22 @@ python --version
 python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA: {torch.cuda.is_available()}'); print(f'GPU: {torch.cuda.get_device_name(0)}')"
 
 echo ""
-echo "=== KEY CHANGE: use_tiled_conv3d=False ==="
-echo "This will use more memory but should avoid any tiling artifacts."
+echo "=== CRITICAL: Using 360p-specific model ==="
+echo "Model: hpcai-tech/OpenSora-STDiT-v4-360p"
+echo ""
+echo "Previous tests used the 720p model (OpenSora-STDiT-v4) which caused RGB blocks!"
+echo "This test uses the CORRECT 360p model."
 echo ""
 
 mkdir -p naive_experiment/results
 
-python naive_experiment/scripts/test_t2v_360p_no_tiling.py \
+python naive_experiment/scripts/test_360p_model.py \
     --prompt "A person applying eye makeup in a bathroom mirror." \
-    --output naive_experiment/results/test_t2v_360p_no_tiling.mp4
+    --output naive_experiment/results/test_360p_correct_model.mp4
 
 echo ""
 echo "=== Test complete ==="
-echo "Check naive_experiment/results/test_t2v_360p_no_tiling.mp4"
+echo "Check naive_experiment/results/test_360p_correct_model.mp4"
 echo ""
-echo "INTERPRETATION:"
-echo "- If video looks good: The issue is in TiledConv3d at 360p"
-echo "- If video still has RGB blocks: The issue is NOT tiling-related"
+echo "If this video looks good, the issue was using the wrong model!"
 

@@ -1,8 +1,11 @@
 # Configuration for fine-tuning on a single video sample
 # This trains the model on just one video for a small number of steps
 #
-# Using 360p 9:16 (360×640) - EXACT official v2v.py config
-# This resolution is officially supported and uses much less memory than 720p.
+# CRITICAL: Using 360p-specific model!
+# - 720p uses: hpcai-tech/OpenSora-STDiT-v4
+# - 360p uses: hpcai-tech/OpenSora-STDiT-v4-360p  <-- THIS ONE
+#
+# See: https://github.com/hpcaitech/Open-Sora/tree/opensora/v1.3#model-weights
 
 # Dataset settings
 dataset = dict(
@@ -11,12 +14,9 @@ dataset = dict(
 )
 
 # Single video bucket: 360p, only first 22 frames used for training
-# Training uses frames 1-22: first 8 as conditioning, frames 9-22 as ground truth
-# Model never sees frames 23-49 during training - reserved for fair evaluation
-# During inference: uses condition_frame_length=5 (latent frames)
 bucket_config = {
     "360p": {
-        22: (1, 1),  # batch_size=1, ensure at least one repeat so buckets yield data
+        22: (1, 1),  # batch_size=1, ensure at least one repeat
     },
 }
 
@@ -41,10 +41,10 @@ num_bucket_build_workers = 1
 dtype = "bf16"
 plugin = "zero2"  # Use ZeRO-2 for memory efficiency
 
-# Model settings - EXACT from official v2v.py
+# CRITICAL: Use 360p-specific model!
 model = dict(
     type="STDiT3-XL/2",
-    from_pretrained="hpcai-tech/OpenSora-STDiT-v4",
+    from_pretrained="hpcai-tech/OpenSora-STDiT-v4-360p",  # 360p model!
     qk_norm=True,
     enable_flash_attn=True,
     enable_layernorm_kernel=False,  # Would be True with apex
@@ -54,7 +54,7 @@ model = dict(
     force_huggingface=True,
 )
 
-# VAE - EXACT from official v2v.py
+# VAE - same for all resolutions
 vae = dict(
     type="OpenSoraVAE_V1_3",
     from_pretrained="hpcai-tech/OpenSora-VAE-v1.3",
@@ -63,7 +63,7 @@ vae = dict(
     micro_batch_size_2d=4,  # Official default
     micro_frame_size=17,  # Official default
     use_tiled_conv3d=True,
-    tile_size=4,  # Official default (NOT 16!)
+    tile_size=4,  # Official default
     normalization="video",
     temporal_overlap=True,
     force_huggingface=True,

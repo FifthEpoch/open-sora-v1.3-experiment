@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 """
-Test T2V generation at 360p with 9:16 aspect ratio (official config).
-This is the EXACT resolution from the official v2v.py config.
-Resolution: 360p, Aspect: 9:16 → (360, 640) - both divisible by 8!
+Test T2V at 360p using the CORRECT 360p-specific model.
+
+CRITICAL DISCOVERY:
+- 720p uses: hpcai-tech/OpenSora-STDiT-v4
+- 360p uses: hpcai-tech/OpenSora-STDiT-v4-360p  <-- Different model!
+
+Previous tests failed because we were using the 720p model for 360p generation.
+This test uses the correct 360p model.
+
+See: https://github.com/hpcaitech/Open-Sora/tree/opensora/v1.3#model-weights
 """
 
 import argparse
@@ -13,9 +20,8 @@ import torch
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from mmengine.config import Config
 from opensora.datasets import save_sample
-from opensora.datasets.aspect import get_image_size, get_num_frames
+from opensora.datasets.aspect import get_image_size
 from opensora.registry import MODELS, SCHEDULERS, build_module
 from opensora.utils.inference_utils import prepare_multi_resolution_info
 from opensora.utils.misc import to_torch_dtype
@@ -23,34 +29,34 @@ from opensora.utils.misc import to_torch_dtype
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--prompt", type=str, default="A person applying eye makeup in front of a mirror.")
-    parser.add_argument("--output", type=str, default="naive_experiment/results/test_t2v_360p_916.mp4")
+    parser.add_argument("--prompt", type=str, default="A person applying eye makeup in a bathroom mirror.")
+    parser.add_argument("--output", type=str, default="naive_experiment/results/test_360p_correct_model.mp4")
     args = parser.parse_args()
     
     device = "cuda"
     dtype = to_torch_dtype("bf16")
     
-    # Use EXACT official config: 360p with 9:16
-    # This gives (360, 640) which is perfectly divisible by 8
     resolution = "360p"
     aspect_ratio = "9:16"
-    
-    image_size = get_image_size(resolution, aspect_ratio)
     num_frames = 49
     fps = 24
     
-    print(f"=== T2V Test with OFFICIAL Resolution ===")
+    image_size = get_image_size(resolution, aspect_ratio)
+    
+    print(f"=== T2V Test at 360p with CORRECT 360p Model ===")
     print(f"Resolution: {resolution}")
     print(f"Aspect ratio: {aspect_ratio}")
     print(f"Image size (H, W): {image_size}")
-    print(f"H % 8 = {image_size[0] % 8}, W % 8 = {image_size[1] % 8}")
     print(f"Num frames: {num_frames}")
     print(f"Prompt: {args.prompt}")
+    print("")
+    print("CRITICAL: Using hpcai-tech/OpenSora-STDiT-v4-360p (360p-specific model)")
+    print("Previous tests used the 720p model which caused RGB blocks!")
     
     # Build models
     print("\nBuilding models...")
     
-    # VAE - EXACT official config from v2v.py
+    # VAE - same for all resolutions
     vae = build_module(
         dict(
             type="OpenSoraVAE_V1_3",
@@ -60,7 +66,7 @@ def main():
             micro_batch_size_2d=4,
             micro_frame_size=17,
             use_tiled_conv3d=True,
-            tile_size=4,  # Official uses 4
+            tile_size=4,
             normalization="video",
             temporal_overlap=True,
             force_huggingface=True,
@@ -84,17 +90,17 @@ def main():
     latent_size = vae.get_latent_size(input_size)
     print(f"Latent size: {latent_size}")
     
-    # Model - EXACT official config
+    # CRITICAL: Use 360p-specific model!
+    print("\nLoading 360p-specific model: hpcai-tech/OpenSora-STDiT-v4-360p")
     model = build_module(
         dict(
             type="STDiT3-XL/2",
-            from_pretrained="hpcai-tech/OpenSora-STDiT-v4",
+            from_pretrained="hpcai-tech/OpenSora-STDiT-v4-360p",  # 360p model!
             qk_norm=True,
             enable_flash_attn=True,
-            enable_layernorm_kernel=False,  # We don't have apex
+            enable_layernorm_kernel=False,
             kernel_size=(8, 8, -1),
             use_spatial_rope=True,
-            class_dropout_prob=0.0,
             force_huggingface=True,
         ),
         MODELS,
@@ -107,15 +113,15 @@ def main():
     
     text_encoder.y_embedder = model.y_embedder
     
-    # Scheduler - EXACT official config from v2v.py
+    # Scheduler
     scheduler = build_module(
         dict(
             type="rflow",
             use_timestep_transform=True,
             num_sampling_steps=30,
             cfg_scale=7.5,
-            scale_image_weight=True,
-            initial_image_scale=1.0,
+            use_oscillation_guidance=True,
+            use_flaw_fix=True,
         ),
         SCHEDULERS
     )
@@ -131,7 +137,6 @@ def main():
         torch.manual_seed(42)
         z = torch.randn(1, vae.out_channels, *latent_size, device=device, dtype=dtype)
         
-        # Pure T2V - no conditioning
         samples = scheduler.sample(
             model,
             text_encoder,
@@ -141,12 +146,6 @@ def main():
             additional_args=model_args,
             progress=True,
             mask=None,
-            mask_index=[],  # Empty - no conditioning
-            image_cfg_scale=None,
-            neg_prompts=None,
-            z_cond=None,
-            z_cond_mask=None,
-            use_sdedit=False,
         )
         
         print(f"Samples shape: {samples.shape}")
@@ -162,8 +161,8 @@ def main():
         print(f"\nSaved to: {args.output}")
     
     print("\n=== Done ===")
-    print("This uses the EXACT official resolution (360p 9:16 = 360×640)")
-    print("If this works, we need to use 9:16 aspect ratio instead of 3:4")
+    print("This test used the CORRECT 360p-specific model.")
+    print("If this video looks good, we've found the solution!")
 
 
 if __name__ == "__main__":

@@ -1,14 +1,11 @@
 # Configuration for baseline video continuation inference
 # This generates O_b outputs using vanilla Open-Sora v1.3 without fine-tuning
 #
-# Using 360p 9:16 (360x640) - EXACT official v2v.py config
-# This resolution is officially supported and uses much less memory than 720p.
+# CRITICAL: Using 360p-specific model!
+# - 720p uses: hpcai-tech/OpenSora-STDiT-v4
+# - 360p uses: hpcai-tech/OpenSora-STDiT-v4-360p  <-- THIS ONE
 #
-# Key settings from official v2v.py:
-# - resolution = "360p", aspect_ratio = "9:16" → (360, 640)
-# - tile_size = 4 (official default)
-# - scale_image_weight = True, initial_image_scale = 1.0
-# - image_cfg_scale = 5.0
+# See: https://github.com/hpcaitech/Open-Sora/tree/opensora/v1.3#model-weights
 
 num_frames = 49  # Official uses 113, reduced for memory
 condition_frame_length = 5  # 5 latent frames (official default)
@@ -28,9 +25,10 @@ use_sdedit = True  # From official v2v.py
 use_oscillation_guidance_for_text = True  # From official v2v.py
 use_oscillation_guidance_for_image = True  # From official v2v.py
 
+# CRITICAL: Use 360p-specific model!
 model = dict(
     type="STDiT3-XL/2",
-    from_pretrained="hpcai-tech/OpenSora-STDiT-v4",
+    from_pretrained="hpcai-tech/OpenSora-STDiT-v4-360p",  # 360p model!
     qk_norm=True,
     enable_flash_attn=True,
     enable_layernorm_kernel=False,  # Would be True with apex
@@ -47,7 +45,7 @@ vae = dict(
     micro_batch_size_2d=4,  # Official default
     micro_frame_size=17,  # Official default
     use_tiled_conv3d=True,
-    tile_size=4,  # Official default (NOT 16!)
+    tile_size=4,  # Official default
     normalization="video",
     temporal_overlap=True,
     force_huggingface=True,
