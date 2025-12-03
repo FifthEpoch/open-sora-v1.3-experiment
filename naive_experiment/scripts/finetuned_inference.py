@@ -27,17 +27,24 @@ from opensora.utils.inference_utils import (
 )
 from opensora.utils.misc import create_logger, to_torch_dtype
 from opensora.utils.config_utils import parse_configs
+from opensora.utils.ckpt_utils import load_checkpoint
 import traceback
 
-# Duplicate helper functions to avoid import issues
+
 def load_model_and_components(config_path, checkpoint_path, vae_path=None, device=None, dtype=None):
-    """Load model, VAE, text encoder, and scheduler."""
+    """
+    Load model, VAE, text encoder, and scheduler.
+    
+    For fine-tuned models:
+    1. First load the base model architecture from HuggingFace (360p model)
+    2. Then load the fine-tuned weights from ColossalAI checkpoint
+    """
     from mmengine.config import Config
     from opensora.datasets.aspect import get_image_size, get_num_frames
     from opensora.registry import MODELS, SCHEDULERS, build_module
     
     cfg = Config.fromfile(config_path)
-    cfg.model.from_pretrained = checkpoint_path  # Fine-tuned checkpoint is always required
+    
     # Update VAE path only if provided
     if vae_path is not None:
         cfg.vae.from_pretrained = vae_path
@@ -50,19 +57,53 @@ def load_model_and_components(config_path, checkpoint_path, vae_path=None, devic
     input_size = (num_frames, *image_size)
     latent_size = vae.get_latent_size(input_size)
     
-    model = (
-        build_module(
-            cfg.model,
-            MODELS,
-            input_size=latent_size,
-            in_channels=vae.out_channels,
-            caption_channels=text_encoder.output_dim,
-            model_max_length=text_encoder.model_max_length,
-            enable_sequence_parallelism=False,
-        )
-        .to(device, dtype)
-        .eval()
+    # Check if checkpoint_path is a ColossalAI checkpoint directory or HuggingFace path
+    is_colossalai_ckpt = os.path.isdir(checkpoint_path) and os.path.exists(
+        os.path.join(checkpoint_path, "model")
     )
+    
+    if is_colossalai_ckpt:
+        # For ColossalAI checkpoints:
+        # 1. First build model with base weights (360p model from HuggingFace)
+        # 2. Then load fine-tuned weights from checkpoint
+        print(f"Loading ColossalAI checkpoint from: {checkpoint_path}")
+        
+        # Keep original from_pretrained to load base model architecture
+        # The config should have the 360p model path
+        model = (
+            build_module(
+                cfg.model,
+                MODELS,
+                input_size=latent_size,
+                in_channels=vae.out_channels,
+                caption_channels=text_encoder.output_dim,
+                model_max_length=text_encoder.model_max_length,
+                enable_sequence_parallelism=False,
+            )
+            .to(device, dtype)
+            .eval()
+        )
+        
+        # Load fine-tuned weights from ColossalAI checkpoint
+        model = load_checkpoint(model, checkpoint_path, model_name="model", strict=False, device=device)
+        model = model.to(device, dtype).eval()
+    else:
+        # For HuggingFace checkpoints, use the original approach
+        cfg.model.from_pretrained = checkpoint_path
+        model = (
+            build_module(
+                cfg.model,
+                MODELS,
+                input_size=latent_size,
+                in_channels=vae.out_channels,
+                caption_channels=text_encoder.output_dim,
+                model_max_length=text_encoder.model_max_length,
+                enable_sequence_parallelism=False,
+            )
+            .to(device, dtype)
+            .eval()
+        )
+    
     text_encoder.y_embedder = model.y_embedder
     scheduler = build_module(cfg.scheduler, SCHEDULERS)
     

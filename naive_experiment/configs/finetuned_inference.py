@@ -25,11 +25,11 @@ use_sdedit = True  # From official v2v.py
 use_oscillation_guidance_for_text = True  # From official v2v.py
 use_oscillation_guidance_for_image = True  # From official v2v.py
 
-# Model - will be set to fine-tuned checkpoint path at runtime
-# Base model is 360p-specific!
+# Model - base model is 360p-specific!
+# Fine-tuned weights will be loaded on top of this base model
 model = dict(
     type="STDiT3-XL/2",
-    from_pretrained=None,  # Will be set to fine-tuned checkpoint path
+    from_pretrained="hpcai-tech/OpenSora-STDiT-v4-360p",  # Base 360p model
     qk_norm=True,
     enable_flash_attn=True,
     enable_layernorm_kernel=False,  # Would be True with apex
