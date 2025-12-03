@@ -285,7 +285,7 @@ def evaluate_single_video(
 def main():
     parser = argparse.ArgumentParser(description="Run naive fine-tuning experiment")
     parser.add_argument("--data-csv", type=str, required=True, help="Path to UCF-101 metadata CSV")
-    parser.add_argument("--checkpoint-path", type=str, default="hpcai-tech/OpenSora-STDiT-v4", help="Open-Sora STDiT checkpoint path or HuggingFace ID")
+    parser.add_argument("--checkpoint-path", type=str, default="hpcai-tech/OpenSora-STDiT-v4-360p", help="Open-Sora STDiT checkpoint path (360p model for 360p videos)")
     parser.add_argument("--vae-path", type=str, default="hpcai-tech/OpenSora-VAE-v1.3", help="Open-Sora VAE checkpoint path or HuggingFace ID")
     parser.add_argument("--output-dir", type=str, required=True, help="Output directory for all results")
     parser.add_argument("--num-videos", type=int, default=None, help="Number of videos to process (None = all)")
@@ -387,7 +387,7 @@ def main():
             "--condition-frames", str(args.condition_frames),
         ]
         # Only pass checkpoint paths if explicitly provided (not defaults)
-        if args.checkpoint_path and args.checkpoint_path not in ["hpcai-tech/OpenSora-STDiT-v4"]:
+        if args.checkpoint_path and args.checkpoint_path not in ["hpcai-tech/OpenSora-STDiT-v4-360p"]:
             cmd.extend(["--checkpoint-path", args.checkpoint_path])
         if args.vae_path and args.vae_path not in ["hpcai-tech/OpenSora-VAE-v1.3"]:
             cmd.extend(["--vae-path", args.vae_path])
