@@ -91,7 +91,8 @@ log_every = 1  # Log every step since we have few steps
 ckpt_every = 50  # Save checkpoint every 50 steps
 
 # Optimization settings - CRITICAL for single-video training
-lr = 1e-5  # Lower learning rate to prevent overfitting
+# LR optimized via HP sweep: 5e-5 outperformed 1e-5 on PSNR, SSIM, LPIPS
+lr = 5e-5  # Higher LR from HP sweep (Option 2)
 warmup_steps = 0  # No warmup for such short training
 use_cosine_scheduler = False  # Use constant LR for simplicity
 grad_clip = 1.0
