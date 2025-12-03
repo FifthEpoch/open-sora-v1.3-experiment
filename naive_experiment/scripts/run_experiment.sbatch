@@ -206,64 +206,52 @@ python -c "import bitsandbytes; print(f'bitsandbytes version: {bitsandbytes.__ve
 echo "Note: Compatible version for PyTorch 2.2.2 is bitsandbytes 0.43.x"
 echo "========================================"
 
-# --- Preprocess Data at 360p ---
+# --- Verify Preprocessed Data at 360p ---
 echo "========================================"
-echo "Preprocessing UCF-101 videos at 360p 9:16"
+echo "Verifying UCF-101 preprocessed data (360p 9:16)"
 echo "========================================"
 
 DATA_DIR="${PROJECT_ROOT}/env_setup/download_ucf101"
 PROCESSED_DIR="${DATA_DIR}/ucf101_processed"
 METADATA_CSV="${DATA_DIR}/ucf101_metadata.csv"
 
-# Check if preprocessing is needed
-if [ -f "${METADATA_CSV}" ]; then
-    # Check if existing data is at 360p
-    EXISTING_HEIGHT=$(head -2 "${METADATA_CSV}" | tail -1 | cut -d',' -f4)
-    if [ "${EXISTING_HEIGHT}" = "360" ]; then
-        echo "✓ Data already preprocessed at 360p"
-    else
-        echo "Existing data is at height=${EXISTING_HEIGHT}, need to reprocess at 360p"
-        echo "Removing old processed data..."
-        rm -rf "${PROCESSED_DIR}"
-        rm -f "${METADATA_CSV}"
-        
-        echo "Running preprocessing..."
-        python "${DATA_DIR}/preprocess_ucf101.py" \
-            --input-dir ucf101_org \
-            --output-dir ucf101_processed \
-            --height 360 \
-            --width 640 \
-            --frames 49 \
-            --conditioning-frames 22 \
-            --skip-cleanup
-        echo "✓ Preprocessing complete"
-    fi
-else
-    echo "No existing metadata found, running preprocessing..."
-    python "${DATA_DIR}/preprocess_ucf101.py" \
-        --input-dir ucf101_org \
-        --output-dir ucf101_processed \
-        --height 360 \
-        --width 640 \
-        --frames 49 \
-        --conditioning-frames 22 \
-        --skip-cleanup
-    echo "✓ Preprocessing complete"
-fi
-
-# Verify preprocessing results
-echo ""
-echo "Verifying preprocessed data..."
-if [ -f "${METADATA_CSV}" ]; then
-    NUM_VIDEOS=$(wc -l < "${METADATA_CSV}")
-    NUM_VIDEOS=$((NUM_VIDEOS - 1))  # Subtract header
-    echo "✓ Found ${NUM_VIDEOS} preprocessed videos"
-    echo "Sample metadata:"
-    head -3 "${METADATA_CSV}"
-else
-    echo "ERROR: Metadata CSV not found after preprocessing!" >&2
+# STRICT CHECK: Require preprocessing to be done beforehand
+if [ ! -f "${METADATA_CSV}" ]; then
+    echo "ERROR: Metadata CSV not found: ${METADATA_CSV}" >&2
+    echo "" >&2
+    echo "Please run preprocessing first:" >&2
+    echo "  sbatch naive_experiment/scripts/preprocess_360p.sbatch" >&2
+    echo "" >&2
     exit 1
 fi
+
+# Verify dimensions are 360p
+echo "Checking video dimensions..."
+EXISTING_HEIGHT=$(head -2 "${METADATA_CSV}" | tail -1 | cut -d',' -f4)
+EXISTING_WIDTH=$(head -2 "${METADATA_CSV}" | tail -1 | cut -d',' -f5)
+echo "Found: height=${EXISTING_HEIGHT}, width=${EXISTING_WIDTH}"
+
+if [ "${EXISTING_HEIGHT}" != "360" ] || [ "${EXISTING_WIDTH}" != "640" ]; then
+    echo "ERROR: Videos are NOT at 360p (360×640)!" >&2
+    echo "Current dimensions: ${EXISTING_HEIGHT}×${EXISTING_WIDTH}" >&2
+    echo "" >&2
+    echo "Please reprocess at 360p first:" >&2
+    echo "  sbatch naive_experiment/scripts/preprocess_360p.sbatch" >&2
+    echo "" >&2
+    exit 1
+fi
+
+echo "✓ Videos are at correct resolution (360×640)"
+
+# Count videos
+NUM_VIDEOS=$(wc -l < "${METADATA_CSV}")
+NUM_VIDEOS=$((NUM_VIDEOS - 1))  # Subtract header
+echo "✓ Found ${NUM_VIDEOS} preprocessed videos"
+
+# Show sample
+echo ""
+echo "Sample metadata:"
+head -3 "${METADATA_CSV}"
 
 # --- Run Experiment ---
 echo "========================================"
