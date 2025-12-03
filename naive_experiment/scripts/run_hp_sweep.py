@@ -147,7 +147,10 @@ def run_single_config(
 
 def load_metrics(config_output_dir: str) -> dict:
     """Load evaluation metrics from a config's output directory and compute averages."""
-    metrics_file = os.path.join(config_output_dir, "evaluation_metrics.json")
+    # Try both possible filenames
+    metrics_file = os.path.join(config_output_dir, "metrics.json")
+    if not os.path.exists(metrics_file):
+        metrics_file = os.path.join(config_output_dir, "evaluation_metrics.json")
     if not os.path.exists(metrics_file):
         return {}
     
