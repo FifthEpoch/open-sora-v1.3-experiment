@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument("--checkpoint-path", type=str, default="hpcai-tech/OpenSora-STDiT-v4-360p",
                         help="Base model checkpoint path")
     parser.add_argument("--configs", type=str, default="default",
-                        choices=["default", "extended", "minimal"],
+                        choices=["default", "extended", "minimal", "aggressive", "focused"],
                         help="Which configuration set to test")
     return parser.parse_args()
 
@@ -63,6 +63,21 @@ HP_CONFIGS = {
     "minimal": [
         {"name": "option1_50steps_1e5", "steps": 50, "lr": 1e-5},
         {"name": "option2_20steps_5e5", "steps": 20, "lr": 5e-5},
+    ],
+    # Aggressive: Build on Option 2's success with higher LR/more steps
+    "aggressive": [
+        {"name": "combo_50steps_5e5", "steps": 50, "lr": 5e-5},       # More steps + winning LR
+        {"name": "combo_100steps_5e5", "steps": 100, "lr": 5e-5},     # Even more steps
+        {"name": "high_lr_20steps_1e4", "steps": 20, "lr": 1e-4},     # 2x the winning LR
+        {"name": "high_lr_50steps_1e4", "steps": 50, "lr": 1e-4},     # High LR + more steps
+        {"name": "very_high_lr_20steps_2e4", "steps": 20, "lr": 2e-4}, # Push LR further
+    ],
+    # Focused: Test around the winning config (5e-5)
+    "focused": [
+        {"name": "lr_3e5_20steps", "steps": 20, "lr": 3e-5},          # Between 1e-5 and 5e-5
+        {"name": "lr_7e5_20steps", "steps": 20, "lr": 7e-5},          # Between 5e-5 and 1e-4
+        {"name": "lr_5e5_30steps", "steps": 30, "lr": 5e-5},          # Winning LR + slight more steps
+        {"name": "lr_5e5_40steps", "steps": 40, "lr": 5e-5},          # Winning LR + more steps
     ],
 }
 
