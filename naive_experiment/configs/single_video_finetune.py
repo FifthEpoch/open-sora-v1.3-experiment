@@ -91,9 +91,10 @@ log_every = 1  # Log every step since we have few steps
 ckpt_every = 50  # Save checkpoint every 50 steps
 
 # Optimization settings - CRITICAL for single-video training
-# HP sweep results (aggressive): 100 steps @ 5e-5 gave best results
-# PSNR: 12.38 (+3.48 vs baseline), SSIM: 0.4918 (+0.19), LPIPS: 0.4432 (-0.28)
-lr = 5e-5  # Optimal LR from HP sweep
+# HP sweep results (ultrafast): 15 steps @ 2e-4 is optimal speed/quality tradeoff
+# PSNR: 11.23 (+2.10 vs baseline), SSIM: 0.4867, LPIPS: 0.5649
+# 91% quality of 100 steps @ 5e-5 but 6.7x faster!
+lr = 2e-4  # Optimal LR from HP sweep (high LR + few steps)
 warmup_steps = 0  # No warmup for such short training
 use_cosine_scheduler = False  # Use constant LR for simplicity
 grad_clip = 1.0
@@ -101,5 +102,5 @@ adam_eps = 1e-15
 ema_decay = 0.99
 accumulation_steps = 1  # No accumulation needed with batch_size=1
 
-# Training runs for 100 steps (optimal from HP sweep)
+# Training runs for 15 steps (optimal from HP sweep - best speed/quality)
 # This is controlled by the script via --finetune-steps

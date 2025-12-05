@@ -290,8 +290,8 @@ def main():
     parser.add_argument("--output-dir", type=str, required=True, help="Output directory for all results")
     parser.add_argument("--num-videos", type=int, default=None, help="Number of videos to process (None = all)")
     parser.add_argument("--condition-frames", type=int, default=22, help="Number of conditioning frames")
-    parser.add_argument("--finetune-steps", type=int, default=100, help="Number of fine-tuning steps (100 from HP sweep)")
-    parser.add_argument("--finetune-lr", type=float, default=5e-5, help="Fine-tuning learning rate (5e-5 from HP sweep)")
+    parser.add_argument("--finetune-steps", type=int, default=15, help="Number of fine-tuning steps (15 from HP sweep)")
+    parser.add_argument("--finetune-lr", type=float, default=2e-4, help="Fine-tuning learning rate (2e-4 from HP sweep)")
     parser.add_argument("--skip-baseline", action="store_true", help="Skip baseline generation (if already done)")
     parser.add_argument("--skip-finetuning", action="store_true", help="Skip fine-tuning (evaluate existing results)")
     parser.add_argument(
