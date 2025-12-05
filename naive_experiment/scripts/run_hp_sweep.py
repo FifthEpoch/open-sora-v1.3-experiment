@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument("--checkpoint-path", type=str, default="hpcai-tech/OpenSora-STDiT-v4-360p",
                         help="Base model checkpoint path")
     parser.add_argument("--configs", type=str, default="default",
-                        choices=["default", "extended", "minimal", "aggressive", "focused"],
+                        choices=["default", "extended", "minimal", "aggressive", "focused", "ultrafast"],
                         help="Which configuration set to test")
     return parser.parse_args()
 
@@ -78,6 +78,16 @@ HP_CONFIGS = {
         {"name": "lr_7e5_20steps", "steps": 20, "lr": 7e-5},          # Between 5e-5 and 1e-4
         {"name": "lr_5e5_30steps", "steps": 30, "lr": 5e-5},          # Winning LR + slight more steps
         {"name": "lr_5e5_40steps", "steps": 40, "lr": 5e-5},          # Winning LR + more steps
+    ],
+    # Ultra-fast: High LR + very few steps (test speed vs quality tradeoff)
+    # Theory: If 1e-4 @ 20 steps ≈ 5e-5 @ 20 steps, then higher LR with fewer steps might work
+    "ultrafast": [
+        {"name": "10steps_2e4", "steps": 10, "lr": 2e-4},             # 2x aggressive LR, half steps
+        {"name": "10steps_5e4", "steps": 10, "lr": 5e-4},             # 5x aggressive LR
+        {"name": "5steps_5e4", "steps": 5, "lr": 5e-4},               # Very few steps, high LR
+        {"name": "5steps_1e3", "steps": 5, "lr": 1e-3},               # Push the limit
+        {"name": "10steps_1e3", "steps": 10, "lr": 1e-3},             # 10x LR
+        {"name": "15steps_2e4", "steps": 15, "lr": 2e-4},             # Slightly more steps at 2e-4
     ],
 }
 
