@@ -209,3 +209,7 @@ slurm-*.out
 slurm_*.out
 slurm_*.err
 **/slurm_log/
+
+# Experiment results/metrics
+metrics.json
+**/metrics.json
