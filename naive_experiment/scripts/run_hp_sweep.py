@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument("--checkpoint-path", type=str, default="hpcai-tech/OpenSora-STDiT-v4-360p",
                         help="Base model checkpoint path")
     parser.add_argument("--configs", type=str, default="default",
-                        choices=["default", "extended", "minimal", "aggressive", "focused", "ultrafast"],
+                        choices=["default", "extended", "minimal", "aggressive", "focused", "ultrafast", "test_20steps_2e4"],
                         help="Which configuration set to test")
     return parser.parse_args()
 
@@ -88,6 +88,10 @@ HP_CONFIGS = {
         {"name": "5steps_1e3", "steps": 5, "lr": 1e-3},               # Push the limit
         {"name": "10steps_1e3", "steps": 10, "lr": 1e-3},             # 10x LR
         {"name": "15steps_2e4", "steps": 15, "lr": 2e-4},             # Slightly more steps at 2e-4
+    ],
+    # Single test: 20 steps @ 2e-4
+    "test_20steps_2e4": [
+        {"name": "20steps_2e4", "steps": 20, "lr": 2e-4},             # Compare to 15 and 50 steps
     ],
 }
 
