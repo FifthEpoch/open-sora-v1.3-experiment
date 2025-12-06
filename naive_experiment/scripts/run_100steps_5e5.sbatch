@@ -55,6 +55,17 @@ nvidia-smi --query-gpu=name,memory.free --format=csv
 
 mkdir -p "${OUTPUT_DIR}"
 
+# Copy existing baselines to avoid regenerating
+EXISTING_BASELINES="${PROJECT_ROOT}/naive_experiment/scripts/results/baselines"
+if [ -d "${EXISTING_BASELINES}" ]; then
+    echo "Copying existing baselines from ${EXISTING_BASELINES}..."
+    cp -r "${EXISTING_BASELINES}" "${OUTPUT_DIR}/"
+    echo "✓ Baselines copied"
+else
+    echo "WARNING: No existing baselines found at ${EXISTING_BASELINES}"
+    echo "Will generate baselines (this adds time)"
+fi
+
 python naive_experiment/scripts/run_experiment.py \
     --data-csv "${METADATA_CSV}" \
     --output-dir "${OUTPUT_DIR}" \
