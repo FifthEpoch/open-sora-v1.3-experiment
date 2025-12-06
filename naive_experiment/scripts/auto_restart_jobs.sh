@@ -2,6 +2,10 @@
 # ============================================================================
 # Auto-restart script for jobs that get killed due to low GPU utilization
 #
+# The cluster kills jobs at EVEN hours (2pm, 4pm, 6pm, 8pm, 10pm, 12am, etc.)
+# This script waits until just after each sweep, checks for killed jobs,
+# and automatically restarts them from where they left off.
+#
 # Usage:
 #   ./auto_restart_jobs.sh --account torch_pr_36_mren
 #
@@ -13,27 +17,23 @@
 #
 # This script will:
 # 1. Submit initial jobs
-# 2. Monitor job status every 2 minutes
-# 3. When a job fails, parse the log to find last processed video
+# 2. Wait until 5 minutes after each even hour (when sweeps happen)
+# 3. Check if jobs were killed
 # 4. Resubmit with --start-from-video flag
 # ============================================================================
 
 set -u
 
 # Configuration
-CHECK_INTERVAL=120  # Check every 2 minutes
 MAX_RETRIES=50      # Maximum number of restarts per job
 ACCOUNT=""
+SWEEP_OFFSET_MINUTES=5  # Check this many minutes after the even hour
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
         --account)
             ACCOUNT="$2"
-            shift 2
-            ;;
-        --interval)
-            CHECK_INTERVAL="$2"
             shift 2
             ;;
         *)
@@ -48,6 +48,51 @@ if [ -z "$ACCOUNT" ]; then
     echo "Usage: $0 --account <slurm_account>"
     exit 1
 fi
+
+# Function to calculate seconds until next even hour + offset
+get_seconds_until_next_check() {
+    local current_hour=$(date +%H)
+    local current_min=$(date +%M)
+    local current_sec=$(date +%S)
+    
+    # Convert to total seconds since midnight
+    local now_seconds=$((10#$current_hour * 3600 + 10#$current_min * 60 + 10#$current_sec))
+    
+    # Find next even hour
+    local next_even_hour
+    if [ $((10#$current_hour % 2)) -eq 0 ]; then
+        # Current hour is even
+        if [ $((10#$current_min)) -lt $SWEEP_OFFSET_MINUTES ]; then
+            # Haven't passed the check time yet for this even hour
+            next_even_hour=$((10#$current_hour))
+        else
+            # Already passed, wait for next even hour
+            next_even_hour=$((10#$current_hour + 2))
+        fi
+    else
+        # Current hour is odd, next even is +1
+        next_even_hour=$((10#$current_hour + 1))
+    fi
+    
+    # Handle day wrap
+    if [ $next_even_hour -ge 24 ]; then
+        next_even_hour=$((next_even_hour - 24))
+        # Add a full day worth of seconds then subtract current time
+        local target_seconds=$((next_even_hour * 3600 + SWEEP_OFFSET_MINUTES * 60))
+        echo $((86400 - now_seconds + target_seconds))
+    else
+        local target_seconds=$((next_even_hour * 3600 + SWEEP_OFFSET_MINUTES * 60))
+        echo $((target_seconds - now_seconds))
+    fi
+}
+
+# Function to format next check time
+get_next_check_time() {
+    local seconds_until=$1
+    date -d "+${seconds_until} seconds" "+%H:%M:%S" 2>/dev/null || \
+    date -v+${seconds_until}S "+%H:%M:%S" 2>/dev/null || \
+    echo "in ${seconds_until}s"
+}
 
 # Job configurations: (name, sbatch_file, output_dir)
 declare -A JOBS
@@ -176,7 +221,8 @@ echo "========================================"
 echo "Auto-Restart Job Monitor"
 echo "========================================"
 echo "Account: $ACCOUNT"
-echo "Check interval: ${CHECK_INTERVAL}s"
+echo "Sweep times: Every even hour (2pm, 4pm, 6pm, ...)"
+echo "Check time: ${SWEEP_OFFSET_MINUTES} minutes after each sweep"
 echo "Jobs to monitor: ${!JOBS[*]}"
 echo "========================================"
 echo ""
@@ -208,17 +254,14 @@ echo ""
 echo "[$(date)] Monitoring started. Press Ctrl+C to stop."
 echo ""
 
-# Monitor loop
-while true; do
-    all_done=true
-    
+# Do an immediate check first (in case jobs were already killed)
+check_and_restart_jobs() {
     for job_name in "${!JOBS[@]}"; do
         # Skip if already marked complete
         if [ "${COMPLETED[$job_name]}" == "true" ]; then
             continue
         fi
         
-        all_done=false
         IFS='|' read -r sbatch_file output_dir <<< "${JOBS[$job_name]}"
         job_id="${JOB_IDS[$job_name]}"
         
@@ -231,15 +274,16 @@ while true; do
         
         # Check if job is still running
         if is_job_running "$job_id"; then
+            echo "[$(date)] $job_name (ID: $job_id) is still running"
             continue
         fi
         
         # Job is not running and not complete - needs restart
-        echo "[$(date)] Job $job_name (ID: $job_id) is not running. Checking status..."
+        echo "[$(date)] Job $job_name (ID: $job_id) was killed. Restarting..."
         
         # Get last processed video
         last_idx=$(get_last_video_idx "$output_dir" "$job_id")
-        echo "  Last processed video: $((last_idx - 1)), will restart from: $last_idx"
+        echo "  Last completed video: $((last_idx - 1)), will restart from: $last_idx"
         
         # Check retry count
         retry_count="${RETRY_COUNTS[$job_name]}"
@@ -261,8 +305,19 @@ while true; do
             echo "  ERROR: Failed to resubmit $job_name"
         fi
     done
-    
+}
+
+# Monitor loop - wait for sweep times
+while true; do
     # Check if all jobs are done
+    all_done=true
+    for job_name in "${!JOBS[@]}"; do
+        if [ "${COMPLETED[$job_name]}" != "true" ]; then
+            all_done=false
+            break
+        fi
+    done
+    
     if [ "$all_done" == "true" ]; then
         echo ""
         echo "========================================"
@@ -271,8 +326,38 @@ while true; do
         break
     fi
     
-    # Wait before next check
-    sleep "$CHECK_INTERVAL"
+    # Calculate time until next check (5 min after next even hour)
+    seconds_until=$(get_seconds_until_next_check)
+    next_time=$(get_next_check_time "$seconds_until")
+    
+    echo ""
+    echo "[$(date)] Waiting for next sweep at even hour..."
+    echo "  Next check in: ${seconds_until} seconds (at ~${next_time})"
+    echo "  Jobs running:"
+    for job_name in "${!JOBS[@]}"; do
+        if [ "${COMPLETED[$job_name]}" != "true" ]; then
+            job_id="${JOB_IDS[$job_name]}"
+            if is_job_running "$job_id"; then
+                echo "    - $job_name (ID: $job_id): RUNNING"
+            else
+                echo "    - $job_name (ID: $job_id): NOT RUNNING (will restart)"
+            fi
+        fi
+    done
+    
+    # Sleep until next check time
+    sleep "$seconds_until"
+    
+    echo ""
+    echo "========================================"
+    echo "[$(date)] Sweep time - checking job status..."
+    echo "========================================"
+    
+    # Give jobs a moment to fully terminate after sweep
+    sleep 30
+    
+    # Check and restart killed jobs
+    check_and_restart_jobs
 done
 
 echo ""
