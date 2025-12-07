@@ -66,6 +66,38 @@ else
     echo "Will generate baselines (this adds time)"
 fi
 
+# ============================================================================
+# AUTO-RESUME: Read progress.json to find where to continue from
+# ============================================================================
+START_FROM_VIDEO=0
+PROGRESS_FILE="${OUTPUT_DIR}/progress.json"
+if [ -f "$PROGRESS_FILE" ]; then
+    START_FROM_VIDEO=$(python3 -c "
+import json
+try:
+    with open('$PROGRESS_FILE') as f:
+        progress = json.load(f)
+    completed = [p['video_idx'] for p in progress if p.get('status') == 'completed']
+    if completed:
+        print(max(completed) + 1)
+    else:
+        print(0)
+except:
+    print(0)
+" 2>/dev/null)
+    echo "========================================"
+    echo "AUTO-RESUME: Found progress.json"
+    echo "  Last completed video: $((START_FROM_VIDEO - 1))"
+    echo "  Resuming from video: ${START_FROM_VIDEO}"
+    echo "========================================"
+fi
+
+# Skip if already done
+if [ "$START_FROM_VIDEO" -ge 100 ]; then
+    echo "All 100 videos already completed! Exiting."
+    exit 0
+fi
+
 python naive_experiment/scripts/run_experiment.py \
     --data-csv "${METADATA_CSV}" \
     --output-dir "${OUTPUT_DIR}" \
@@ -73,7 +105,8 @@ python naive_experiment/scripts/run_experiment.py \
     --condition-frames 22 \
     --finetune-steps 50 \
     --finetune-lr 1e-5 \
-    --skip-baseline
+    --skip-baseline \
+    --start-from-video "${START_FROM_VIDEO}"
 
 echo ""
 echo "========================================"
