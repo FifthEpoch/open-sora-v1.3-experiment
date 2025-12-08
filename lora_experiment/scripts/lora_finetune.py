@@ -150,16 +150,20 @@ def train_lora(
     model.train()
     losses = []
     
+    # Get the inner scheduler for add_noise (RFLOW wraps RFlowScheduler)
+    inner_scheduler = scheduler.scheduler if hasattr(scheduler, 'scheduler') else scheduler
+    num_timesteps = scheduler.num_timesteps
+    
     pbar = tqdm(range(num_steps), desc="LoRA Training")
     for step in pbar:
         optimizer.zero_grad()
         
-        # Sample random timestep
-        t = torch.randint(0, scheduler.num_timesteps, (B,), device=device)
+        # Sample random timestep (0 to num_timesteps-1)
+        t = torch.randint(0, num_timesteps, (B,), device=device)
         
-        # Add noise to latents
+        # Add noise using rectified flow interpolation
         noise = torch.randn_like(latents)
-        noisy_latents = scheduler.add_noise(latents, noise, t)
+        noisy_latents = inner_scheduler.add_noise(latents, noise, t)
         
         # Get model prediction
         model_args["x"] = noisy_latents
@@ -168,18 +172,14 @@ def train_lora(
         model_args["width"] = torch.tensor([image_size[1]], device=device)
         model_args["fps"] = torch.tensor([24], device=device)
         
-        # Forward pass
+        # Forward pass - model outputs [velocity, sigma] concatenated
         pred = model(**model_args)
+        velocity_pred = pred.chunk(2, dim=1)[0]  # Take velocity part
         
-        # Compute loss (simplified - predict noise)
-        if scheduler.prediction_type == "epsilon":
-            target = noise
-        elif scheduler.prediction_type == "v_prediction":
-            target = scheduler.get_velocity(latents, noise, t)
-        else:
-            target = noise
+        # For rectified flow, target is velocity: v = x_start - noise
+        target = latents - noise
         
-        loss = F.mse_loss(pred.float(), target.float())
+        loss = F.mse_loss(velocity_pred.float(), target.float())
         
         # Backward pass
         loss.backward()
