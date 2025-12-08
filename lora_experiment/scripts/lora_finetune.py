@@ -244,21 +244,18 @@ def main():
     input_size = (num_frames, *image_size)
     latent_size = vae.get_latent_size(input_size)
     
-    # Build STDiT3 model
-    model = (
-        build_module(
-            cfg.model,
-            MODELS,
-            input_size=latent_size,
-            in_channels=vae.out_channels,
-            caption_channels=text_encoder.output_dim,
-            model_max_length=text_encoder.model_max_length,
-            enable_sequence_parallelism=False,
-        )
-        .to(device, dtype)
+    # Build STDiT3 model (don't move to device yet - inject LoRA first)
+    model = build_module(
+        cfg.model,
+        MODELS,
+        input_size=latent_size,
+        in_channels=vae.out_channels,
+        caption_channels=text_encoder.output_dim,
+        model_max_length=text_encoder.model_max_length,
+        enable_sequence_parallelism=False,
     )
     
-    # Inject LoRA
+    # Inject LoRA (before moving to device)
     print("\nInjecting LoRA layers...")
     lora_modules = inject_lora_into_stdit3(
         model,
@@ -268,6 +265,9 @@ def main():
         target_modules=cfg.lora.get("target_modules", ["qkv", "proj"]),
         target_blocks=cfg.lora.get("target_blocks", "all"),
     )
+    
+    # NOW move model (with LoRA layers) to device
+    model = model.to(device, dtype)
     
     # Count parameters
     param_counts = count_lora_parameters(model)

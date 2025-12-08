@@ -159,15 +159,23 @@ class LoRAQKV(nn.Module):
         
         # Apply LoRA to each
         x_dropped = self.dropout(x)
+        device = x.device
+        dtype = x.dtype
         
         if self.lora_A_q is not None:
-            q = q + F.linear(F.linear(x_dropped, self.lora_A_q), self.lora_B_q) * self.scaling
+            lora_A_q = self.lora_A_q.to(device=device, dtype=dtype)
+            lora_B_q = self.lora_B_q.to(device=device, dtype=dtype)
+            q = q + F.linear(F.linear(x_dropped, lora_A_q), lora_B_q) * self.scaling
         
         if self.lora_A_k is not None:
-            k = k + F.linear(F.linear(x_dropped, self.lora_A_k), self.lora_B_k) * self.scaling
+            lora_A_k = self.lora_A_k.to(device=device, dtype=dtype)
+            lora_B_k = self.lora_B_k.to(device=device, dtype=dtype)
+            k = k + F.linear(F.linear(x_dropped, lora_A_k), lora_B_k) * self.scaling
         
         if self.lora_A_v is not None:
-            v = v + F.linear(F.linear(x_dropped, self.lora_A_v), self.lora_B_v) * self.scaling
+            lora_A_v = self.lora_A_v.to(device=device, dtype=dtype)
+            lora_B_v = self.lora_B_v.to(device=device, dtype=dtype)
+            v = v + F.linear(F.linear(x_dropped, lora_A_v), lora_B_v) * self.scaling
         
         # Concatenate back
         return torch.cat([q, k, v], dim=-1)
