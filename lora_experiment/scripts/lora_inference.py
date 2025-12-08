@@ -178,9 +178,13 @@ def main():
     # Prepare model inputs
     print("\nPreparing generation...")
     
-    # Encode text
-    y = text_encoder.encode(args.caption)
-    mask = text_encoder.get_attention_mask(y, device=device)
+    # Encode text - tokenize first, then encode
+    tokens = text_encoder.tokenize_fn(args.caption)
+    input_ids = tokens["input_ids"].to(device)
+    attention_mask = tokens["attention_mask"].to(device)
+    encoded = text_encoder.encode(input_ids, attention_mask)
+    y = encoded["y"]
+    mask = encoded["mask"]
     
     # Initialize latents with noise
     noise_shape = (1, vae.out_channels, T_latent, latent_size_hw[1], latent_size_hw[2])
