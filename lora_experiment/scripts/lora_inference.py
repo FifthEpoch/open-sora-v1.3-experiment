@@ -178,14 +178,6 @@ def main():
     # Prepare model inputs
     print("\nPreparing generation...")
     
-    # Encode text - tokenize first, then encode
-    tokens = text_encoder.tokenize_fn(args.caption)
-    input_ids = tokens["input_ids"].to(device)
-    attention_mask = tokens["attention_mask"].to(device)
-    encoded = text_encoder.encode(input_ids, attention_mask)
-    y = encoded["y"]
-    mask = encoded["mask"]
-    
     # Initialize latents with noise
     noise_shape = (1, vae.out_channels, T_latent, latent_size_hw[1], latent_size_hw[2])
     latents = torch.randn(noise_shape, device=device, dtype=dtype)
@@ -193,33 +185,40 @@ def main():
     # Copy conditioning latents
     latents[:, :, :cond_T_latent] = cond_latents
     
-    # Create conditioning tensors
-    cond = torch.zeros_like(latents)
-    cond[:, :, :cond_T_latent] = cond_latents
-    cond_mask = torch.zeros_like(latents)
-    cond_mask[:, :, :cond_T_latent] = 1.0
+    # Create conditioning tensors for z_cond and z_cond_mask
+    z_cond = torch.zeros_like(latents)
+    z_cond[:, :, :cond_T_latent] = cond_latents
+    z_cond_mask = torch.zeros_like(latents)
+    z_cond_mask[:, :, :cond_T_latent] = 1.0
     
     # Generate
     print("Generating video...")
-    model_args = {
-        "y": y,
-        "mask": mask,
+    
+    # Additional model args (height, width, fps)
+    additional_args = {
         "height": torch.tensor([image_size[0]], device=device),
         "width": torch.tensor([image_size[1]], device=device),
         "fps": torch.tensor([24], device=device),
-        "cond": cond,
-        "cond_mask": cond_mask,
-        "mask_index": mask_index,
     }
     
-    # Sample using scheduler
+    # Sample using scheduler - RFLOW.sample() takes specific args
     with torch.no_grad():
         samples = scheduler.sample(
-            model,
-            latents.shape,
-            model_args,
+            model=model,
+            text_encoder=text_encoder,
+            z=latents,
+            prompts=[args.caption],  # List of prompts
             device=device,
+            additional_args=additional_args,
+            guidance_scale=7.5,
+            image_cfg_scale=2.0,
             progress=True,
+            z_cond=z_cond,
+            z_cond_mask=z_cond_mask,
+            mask_index=mask_index,
+            use_sdedit=True,
+            use_oscillation_guidance_for_text=True,
+            use_oscillation_guidance_for_image=True,
         )
     
     # Decode
