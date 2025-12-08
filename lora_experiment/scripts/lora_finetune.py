@@ -130,11 +130,18 @@ def train_lora(
     # Create optimizer for LoRA params only
     optimizer = AdamW(lora_params, lr=lr, betas=(0.9, 0.999), eps=1e-15)
     
-    # Encode text
+    # Encode text - need to tokenize first, then encode
     with torch.no_grad():
         model_args = {}
-        model_args["y"] = text_encoder.encode(caption)
-        model_args["mask"] = text_encoder.get_attention_mask(model_args["y"], device=device)
+        # Tokenize the caption
+        tokens = text_encoder.tokenize_fn(caption)
+        input_ids = tokens["input_ids"].to(device)
+        attention_mask = tokens["attention_mask"].to(device)
+        
+        # Encode to get embeddings
+        encoded = text_encoder.encode(input_ids, attention_mask)
+        model_args["y"] = encoded["y"]
+        model_args["mask"] = encoded["mask"]
     
     # Get latent size
     B, C, T, H, W = latents.shape

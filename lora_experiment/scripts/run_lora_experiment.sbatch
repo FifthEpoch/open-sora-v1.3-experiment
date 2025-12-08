@@ -110,7 +110,8 @@ TOTAL_TRAIN_TIME=0
 TOTAL_INFER_TIME=0
 
 # Process videos
-while IFS=, read -r video_path caption height width fps class_name || [ -n "$video_path" ]; do
+# CSV columns: path, num_frames, conditioning_frames, height, width, fps, text
+while IFS=, read -r video_path num_frames cond_frames height width fps caption || [ -n "$video_path" ]; do
     # Skip header
     if [ "$video_path" == "path" ]; then
         continue
