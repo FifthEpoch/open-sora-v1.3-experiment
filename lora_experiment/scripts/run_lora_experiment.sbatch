@@ -98,20 +98,75 @@ mkdir -p "${OUTPUT_DIR}/lora_weights"
 mkdir -p "${OUTPUT_DIR}/generated"
 
 # ============================================================================
+# Stratified Sampling
+# ============================================================================
+echo "========================================"
+echo "Performing Stratified Sampling"
+echo "========================================"
+
+SAMPLED_CSV="${OUTPUT_DIR}/sampled_videos.csv"
+
+python -c "
+import pandas as pd
+import random
+from pathlib import Path
+
+random.seed(42)
+
+# Load metadata
+df = pd.read_csv('${METADATA_CSV}')
+print(f'Total videos in dataset: {len(df)}')
+
+# Extract class from path (parent directory name)
+df['class'] = df['path'].apply(lambda p: Path(p).parent.name)
+print(f'Number of classes: {df[\"class\"].nunique()}')
+
+# Stratified sampling
+num_videos = ${NUM_VIDEOS}
+samples_per_class = max(1, num_videos // df['class'].nunique())
+
+sampled = []
+for class_name, group in df.groupby('class'):
+    n = min(len(group), samples_per_class)
+    sampled.extend(group.sample(n=n, random_state=42).to_dict('records'))
+    if len(sampled) >= num_videos:
+        break
+
+# If we need more, sample from remaining
+if len(sampled) < num_videos:
+    remaining = df[~df.index.isin([s.get('index', -1) for s in sampled])]
+    extra = remaining.sample(n=min(num_videos - len(sampled), len(remaining)), random_state=42)
+    sampled.extend(extra.to_dict('records'))
+
+# Shuffle and limit
+random.shuffle(sampled)
+sampled = sampled[:num_videos]
+
+# Save sampled CSV
+sampled_df = pd.DataFrame(sampled)
+sampled_df.to_csv('${SAMPLED_CSV}', index=False)
+
+print(f'Sampled {len(sampled_df)} videos from {sampled_df[\"class\"].nunique()} classes')
+print(f'Class distribution: {sampled_df[\"class\"].value_counts().to_dict()}')
+"
+
+echo "Sampled videos saved to: ${SAMPLED_CSV}"
+
+# ============================================================================
 # Run LoRA Experiment
 # ============================================================================
 echo "========================================"
 echo "Starting LoRA Experiment"
 echo "========================================"
 
-# Read video paths and captions from metadata
+# Read video paths and captions from SAMPLED metadata
 VIDEO_COUNT=0
 TOTAL_TRAIN_TIME=0
 TOTAL_INFER_TIME=0
 
-# Process videos
-# CSV columns: path, num_frames, conditioning_frames, height, width, fps, text
-while IFS=, read -r video_path num_frames cond_frames height width fps caption || [ -n "$video_path" ]; do
+# Process videos from stratified sample
+# CSV columns: path, num_frames, conditioning_frames, height, width, fps, text, class
+while IFS=, read -r video_path num_frames cond_frames height width fps caption class_name || [ -n "$video_path" ]; do
     # Skip header
     if [ "$video_path" == "path" ]; then
         continue
@@ -235,7 +290,7 @@ except Exception as e:
     
     echo "Video ${VIDEO_COUNT} completed. Train: ${TRAIN_TIME}s, Infer: ${INFER_TIME}s"
     
-done < "${METADATA_CSV}"
+done < "${SAMPLED_CSV}"
 
 # ============================================================================
 # Aggregate metrics
