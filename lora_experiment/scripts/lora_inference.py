@@ -49,6 +49,8 @@ def parse_args():
     parser.add_argument("--output-path", type=str, required=True, help="Output video path")
     parser.add_argument("--condition-frames", type=int, default=22, help="Number of conditioning frames")
     parser.add_argument("--device", type=str, default="cuda", help="Device to use")
+    parser.add_argument("--rank", type=int, default=None, help="LoRA rank (overrides config)")
+    parser.add_argument("--alpha", type=float, default=None, help="LoRA alpha (overrides config)")
     return parser.parse_args()
 
 
@@ -129,11 +131,14 @@ def main():
     )
     
     # Inject LoRA BEFORE moving to device (with same config as training)
-    print("\nInjecting LoRA layers...")
+    # Use command-line args if provided, otherwise fall back to config
+    lora_rank = args.rank if args.rank is not None else cfg.lora.rank
+    lora_alpha = args.alpha if args.alpha is not None else cfg.lora.alpha
+    print(f"\nInjecting LoRA layers (rank={lora_rank}, alpha={lora_alpha})...")
     inject_lora_into_stdit3(
         model,
-        rank=cfg.lora.rank,
-        alpha=cfg.lora.alpha,
+        rank=lora_rank,
+        alpha=lora_alpha,
         dropout=0.0,  # No dropout during inference
         target_modules=cfg.lora.get("target_modules", ["qkv", "proj"]),
         target_blocks=cfg.lora.get("target_blocks", "all"),
