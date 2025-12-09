@@ -190,11 +190,103 @@ while IFS=, read -r video_path num_frames cond_frames height width fps caption |
     # Copy LoRA weights to central location
     cp "${LORA_WEIGHTS}" "${OUTPUT_DIR}/lora_weights/lora_${VIDEO_COUNT}_${VIDEO_NAME}.pt"
     
+    # Step 3: Compute evaluation metrics
+    GENERATED_VIDEO="${OUTPUT_DIR}/generated/lora_${VIDEO_COUNT}_${VIDEO_NAME}.mp4"
+    if [ -f "${GENERATED_VIDEO}" ]; then
+        echo "Step 3: Computing metrics..."
+        python -c "
+import torch
+import json
+import os
+from pathlib import Path
+
+# Add project root
+import sys
+sys.path.insert(0, '${PROJECT_ROOT}')
+
+from naive_experiment.scripts.evaluate_continuations import compute_video_metrics
+
+original = '${FULL_VIDEO_PATH}'
+generated = '${GENERATED_VIDEO}'
+condition_frames = ${CONDITION_FRAMES}
+
+try:
+    metrics = compute_video_metrics(original, generated, condition_frames)
+    
+    # Save metrics
+    metrics_file = '${VIDEO_OUTPUT_DIR}/metrics.json'
+    metrics['video_idx'] = ${VIDEO_COUNT}
+    metrics['video_name'] = '${VIDEO_NAME}'
+    metrics['train_time_sec'] = ${TRAIN_TIME}
+    metrics['infer_time_sec'] = ${INFER_TIME}
+    
+    with open(metrics_file, 'w') as f:
+        json.dump(metrics, f, indent=2)
+    
+    print(f'  PSNR: {metrics.get(\"psnr\", \"N/A\"):.2f}')
+    print(f'  SSIM: {metrics.get(\"ssim\", \"N/A\"):.4f}')
+    print(f'  LPIPS: {metrics.get(\"lpips\", \"N/A\"):.4f}')
+except Exception as e:
+    print(f'  Metrics computation failed: {e}')
+" 2>&1
+    fi
+    
     VIDEO_COUNT=$((VIDEO_COUNT + 1))
     
     echo "Video ${VIDEO_COUNT} completed. Train: ${TRAIN_TIME}s, Infer: ${INFER_TIME}s"
     
 done < "${METADATA_CSV}"
+
+# ============================================================================
+# Aggregate metrics
+# ============================================================================
+echo ""
+echo "Aggregating metrics..."
+python -c "
+import json
+import os
+from pathlib import Path
+import numpy as np
+
+output_dir = '${OUTPUT_DIR}'
+metrics_files = list(Path(output_dir).glob('video_*/metrics.json'))
+
+if not metrics_files:
+    print('No metrics files found')
+else:
+    all_metrics = []
+    for f in metrics_files:
+        with open(f) as fp:
+            all_metrics.append(json.load(fp))
+    
+    # Compute averages
+    psnrs = [m.get('psnr', 0) for m in all_metrics if m.get('psnr')]
+    ssims = [m.get('ssim', 0) for m in all_metrics if m.get('ssim')]
+    lpips_vals = [m.get('lpips', 1) for m in all_metrics if m.get('lpips')]
+    train_times = [m.get('train_time_sec', 0) for m in all_metrics]
+    infer_times = [m.get('infer_time_sec', 0) for m in all_metrics]
+    
+    summary = {
+        'num_videos': len(all_metrics),
+        'avg_psnr': np.mean(psnrs) if psnrs else 0,
+        'avg_ssim': np.mean(ssims) if ssims else 0,
+        'avg_lpips': np.mean(lpips_vals) if lpips_vals else 0,
+        'avg_train_time_sec': np.mean(train_times),
+        'avg_infer_time_sec': np.mean(infer_times),
+        'total_train_time_sec': sum(train_times),
+        'total_infer_time_sec': sum(infer_times),
+    }
+    
+    # Save summary
+    with open(f'{output_dir}/metrics_summary.json', 'w') as f:
+        json.dump(summary, f, indent=2)
+    
+    print(f'Average PSNR: {summary[\"avg_psnr\"]:.2f}')
+    print(f'Average SSIM: {summary[\"avg_ssim\"]:.4f}')
+    print(f'Average LPIPS: {summary[\"avg_lpips\"]:.4f}')
+    print(f'Average train time: {summary[\"avg_train_time_sec\"]:.1f}s')
+    print(f'Average infer time: {summary[\"avg_infer_time_sec\"]:.1f}s')
+"
 
 # ============================================================================
 # Summary
@@ -212,6 +304,7 @@ echo ""
 echo "Results saved to: ${OUTPUT_DIR}"
 echo "Generated videos: ${OUTPUT_DIR}/generated/"
 echo "LoRA weights: ${OUTPUT_DIR}/lora_weights/"
+echo "Metrics summary: ${OUTPUT_DIR}/metrics_summary.json"
 echo ""
 echo "End Time: $(date)"
 echo "========================================"
