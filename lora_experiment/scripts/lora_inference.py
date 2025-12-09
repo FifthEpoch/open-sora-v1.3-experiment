@@ -117,22 +117,18 @@ def main():
     input_size = (num_frames, *image_size)
     latent_size = vae.get_latent_size(input_size)
     
-    # Build STDiT3 model
-    model = (
-        build_module(
-            cfg.model,
-            MODELS,
-            input_size=latent_size,
-            in_channels=vae.out_channels,
-            caption_channels=text_encoder.output_dim,
-            model_max_length=text_encoder.model_max_length,
-            enable_sequence_parallelism=False,
-        )
-        .to(device, dtype)
-        .eval()
+    # Build STDiT3 model (don't move to device yet - inject LoRA first)
+    model = build_module(
+        cfg.model,
+        MODELS,
+        input_size=latent_size,
+        in_channels=vae.out_channels,
+        caption_channels=text_encoder.output_dim,
+        model_max_length=text_encoder.model_max_length,
+        enable_sequence_parallelism=False,
     )
     
-    # Inject LoRA (with same config as training)
+    # Inject LoRA BEFORE moving to device (with same config as training)
     print("\nInjecting LoRA layers...")
     inject_lora_into_stdit3(
         model,
@@ -146,6 +142,9 @@ def main():
     # Load LoRA weights
     print(f"Loading LoRA weights from {args.lora_weights}...")
     load_lora_weights(model, args.lora_weights)
+    
+    # NOW move model (with LoRA) to device
+    model = model.to(device, dtype).eval()
     
     # Count parameters
     param_counts = count_lora_parameters(model)
