@@ -231,13 +231,26 @@ def main():
     video = (video + 1) / 2  # [-1, 1] -> [0, 1]
     video = video.clamp(0, 1)
     video = video.permute(1, 2, 3, 0)  # (T, H, W, C)
-    video = (video * 255).to(torch.uint8).cpu()
+    video = (video * 255).to(torch.uint8).cpu().numpy()
     
-    # Save video
-    os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
-    torchvision.io.write_video(args.output_path, video, fps=24)
+    # Save video using imageio (more compatible)
+    output_dir = os.path.dirname(args.output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
     
-    print(f"\nVideo saved to: {args.output_path}")
+    try:
+        import imageio
+        imageio.mimwrite(args.output_path, video, fps=24, codec='libx264')
+        print(f"\nVideo saved to: {args.output_path}")
+    except ImportError:
+        # Fallback to saving frames as images
+        frames_dir = args.output_path.replace('.mp4', '_frames')
+        os.makedirs(frames_dir, exist_ok=True)
+        for i, frame in enumerate(video):
+            from PIL import Image
+            Image.fromarray(frame).save(f"{frames_dir}/frame_{i:04d}.png")
+        print(f"\nFrames saved to: {frames_dir}")
+    
     print("Done!")
 
 
