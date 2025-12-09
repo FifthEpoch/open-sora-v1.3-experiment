@@ -194,10 +194,11 @@ def main():
     # Generate
     print("Generating video...")
     
-    # Additional model args (height, width, fps)
+    # Additional model args (height, width, num_frames, fps) - all required by scheduler
     additional_args = {
         "height": torch.tensor([image_size[0]], device=device),
         "width": torch.tensor([image_size[1]], device=device),
+        "num_frames": torch.tensor([T_latent * 4 + 1], device=device),  # Convert latent frames to pixel frames
         "fps": torch.tensor([24], device=device),
     }
     
