@@ -94,7 +94,6 @@ echo ""
 # Create Output Directory
 # ============================================================================
 mkdir -p "${OUTPUT_DIR}"
-mkdir -p "${OUTPUT_DIR}/lora_weights"
 mkdir -p "${OUTPUT_DIR}/generated"
 
 # ============================================================================
@@ -242,9 +241,6 @@ while IFS=, read -r video_path num_frames cond_frames height width fps caption c
     TOTAL_INFER_TIME=$((TOTAL_INFER_TIME + INFER_TIME))
     echo "Inference time: ${INFER_TIME} seconds"
     
-    # Copy LoRA weights to central location
-    cp "${LORA_WEIGHTS}" "${OUTPUT_DIR}/lora_weights/lora_${VIDEO_COUNT}_${VIDEO_NAME}.pt"
-    
     # Step 3: Compute evaluation metrics
     GENERATED_VIDEO="${OUTPUT_DIR}/generated/lora_${VIDEO_COUNT}_${VIDEO_NAME}.mp4"
     if [ -f "${GENERATED_VIDEO}" ]; then
@@ -285,6 +281,11 @@ except Exception as e:
     print(f'  Metrics computation failed: {e}')
 " 2>&1
     fi
+    
+    # Step 4: Clean up LoRA weights to save disk space
+    echo "Step 4: Cleaning up LoRA weights..."
+    rm -f "${LORA_WEIGHTS}"
+    echo "  LoRA weights deleted"
     
     VIDEO_COUNT=$((VIDEO_COUNT + 1))
     
@@ -358,8 +359,8 @@ echo "Average inference time: $((TOTAL_INFER_TIME / VIDEO_COUNT)) seconds/video"
 echo ""
 echo "Results saved to: ${OUTPUT_DIR}"
 echo "Generated videos: ${OUTPUT_DIR}/generated/"
-echo "LoRA weights: ${OUTPUT_DIR}/lora_weights/"
 echo "Metrics summary: ${OUTPUT_DIR}/metrics_summary.json"
+echo "(LoRA weights deleted after evaluation to save disk space)"
 echo ""
 echo "End Time: $(date)"
 echo "========================================"
