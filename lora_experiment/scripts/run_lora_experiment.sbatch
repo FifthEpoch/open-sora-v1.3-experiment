@@ -249,20 +249,32 @@ while IFS=, read -r video_path num_frames cond_frames height width fps caption c
 import torch
 import json
 import os
+import numpy as np
 from pathlib import Path
 
 # Add project root
 import sys
 sys.path.insert(0, '${PROJECT_ROOT}')
 
-from naive_experiment.scripts.evaluate_continuations import compute_video_metrics
+from naive_experiment.scripts.evaluate_continuations import extract_frames_from_video, load_generated_video, evaluate_pair
 
 original = '${FULL_VIDEO_PATH}'
 generated = '${GENERATED_VIDEO}'
 condition_frames = ${CONDITION_FRAMES}
 
 try:
-    metrics = compute_video_metrics(original, generated, condition_frames)
+    # Extract ground truth frames (after conditioning)
+    gt_frames = extract_frames_from_video(original, start_frame=condition_frames, num_frames=27)
+    
+    # Load generated video frames (skip conditioning frames)
+    gen_frames = load_generated_video(generated)
+    if gen_frames is not None and len(gen_frames) > condition_frames:
+        gen_frames = gen_frames[condition_frames:]
+    
+    if gt_frames is not None and gen_frames is not None:
+        metrics = evaluate_pair(gt_frames, gen_frames)
+    else:
+        metrics = {'error': 'Could not load frames'}
     
     # Save metrics
     metrics_file = '${VIDEO_OUTPUT_DIR}/metrics.json'
@@ -272,13 +284,18 @@ try:
     metrics['infer_time_sec'] = ${INFER_TIME}
     
     with open(metrics_file, 'w') as f:
-        json.dump(metrics, f, indent=2)
+        json.dump(metrics, f, indent=2, default=float)
     
-    print(f'  PSNR: {metrics.get(\"psnr\", \"N/A\"):.2f}')
-    print(f'  SSIM: {metrics.get(\"ssim\", \"N/A\"):.4f}')
-    print(f'  LPIPS: {metrics.get(\"lpips\", \"N/A\"):.4f}')
+    if 'psnr' in metrics:
+        print(f'  PSNR: {metrics[\"psnr\"]:.2f}')
+        print(f'  SSIM: {metrics[\"ssim\"]:.4f}')
+        print(f'  LPIPS: {metrics[\"lpips\"]:.4f}')
+    else:
+        print(f'  Metrics: {metrics}')
 except Exception as e:
+    import traceback
     print(f'  Metrics computation failed: {e}')
+    traceback.print_exc()
 " 2>&1
     fi
     
