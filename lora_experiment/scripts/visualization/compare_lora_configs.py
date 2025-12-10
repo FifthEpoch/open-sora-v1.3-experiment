@@ -28,15 +28,22 @@ def load_all_results(results_dir: Path) -> dict:
     results = {}
     
     # Define expected configurations and their properties
+    # Maps directory name -> config properties
     configs = {
-        # Rank 8 configs
+        # Baseline configs (different naming conventions)
+        'lora_20steps': {'rank': 8, 'lr': 1e-4, 'steps': 20, 'label': 'R8 LR1e-4 20s'},
+        'lora_50steps': {'rank': 8, 'lr': 1e-4, 'steps': 50, 'label': 'R8 LR1e-4 50s'},
+        'lora_100steps': {'rank': 8, 'lr': 1e-4, 'steps': 100, 'label': 'R8 LR1e-4 100s'},
+        'lora_lr2e4': {'rank': 8, 'lr': 2e-4, 'steps': 20, 'label': 'R8 LR2e-4 20s'},
+        'lora_rank16': {'rank': 16, 'lr': 1e-4, 'steps': 20, 'label': 'R16 LR1e-4 20s'},
+        'lora_rank16_lr2e4': {'rank': 16, 'lr': 2e-4, 'steps': 20, 'label': 'R16 LR2e-4 20s'},
+        # Alternative naming (rank*_lr*_* format)
         'rank8_lr1e4_20steps': {'rank': 8, 'lr': 1e-4, 'steps': 20, 'label': 'R8 LR1e-4 20s'},
         'rank8_lr1e4_50steps': {'rank': 8, 'lr': 1e-4, 'steps': 50, 'label': 'R8 LR1e-4 50s'},
         'rank8_lr1e4_100steps': {'rank': 8, 'lr': 1e-4, 'steps': 100, 'label': 'R8 LR1e-4 100s'},
         'rank8_lr2e4': {'rank': 8, 'lr': 2e-4, 'steps': 20, 'label': 'R8 LR2e-4 20s'},
         'rank8_lr2e4_50steps': {'rank': 8, 'lr': 2e-4, 'steps': 50, 'label': 'R8 LR2e-4 50s'},
         'rank8_lr2e4_100steps': {'rank': 8, 'lr': 2e-4, 'steps': 100, 'label': 'R8 LR2e-4 100s'},
-        # Rank 16 configs
         'rank16_lr1e4': {'rank': 16, 'lr': 1e-4, 'steps': 20, 'label': 'R16 LR1e-4 20s'},
         'rank16_lr1e4_50steps': {'rank': 16, 'lr': 1e-4, 'steps': 50, 'label': 'R16 LR1e-4 50s'},
         'rank16_lr1e4_100steps': {'rank': 16, 'lr': 1e-4, 'steps': 100, 'label': 'R16 LR1e-4 100s'},

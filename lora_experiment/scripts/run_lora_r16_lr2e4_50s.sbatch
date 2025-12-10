@@ -30,15 +30,8 @@ PROJECT_ROOT="${SCRATCH_BASE}/open-sora-v1.3-experiment"
 DATA_DIR="${PROJECT_ROOT}/env_setup/download_ucf101"
 OUTPUT_DIR="${PROJECT_ROOT}/lora_experiment/results/rank16_lr2e4_50steps"
 CONFIG_FILE="${PROJECT_ROOT}/lora_experiment/configs/lora_finetune.py"
-# Try multiple possible locations for the reference sampled videos CSV
-REFERENCE_SAMPLED_CSV=""
-for possible_dir in "rank8_lr1e4_20steps" "lora_test" "rank8_lr1e4_50steps" "rank8_lr1e4_100steps"; do
-    if [ -f "${PROJECT_ROOT}/lora_experiment/results/${possible_dir}/sampled_videos.csv" ]; then
-        REFERENCE_SAMPLED_CSV="${PROJECT_ROOT}/lora_experiment/results/${possible_dir}/sampled_videos.csv"
-        echo "Found reference CSV in: ${possible_dir}"
-        break
-    fi
-done
+# Reference sampled videos CSV - use lora_20steps as the canonical source
+REFERENCE_SAMPLED_CSV="${PROJECT_ROOT}/lora_experiment/results/lora_20steps/sampled_videos.csv"
 
 echo "========================================"
 echo "LoRA: R16 LR2e-4 50steps"
@@ -55,15 +48,15 @@ export LD_LIBRARY_PATH="${CONDA_ENV}/lib:${LD_LIBRARY_PATH:-}"
 export HF_HOME="${SCRATCH_BASE}/.cache/huggingface"
 cd "$PROJECT_ROOT"
 
-if [ -z "${REFERENCE_SAMPLED_CSV}" ] || [ ! -f "${REFERENCE_SAMPLED_CSV}" ]; then
-    echo "ERROR: Reference CSV not found in any expected location"
-    echo "Checked: rank8_lr1e4_20steps, lora_test, rank8_lr1e4_50steps, rank8_lr1e4_100steps"
+if [ ! -f "${REFERENCE_SAMPLED_CSV}" ]; then
+    echo "ERROR: Reference CSV not found at: ${REFERENCE_SAMPLED_CSV}"
     exit 1
 fi
 
 mkdir -p "${OUTPUT_DIR}/generated"
-cp "${REFERENCE_SAMPLED_CSV}" "${OUTPUT_DIR}/sampled_videos.csv"
 SAMPLED_CSV="${OUTPUT_DIR}/sampled_videos.csv"
+cp "${REFERENCE_SAMPLED_CSV}" "${SAMPLED_CSV}"
+echo "Using reference CSV from lora_20steps"
 
 VIDEO_COUNT=0
 while IFS=, read -r video_path num_frames cond_frames height width fps caption class_name || [ -n "$video_path" ]; do
