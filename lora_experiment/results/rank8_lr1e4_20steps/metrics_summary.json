@@ -1,0 +1,10 @@
+{
+  "num_videos": 10,
+  "avg_psnr": 11.479244268833076,
+  "avg_ssim": 0.3736056694687277,
+  "avg_lpips": 0.7468033152597923,
+  "avg_train_time_sec": 82.9,
+  "avg_infer_time_sec": 76.8,
+  "total_train_time_sec": 829,
+  "total_infer_time_sec": 768
+}
