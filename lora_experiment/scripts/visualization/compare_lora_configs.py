@@ -369,7 +369,7 @@ def plot_time_vs_quality(results: dict, output_dir: Path):
             if len(points) > 1:
                 # Place labels in order: above first point, below second, etc.
                 # Use consistent spacing that doesn't overlap
-                offsets = [8, -12, 20, -24, 32, -36]  # Alternating above/below with increasing distance
+                offsets = [8, -16, 20, -28, 32, -40]  # Alternating above/below with increasing distance
                 y_offset = offsets[rank_in_group] if rank_in_group < len(offsets) else 8 + rank_in_group * 12
             else:
                 y_offset = 5
