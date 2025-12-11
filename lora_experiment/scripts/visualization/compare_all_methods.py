@@ -410,8 +410,11 @@ def plot_efficiency_summary(lora_results: dict, full_ft_results: dict, output_di
     ax.set_title('Time vs Quality: All Methods', fontsize=14, fontweight='bold')
     ax.grid(True, alpha=0.3)
     
+    # Set y-axis to start at 0.4 to reduce whitespace and spread data points
+    ax.set_ylim(0.4, 0.85)
+    
     # Highlight the Pareto-optimal region
-    ax.fill_between([0, 200], [0, 0], [0.65, 0.65], alpha=0.1, color='green', label='Efficient Region')
+    ax.fill_between([0, 200], [0.4, 0.4], [0.65, 0.65], alpha=0.1, color='green', label='Efficient Region')
     
     plt.tight_layout()
     plt.savefig(output_dir / '4_efficiency_overview.png', dpi=150, bbox_inches='tight')
