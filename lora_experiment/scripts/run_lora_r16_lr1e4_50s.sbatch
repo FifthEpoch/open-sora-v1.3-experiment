@@ -30,8 +30,8 @@ PROJECT_ROOT="${SCRATCH_BASE}/open-sora-v1.3-experiment"
 DATA_DIR="${PROJECT_ROOT}/env_setup/download_ucf101"
 OUTPUT_DIR="${PROJECT_ROOT}/lora_experiment/results/rank16_lr1e4_50steps"
 CONFIG_FILE="${PROJECT_ROOT}/lora_experiment/configs/lora_finetune.py"
-# Reference sampled videos CSV - use lora_20steps as the canonical source
-REFERENCE_SAMPLED_CSV="${PROJECT_ROOT}/lora_experiment/results/lora_20steps/sampled_videos.csv"
+# Reference sampled videos CSV - use rank8_lr1e4_20steps as the canonical source
+REFERENCE_SAMPLED_CSV="${PROJECT_ROOT}/lora_experiment/results/rank8_lr1e4_20steps/sampled_videos.csv"
 
 echo "========================================"
 echo "LoRA: R16 LR1e-4 50steps"
@@ -56,7 +56,7 @@ fi
 mkdir -p "${OUTPUT_DIR}/generated"
 SAMPLED_CSV="${OUTPUT_DIR}/sampled_videos.csv"
 cp "${REFERENCE_SAMPLED_CSV}" "${SAMPLED_CSV}"
-echo "Using reference CSV from lora_20steps"
+echo "Using reference CSV from rank8_lr1e4_20steps"
 
 VIDEO_COUNT=0
 while IFS=, read -r video_path num_frames cond_frames height width fps caption class_name || [ -n "$video_path" ]; do
