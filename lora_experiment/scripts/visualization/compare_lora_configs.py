@@ -286,36 +286,105 @@ def plot_time_vs_quality(results: dict, output_dir: Path):
     psnr_vals = [results[c]['psnr'] for c in configs]
     lpips_vals = [results[c]['lpips'] for c in configs]
     
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
     
     # Assign colors based on rank
     colors = ['#2ecc71' if results[c]['config']['rank'] == 8 else '#3498db' for c in configs]
     # Assign markers based on LR
     markers = ['o' if results[c]['config']['lr'] == 1e-4 else 's' for c in configs]
     
+    # Helper function to get smart label positions
+    def get_label_position(x, y, all_x, all_y, x_max, idx):
+        """Determine label position to avoid overlaps and overflow."""
+        # Check if point is on the right side (would overflow)
+        if x > x_max * 0.7:
+            ha = 'right'
+            x_offset = -8
+        else:
+            ha = 'left'
+            x_offset = 8
+        
+        # Check for nearby points to avoid vertical overlap
+        y_offset = 5
+        for j, (ox, oy) in enumerate(zip(all_x, all_y)):
+            if j != idx and abs(x - ox) < 5 and abs(y - oy) < 0.03:
+                # Points are close, stagger vertically
+                if y > oy:
+                    y_offset = 12
+                else:
+                    y_offset = -12
+                break
+        
+        return x_offset, y_offset, ha
+    
+    # Get max x for determining overflow threshold
+    x_max = max(pure_train_times)
+    
     # Time vs PSNR
     for i, c in enumerate(configs):
         axes[0].scatter(pure_train_times[i], psnr_vals[i], c=colors[i], marker=markers[i], s=150, alpha=0.7,
                        edgecolors='black', linewidths=0.5)
+        
+        x_off, y_off, ha = get_label_position(pure_train_times[i], psnr_vals[i], 
+                                               pure_train_times, psnr_vals, x_max, i)
         axes[0].annotate(labels[i], (pure_train_times[i], psnr_vals[i]), 
-                        textcoords="offset points", xytext=(5, 5), fontsize=8)
+                        textcoords="offset points", xytext=(x_off, y_off), 
+                        fontsize=8, ha=ha, va='center')
     
     axes[0].set_xlabel('Pure Training Time (seconds) - Gradient Steps Only', fontsize=11)
     axes[0].set_ylabel('PSNR (dB)', fontsize=11)
     axes[0].set_title('Pure Training Time vs PSNR', fontsize=12, fontweight='bold')
     axes[0].grid(True, alpha=0.3)
+    # Add right margin to prevent label cutoff
+    axes[0].set_xlim(right=x_max * 1.15)
     
-    # Time vs LPIPS  
+    # Time vs LPIPS - need special handling for overlapping labels
+    # Group points by time to handle overlaps
+    time_to_points = {}
+    for i, c in enumerate(configs):
+        t = pure_train_times[i]
+        if t not in time_to_points:
+            time_to_points[t] = []
+        time_to_points[t].append((i, lpips_vals[i], labels[i], colors[i], markers[i]))
+    
     for i, c in enumerate(configs):
         axes[1].scatter(pure_train_times[i], lpips_vals[i], c=colors[i], marker=markers[i], s=150, alpha=0.7,
                        edgecolors='black', linewidths=0.5)
-        axes[1].annotate(labels[i], (pure_train_times[i], lpips_vals[i]),
-                        textcoords="offset points", xytext=(5, 5), fontsize=8)
+    
+    # Add labels with smart positioning for LPIPS
+    for t, points in time_to_points.items():
+        # Sort points by LPIPS value
+        points.sort(key=lambda x: x[1])
+        
+        for rank_in_group, (i, lpips, label, color, marker) in enumerate(points):
+            # Determine horizontal alignment based on position
+            if t > x_max * 0.7:
+                ha = 'right'
+                x_offset = -8
+            else:
+                ha = 'left'
+                x_offset = 8
+            
+            # Stagger labels vertically if multiple points at same x
+            if len(points) > 1:
+                # Alternate above/below for points at same x
+                if rank_in_group % 2 == 0:
+                    y_offset = -15 - (rank_in_group // 2) * 12
+                else:
+                    y_offset = 10 + (rank_in_group // 2) * 12
+            else:
+                y_offset = 5
+            
+            axes[1].annotate(label, (t, lpips),
+                           textcoords="offset points", xytext=(x_offset, y_offset),
+                           fontsize=8, ha=ha, va='center')
     
     axes[1].set_xlabel('Pure Training Time (seconds) - Gradient Steps Only', fontsize=11)
     axes[1].set_ylabel('LPIPS (lower is better)', fontsize=11)
     axes[1].set_title('Pure Training Time vs LPIPS', fontsize=12, fontweight='bold')
     axes[1].grid(True, alpha=0.3)
+    # Add right margin to prevent label cutoff
+    axes[1].set_xlim(right=x_max * 1.15)
     
     # Add legend
     legend_elements = [
