@@ -96,14 +96,33 @@ mkdir -p "${OUTPUT_DIR}/generated"
 
 # Reuse the same sampled videos from previous experiments for fair comparison
 SAMPLED_CSV="${OUTPUT_DIR}/sampled_videos.csv"
-REFERENCE_CSV="${PROJECT_ROOT}/lora_experiment/results/rank8_lr1e4_20steps/sampled_videos.csv"
 
-if [ -f "${REFERENCE_CSV}" ]; then
-    cp "${REFERENCE_CSV}" "${SAMPLED_CSV}"
-    echo "✓ Copied sampled_videos.csv from reference experiment"
+# Search for sampled_videos.csv in multiple possible locations
+POSSIBLE_REFS=(
+    "${PROJECT_ROOT}/lora_experiment/results/rank8_lr1e4_20steps/sampled_videos.csv"
+    "${PROJECT_ROOT}/lora_experiment/results/lora_20steps/sampled_videos.csv"
+    "${PROJECT_ROOT}/lora_experiment/results/lora_test/sampled_videos.csv"
+    "${PROJECT_ROOT}/lora_experiment/results/rank8_lr1e4_100steps/sampled_videos.csv"
+    "${PROJECT_ROOT}/lora_experiment/results/rank8_lr2e4_100steps/sampled_videos.csv"
+)
+
+FOUND_REF=""
+for REF in "${POSSIBLE_REFS[@]}"; do
+    if [ -f "$REF" ]; then
+        FOUND_REF="$REF"
+        break
+    fi
+done
+
+if [ -n "$FOUND_REF" ]; then
+    cp "$FOUND_REF" "${SAMPLED_CSV}"
+    echo "✓ Copied sampled_videos.csv from: $FOUND_REF"
 else
-    echo "ERROR: Reference CSV not found at ${REFERENCE_CSV}" >&2
-    echo "Please run the base LoRA experiment first to generate sampled_videos.csv"
+    echo "ERROR: Could not find sampled_videos.csv in any known location" >&2
+    echo "Searched locations:"
+    for REF in "${POSSIBLE_REFS[@]}"; do
+        echo "  - $REF"
+    done
     exit 1
 fi
 
