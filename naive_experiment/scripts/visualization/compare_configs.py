@@ -23,18 +23,16 @@ plt.rcParams['axes.titlesize'] = 14
 plt.rcParams['axes.labelsize'] = 12
 plt.rcParams['figure.dpi'] = 150
 
-# Color palette - professional and colorblind-friendly
+# Color palette - muted yellow → green → blue progression (distinct hues)
 COLORS = {
-    '15steps_1e4': '#E64B35',   # Red
-    '15steps_2e4': '#4DBBD5',   # Cyan  
-    '50steps_1e5': '#00A087',   # Teal
-    '50steps_5e5': '#3C5488',   # Blue
-    '100steps_5e5': '#F39B7F',  # Coral
+    '15steps_1e4': '#E8B84A',   # Muted gold/yellow (fewest steps)
+    '50steps_1e5': '#6AAF6A',   # Muted forest green
+    '50steps_5e5': '#4A90A4',   # Muted ocean blue
+    '100steps_5e5': '#7B68A6',  # Muted purple (most steps)
 }
 
 CONFIG_LABELS = {
     '15steps_1e4': '15 steps @ 1e-4',
-    '15steps_2e4': '15 steps @ 2e-4',
     '50steps_1e5': '50 steps @ 1e-5',
     '50steps_5e5': '50 steps @ 5e-5',
     '100steps_5e5': '100 steps @ 5e-5',
@@ -46,8 +44,15 @@ def load_metrics(results_dir):
     results_dir = Path(results_dir)
     all_metrics = {}
     
+    # Skip invalid/duplicate configs
+    SKIP_CONFIGS = {'15steps_2e4'}  # Known duplicate of 15steps_1e4
+    
     for config_dir in sorted(results_dir.iterdir()):
         if not config_dir.is_dir():
+            continue
+        
+        if config_dir.name in SKIP_CONFIGS:
+            print(f"Skipping {config_dir.name} (known invalid data)")
             continue
         
         metrics_file = config_dir / "metrics.json"
@@ -107,21 +112,22 @@ def compute_summary_stats(all_metrics):
 
 
 def plot_1_metrics_comparison_bar(summary, output_dir):
-    """Bar chart comparing average metrics across configs."""
+    """Bar chart comparing average metrics across configs with single baseline line."""
     fig, axes = plt.subplots(1, 3, figsize=(14, 5))
     
     configs = sorted(summary.keys())
     x = np.arange(len(configs))
-    width = 0.35
+    width = 0.6  # Wider bars since we only have one per config
     
     # PSNR
     ax = axes[0]
     baseline_vals = [np.mean(summary[c]['baseline_psnr']) for c in configs]
     finetuned_vals = [np.mean(summary[c]['finetuned_psnr']) for c in configs]
+    avg_baseline = np.mean(baseline_vals)
     
-    bars1 = ax.bar(x - width/2, baseline_vals, width, label='Baseline', color='#888888', alpha=0.7)
-    bars2 = ax.bar(x + width/2, finetuned_vals, width, label='Fine-tuned', 
-                   color=[COLORS.get(c, '#333') for c in configs])
+    ax.bar(x, finetuned_vals, width, color=[COLORS.get(c, '#333') for c in configs])
+    ax.axhline(y=avg_baseline, color='#555555', linestyle='--', linewidth=2, 
+               label=f'Baseline Avg ({avg_baseline:.2f})')
     
     ax.set_ylabel('PSNR (dB) ↑')
     ax.set_title('PSNR Comparison')
@@ -134,10 +140,11 @@ def plot_1_metrics_comparison_bar(summary, output_dir):
     ax = axes[1]
     baseline_vals = [np.mean(summary[c]['baseline_ssim']) for c in configs]
     finetuned_vals = [np.mean(summary[c]['finetuned_ssim']) for c in configs]
+    avg_baseline = np.mean(baseline_vals)
     
-    ax.bar(x - width/2, baseline_vals, width, label='Baseline', color='#888888', alpha=0.7)
-    ax.bar(x + width/2, finetuned_vals, width, label='Fine-tuned',
-           color=[COLORS.get(c, '#333') for c in configs])
+    ax.bar(x, finetuned_vals, width, color=[COLORS.get(c, '#333') for c in configs])
+    ax.axhline(y=avg_baseline, color='#555555', linestyle='--', linewidth=2,
+               label=f'Baseline Avg ({avg_baseline:.3f})')
     
     ax.set_ylabel('SSIM ↑')
     ax.set_title('SSIM Comparison')
@@ -150,10 +157,11 @@ def plot_1_metrics_comparison_bar(summary, output_dir):
     ax = axes[2]
     baseline_vals = [np.mean(summary[c]['baseline_lpips']) for c in configs]
     finetuned_vals = [np.mean(summary[c]['finetuned_lpips']) for c in configs]
+    avg_baseline = np.mean(baseline_vals)
     
-    ax.bar(x - width/2, baseline_vals, width, label='Baseline', color='#888888', alpha=0.7)
-    ax.bar(x + width/2, finetuned_vals, width, label='Fine-tuned',
-           color=[COLORS.get(c, '#333') for c in configs])
+    ax.bar(x, finetuned_vals, width, color=[COLORS.get(c, '#333') for c in configs])
+    ax.axhline(y=avg_baseline, color='#555555', linestyle='--', linewidth=2,
+               label=f'Baseline Avg ({avg_baseline:.3f})')
     
     ax.set_ylabel('LPIPS ↓')
     ax.set_title('LPIPS Comparison (Lower is Better)')

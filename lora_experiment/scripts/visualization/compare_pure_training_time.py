@@ -88,7 +88,6 @@ def load_full_ft_results(results_dir: Path) -> dict:
         '50steps_5e5': {'steps': 50, 'lr': 5e-5},
         '100steps_5e5': {'steps': 100, 'lr': 5e-5},
         '50steps_1e5': {'steps': 50, 'lr': 1e-5},
-        '15steps_2e4': {'steps': 15, 'lr': 2e-4},
         '15steps_1e4': {'steps': 15, 'lr': 1e-4},
     }
     
