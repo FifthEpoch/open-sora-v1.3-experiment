@@ -51,6 +51,7 @@ def parse_args():
     parser.add_argument("--device", type=str, default="cuda", help="Device to use")
     parser.add_argument("--rank", type=int, default=None, help="LoRA rank (overrides config)")
     parser.add_argument("--alpha", type=float, default=None, help="LoRA alpha (overrides config)")
+    parser.add_argument("--target-mlp", action="store_true", default=None, help="Target MLP layers (fc1, fc2)")
     return parser.parse_args()
 
 
@@ -134,7 +135,10 @@ def main():
     # Use command-line args if provided, otherwise fall back to config
     lora_rank = args.rank if args.rank is not None else cfg.lora.rank
     lora_alpha = args.alpha if args.alpha is not None else cfg.lora.alpha
-    print(f"\nInjecting LoRA layers (rank={lora_rank}, alpha={lora_alpha})...")
+    target_mlp = getattr(args, 'target_mlp', None)
+    if target_mlp is None:
+        target_mlp = cfg.lora.get("target_mlp", False)
+    print(f"\nInjecting LoRA layers (rank={lora_rank}, alpha={lora_alpha}, target_mlp={target_mlp})...")
     inject_lora_into_stdit3(
         model,
         rank=lora_rank,
@@ -142,6 +146,7 @@ def main():
         dropout=0.0,  # No dropout during inference
         target_modules=cfg.lora.get("target_modules", ["qkv", "proj"]),
         target_blocks=cfg.lora.get("target_blocks", "all"),
+        target_mlp=target_mlp,
     )
     
     # Load LoRA weights

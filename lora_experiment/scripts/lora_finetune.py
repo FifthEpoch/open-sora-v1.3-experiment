@@ -257,7 +257,8 @@ def main():
     )
     
     # Inject LoRA (before moving to device)
-    print("\nInjecting LoRA layers...")
+    target_mlp = cfg.lora.get("target_mlp", False)
+    print(f"\nInjecting LoRA layers (target_mlp={target_mlp})...")
     lora_modules = inject_lora_into_stdit3(
         model,
         rank=cfg.lora.rank,
@@ -265,6 +266,7 @@ def main():
         dropout=cfg.lora.get("dropout", 0.0),
         target_modules=cfg.lora.get("target_modules", ["qkv", "proj"]),
         target_blocks=cfg.lora.get("target_blocks", "all"),
+        target_mlp=target_mlp,
     )
     
     # NOW move model (with LoRA layers) to device

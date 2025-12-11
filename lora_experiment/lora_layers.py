@@ -210,6 +210,43 @@ def inject_lora_into_attention(
     return lora_modules
 
 
+def inject_lora_into_mlp(
+    mlp_module: nn.Module,
+    rank: int = 8,
+    alpha: float = 16,
+    dropout: float = 0.0,
+    target_layers: List[str] = ["fc1", "fc2"],
+) -> Dict[str, nn.Module]:
+    """
+    Inject LoRA layers into an MLP module.
+    
+    Args:
+        mlp_module: The MLP module (timm's Mlp with fc1, fc2)
+        rank: LoRA rank
+        alpha: LoRA alpha scaling
+        dropout: Dropout for LoRA layers
+        target_layers: Which MLP layers to apply LoRA to ("fc1", "fc2")
+    
+    Returns:
+        Dict of original modules replaced by LoRA versions
+    """
+    lora_modules = {}
+    
+    if "fc1" in target_layers and hasattr(mlp_module, "fc1"):
+        original_fc1 = mlp_module.fc1
+        lora_fc1 = LoRALinear(original_fc1, rank=rank, alpha=alpha, dropout=dropout)
+        mlp_module.fc1 = lora_fc1
+        lora_modules["fc1"] = lora_fc1
+    
+    if "fc2" in target_layers and hasattr(mlp_module, "fc2"):
+        original_fc2 = mlp_module.fc2
+        lora_fc2 = LoRALinear(original_fc2, rank=rank, alpha=alpha, dropout=dropout)
+        mlp_module.fc2 = lora_fc2
+        lora_modules["fc2"] = lora_fc2
+    
+    return lora_modules
+
+
 def inject_lora_into_stdit3(
     model: nn.Module,
     rank: int = 8,
@@ -217,6 +254,7 @@ def inject_lora_into_stdit3(
     dropout: float = 0.0,
     target_modules: List[str] = ["qkv", "proj"],
     target_blocks: str = "all",  # "all", "spatial", "temporal"
+    target_mlp: bool = False,  # Whether to also target MLP layers (fc1, fc2)
 ) -> Dict[str, Dict[str, nn.Module]]:
     """
     Inject LoRA layers into STDiT3 model.
@@ -226,8 +264,9 @@ def inject_lora_into_stdit3(
         rank: LoRA rank
         alpha: LoRA alpha scaling
         dropout: Dropout for LoRA layers
-        target_modules: Which attention modules to apply LoRA to
+        target_modules: Which attention modules to apply LoRA to ("qkv", "proj")
         target_blocks: Which blocks to apply LoRA to ("all", "spatial", "temporal")
+        target_mlp: Whether to also target MLP layers (fc1, fc2)
     
     Returns:
         Dict mapping block names to their LoRA modules
@@ -257,6 +296,13 @@ def inject_lora_into_stdit3(
                     lora_proj = LoRALinear(block.cross_attn.proj, rank=rank, alpha=alpha, dropout=dropout)
                     block.cross_attn.proj = lora_proj
                     all_lora_modules[block_name]["cross_attn_proj"] = lora_proj
+                
+                # MLP layers (fc1, fc2)
+                if target_mlp and hasattr(block, "mlp"):
+                    lora_mlp_mods = inject_lora_into_mlp(
+                        block.mlp, rank=rank, alpha=alpha, dropout=dropout, target_layers=["fc1", "fc2"]
+                    )
+                    all_lora_modules[block_name]["mlp"] = lora_mlp_mods
     
     # Inject LoRA into temporal blocks
     if target_blocks in ["all", "temporal"]:
@@ -277,6 +323,13 @@ def inject_lora_into_stdit3(
                     lora_proj = LoRALinear(block.cross_attn.proj, rank=rank, alpha=alpha, dropout=dropout)
                     block.cross_attn.proj = lora_proj
                     all_lora_modules[block_name]["cross_attn_proj"] = lora_proj
+                
+                # MLP layers (fc1, fc2)
+                if target_mlp and hasattr(block, "mlp"):
+                    lora_mlp_mods = inject_lora_into_mlp(
+                        block.mlp, rank=rank, alpha=alpha, dropout=dropout, target_layers=["fc1", "fc2"]
+                    )
+                    all_lora_modules[block_name]["mlp"] = lora_mlp_mods
     
     return all_lora_modules
 
