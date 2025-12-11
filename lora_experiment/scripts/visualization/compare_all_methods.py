@@ -407,12 +407,11 @@ def plot_efficiency_summary(lora_results: dict, full_ft_results: dict, output_di
     
     ax.set_xlabel('Training Time per Video (seconds)', fontsize=12)
     ax.set_ylabel('LPIPS (lower = better quality)', fontsize=12)
-    ax.set_title('Efficiency Overview: All Methods\n(Bubble size = PSNR)', fontsize=14, fontweight='bold')
+    ax.set_title('Time vs Quality: All Methods', fontsize=14, fontweight='bold')
     ax.grid(True, alpha=0.3)
     
     # Highlight the Pareto-optimal region
     ax.fill_between([0, 200], [0, 0], [0.65, 0.65], alpha=0.1, color='green', label='Efficient Region')
-    ax.text(100, 0.62, '← Better (Fast & High Quality)', fontsize=10, color='green', fontweight='bold')
     
     plt.tight_layout()
     plt.savefig(output_dir / '4_efficiency_overview.png', dpi=150, bbox_inches='tight')
