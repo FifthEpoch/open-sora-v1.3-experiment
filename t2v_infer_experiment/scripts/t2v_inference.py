@@ -116,7 +116,7 @@ def main():
         device=device, dtype=dtype
     )
     
-    # Prepare model arguments for T2V
+    # Prepare model arguments for T2V (batch size = 1)
     model_args = {
         "height": torch.tensor([image_size[0]], device=device),
         "width": torch.tensor([image_size[1]], device=device),
@@ -128,15 +128,22 @@ def main():
     print(f"\nGenerating video from prompt: '{args.prompt}'")
     gen_start = time.time()
     
+    # Prompts must be a list for scheduler.sample()
+    prompts = [args.prompt]
+    
     with torch.no_grad():
         samples = scheduler.sample(
             model,
             text_encoder,
-            z,
-            args.prompt,
+            z=z,
+            prompts=prompts,
             device=device,
             additional_args=model_args,
             progress=True,
+            # No conditioning for T2V
+            z_cond=None,
+            z_cond_mask=None,
+            mask_index=None,
         )
     
     gen_time = time.time() - gen_start
