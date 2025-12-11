@@ -22,6 +22,9 @@ except ImportError:
     HAS_MATPLOTLIB = False
     print("Warning: matplotlib not available")
 
+# Pure training time constant (from timing test)
+LORA_SEC_PER_STEP = 0.744  # seconds per gradient step
+
 
 def load_all_results(results_dir: Path) -> dict:
     """Load all metrics_summary.json files from subdirectories."""
@@ -271,57 +274,64 @@ def plot_effect_of_rank_and_lr(results: dict, output_dir: Path):
 
 
 def plot_time_vs_quality(results: dict, output_dir: Path):
-    """Scatter plot: training time vs quality metrics."""
+    """Scatter plot: PURE training time (gradient steps only) vs quality metrics."""
     if not HAS_MATPLOTLIB:
         return
     
     configs = list(results.keys())
     labels = [results[c]['config']['label'] for c in configs]
     
-    train_times = [results[c]['train_time'] for c in configs]
+    # Use PURE training time (gradient steps only) instead of total time
+    pure_train_times = [results[c]['config']['steps'] * LORA_SEC_PER_STEP for c in configs]
     psnr_vals = [results[c]['psnr'] for c in configs]
     lpips_vals = [results[c]['lpips'] for c in configs]
     
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     
     # Assign colors based on rank
-    colors = ['blue' if results[c]['config']['rank'] == 8 else 'red' for c in configs]
+    colors = ['#2ecc71' if results[c]['config']['rank'] == 8 else '#3498db' for c in configs]
     # Assign markers based on LR
     markers = ['o' if results[c]['config']['lr'] == 1e-4 else 's' for c in configs]
     
     # Time vs PSNR
     for i, c in enumerate(configs):
-        axes[0].scatter(train_times[i], psnr_vals[i], c=colors[i], marker=markers[i], s=150, alpha=0.7)
-        axes[0].annotate(labels[i], (train_times[i], psnr_vals[i]), 
+        axes[0].scatter(pure_train_times[i], psnr_vals[i], c=colors[i], marker=markers[i], s=150, alpha=0.7,
+                       edgecolors='black', linewidths=0.5)
+        axes[0].annotate(labels[i], (pure_train_times[i], psnr_vals[i]), 
                         textcoords="offset points", xytext=(5, 5), fontsize=8)
     
-    axes[0].set_xlabel('Training Time per Video (seconds)')
-    axes[0].set_ylabel('PSNR (dB)')
-    axes[0].set_title('Training Time vs PSNR')
+    axes[0].set_xlabel('Pure Training Time (seconds) - Gradient Steps Only', fontsize=11)
+    axes[0].set_ylabel('PSNR (dB)', fontsize=11)
+    axes[0].set_title('Pure Training Time vs PSNR', fontsize=12, fontweight='bold')
     axes[0].grid(True, alpha=0.3)
     
     # Time vs LPIPS  
     for i, c in enumerate(configs):
-        axes[1].scatter(train_times[i], lpips_vals[i], c=colors[i], marker=markers[i], s=150, alpha=0.7)
-        axes[1].annotate(labels[i], (train_times[i], lpips_vals[i]),
+        axes[1].scatter(pure_train_times[i], lpips_vals[i], c=colors[i], marker=markers[i], s=150, alpha=0.7,
+                       edgecolors='black', linewidths=0.5)
+        axes[1].annotate(labels[i], (pure_train_times[i], lpips_vals[i]),
                         textcoords="offset points", xytext=(5, 5), fontsize=8)
     
-    axes[1].set_xlabel('Training Time per Video (seconds)')
-    axes[1].set_ylabel('LPIPS (lower is better)')
-    axes[1].set_title('Training Time vs LPIPS')
+    axes[1].set_xlabel('Pure Training Time (seconds) - Gradient Steps Only', fontsize=11)
+    axes[1].set_ylabel('LPIPS (lower is better)', fontsize=11)
+    axes[1].set_title('Pure Training Time vs LPIPS', fontsize=12, fontweight='bold')
     axes[1].grid(True, alpha=0.3)
     
     # Add legend
     legend_elements = [
-        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Rank 8'),
-        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Rank 16'),
+        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#2ecc71', markersize=10, label='Rank 8'),
+        plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='#3498db', markersize=10, label='Rank 16'),
         plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', markersize=10, label='LR 1e-4'),
         plt.Line2D([0], [0], marker='s', color='w', markerfacecolor='gray', markersize=10, label='LR 2e-4'),
     ]
     axes[0].legend(handles=legend_elements, loc='lower right')
     axes[1].legend(handles=legend_elements, loc='upper right')
     
-    plt.tight_layout()
+    # Add note about timing
+    fig.text(0.5, 0.02, f'Note: Pure training time = steps × {LORA_SEC_PER_STEP}s/step (excludes model loading & encoding overhead)',
+             ha='center', fontsize=9, style='italic', color='gray')
+    
+    plt.tight_layout(rect=[0, 0.05, 1, 1])
     plt.savefig(output_dir / '4_time_vs_quality.png', dpi=150, bbox_inches='tight')
     plt.savefig(output_dir / '4_time_vs_quality.pdf', bbox_inches='tight')
     plt.close()
