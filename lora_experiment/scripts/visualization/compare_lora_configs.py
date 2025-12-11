@@ -367,11 +367,11 @@ def plot_time_vs_quality(results: dict, output_dir: Path):
             
             # Stagger labels vertically if multiple points at same x
             if len(points) > 1:
-                # Alternate above/below for points at same x
+                # Alternate above/below for points at same x (smaller offsets)
                 if rank_in_group % 2 == 0:
-                    y_offset = -15 - (rank_in_group // 2) * 12
+                    y_offset = -10 - (rank_in_group // 2) * 8
                 else:
-                    y_offset = 10 + (rank_in_group // 2) * 12
+                    y_offset = 8 + (rank_in_group // 2) * 8
             else:
                 y_offset = 5
             
