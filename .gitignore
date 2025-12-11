@@ -213,3 +213,11 @@ slurm_*.err
 # Experiment results/metrics
 metrics.json
 **/metrics.json
+**/metrics_summary.json
+
+# LoRA experiment results (large generated files)
+lora_experiment/results/rank*/
+lora_experiment/results/timing_test/
+
+# Naive experiment results (large generated files)
+naive_experiment/scripts/results/*/
