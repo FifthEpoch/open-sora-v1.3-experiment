@@ -231,6 +231,7 @@ def main():
     
     # Build model components
     print("\nLoading model components...")
+    model_load_start = time.time()
     
     # Text encoder
     text_encoder = build_module(cfg.text_encoder, MODELS, device=device)
@@ -282,8 +283,12 @@ def main():
     # Link embedder
     text_encoder.y_embedder = model.y_embedder
     
+    model_load_time = time.time() - model_load_start
+    print(f"\nModel loading time: {model_load_time:.2f} seconds")
+    
     # Load video and encode
     print("\nLoading and encoding video...")
+    encode_start = time.time()
     latents = load_video_for_training(
         args.video_path, vae, num_frames, image_size, device, dtype
     )
@@ -294,9 +299,12 @@ def main():
     gc.collect()
     torch.cuda.empty_cache()
     
+    encode_time = time.time() - encode_start
+    print(f"Video encoding time: {encode_time:.2f} seconds")
+    
     # Train LoRA
     print("\nStarting LoRA training...")
-    start_time = time.time()
+    train_start_time = time.time()
     
     losses = train_lora(
         model=model,
@@ -313,8 +321,16 @@ def main():
         num_frames=num_frames,
     )
     
-    train_time = time.time() - start_time
-    print(f"\nTraining completed in {train_time:.2f} seconds")
+    pure_train_time = time.time() - train_start_time
+    total_time = model_load_time + encode_time + pure_train_time
+    
+    print(f"\n{'='*60}")
+    print(f"Timing Breakdown:")
+    print(f"  Model loading + LoRA injection: {model_load_time:.2f}s")
+    print(f"  Video encoding: {encode_time:.2f}s")
+    print(f"  Pure training (gradient steps): {pure_train_time:.2f}s")
+    print(f"  Total: {total_time:.2f}s")
+    print(f"{'='*60}")
     print(f"Average loss: {sum(losses) / len(losses):.4f}")
     
     # Save LoRA weights
@@ -323,7 +339,7 @@ def main():
     save_lora_weights(model, lora_path)
     print(f"\nLoRA weights saved to: {lora_path}")
     
-    # Save training info
+    # Save training info with detailed timing breakdown
     info = {
         "video_path": args.video_path,
         "caption": args.caption,
@@ -331,7 +347,14 @@ def main():
         "lr": cfg.lr,
         "lora_rank": cfg.lora.rank,
         "lora_alpha": cfg.lora.alpha,
-        "train_time": train_time,
+        # Detailed timing breakdown
+        "model_load_time_sec": model_load_time,
+        "video_encode_time_sec": encode_time,
+        "pure_train_time_sec": pure_train_time,  # Just gradient steps
+        "total_time_sec": total_time,
+        # Legacy field for backwards compatibility
+        "train_time": pure_train_time,
+        # Loss info
         "final_loss": losses[-1],
         "avg_loss": sum(losses) / len(losses),
         "losses": losses,

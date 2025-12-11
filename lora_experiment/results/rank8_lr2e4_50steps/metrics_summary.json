@@ -1,0 +1,11 @@
+{
+  "num_videos": 10,
+  "num_steps": 50,
+  "rank": 8,
+  "lr": 0.0002,
+  "avg_psnr": 11.861808664047109,
+  "avg_ssim": 0.37267208194937895,
+  "avg_lpips": 0.6884695606099236,
+  "avg_train_time_sec": 102.6,
+  "avg_infer_time_sec": 78.3
+}
