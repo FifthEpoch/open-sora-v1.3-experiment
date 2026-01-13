@@ -45,6 +45,7 @@ def load_lora_results(results_dir: Path) -> dict:
         'rank16_lr1e4_100steps': {'rank': 16, 'lr': 1e-4, 'steps': 100},
         'rank16_lr2e4_20steps': {'rank': 16, 'lr': 2e-4, 'steps': 20},
         'rank16_lr2e4_50steps': {'rank': 16, 'lr': 2e-4, 'steps': 50},
+        'rank16_lr2e4_100steps': {'rank': 16, 'lr': 2e-4, 'steps': 100},
     }
     
     results = {}

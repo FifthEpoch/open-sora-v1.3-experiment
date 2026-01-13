@@ -169,7 +169,7 @@ def main():
     # Save video
     print(f"\nSaving video to: {args.output_path}")
     os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
-    imageio.mimwrite(args.output_path, video, fps=cfg.fps, codec='libx264', quality=8)
+    imageio.mimwrite(args.output_path, video, fps=cfg.fps, codec='libx264')
     
     # Summary
     total_time = time.time() - load_start

@@ -48,6 +48,7 @@ def load_all_results(results_dir: Path) -> dict:
         # Rank 16, LR 2e-4
         'rank16_lr2e4_20steps': {'rank': 16, 'lr': 2e-4, 'steps': 20, 'label': 'R16 LR2e-4 20s'},
         'rank16_lr2e4_50steps': {'rank': 16, 'lr': 2e-4, 'steps': 50, 'label': 'R16 LR2e-4 50s'},
+        'rank16_lr2e4_100steps': {'rank': 16, 'lr': 2e-4, 'steps': 100, 'label': 'R16 LR2e-4 100s'},
     }
     
     for dir_name, config in configs.items():
